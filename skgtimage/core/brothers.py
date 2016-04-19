@@ -2,7 +2,6 @@ import networkx as nx
 import itertools
 from skgtimage.core.search_base import recursive_brothers
 
-
 def find_groups_of_brothers(g):
     groups_of_brothers=[]
     for n in g.nodes():
