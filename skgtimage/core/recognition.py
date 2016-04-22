@@ -82,37 +82,6 @@ def compute_node2size_map(graph,leaf_only=False):
         node2size[n]=size
     return node2size
 
-'''
-def update_graphs_from_identified_regions(graphs,regions,matching):
-    """
-
-    :param graphs: list of graph (topological+ photometric) where nodes and edges correspond to a priori knowledge
-    :param regions: regions (not residues) ordered according to matching
-    :param matching: matching = map[region index]=node (a priori knowledge)
-    """
-    #Update graphs
-    for i in matching.keys():
-        id=matching[i]
-        region=regions[i]
-        for g in graphs:
-            if g.get_region(id) is None:
-                g.set_region(id,region)
-'''
-'''
-def recognize_version1(query_graphs,ref_graphs,return_details=False):
-    ###########################################################################################
-    #Common matchings
-    ###########################################################################################
-    common_isomorphisms,isomorphisms_per_graph=generate_common_subgraphisomorphisms(query_graphs,ref_graphs)
-    ###########################################################################################
-    #Relationships: union of all peer2peer matchings which have been discovered
-    #Warning: risk of possible inconsistency
-    ###########################################################################################
-    io=iorelationships(common_isomorphisms)
-
-    return io,tuple([common_isomorphisms,tuple(isomorphisms_per_graph)])
-'''
-
 def recognize_version2(query_t_graph,ref_t_graph,query_p_graph,ref_p_graph,return_details=False):
     ###########################################################################################
     #1) Find common matchings
@@ -189,35 +158,6 @@ def matching_costs(graph,s,targets):
 def resolve_conflict(graph,sources,unknown2candidates):
     for s in sources:
         print(matching_costs(graph,s,unknown2candidates[s]))
-'''
-def neighboring_candidates(graph,s,possible_candidates):
-    """
-    Possibles (valid) candidates are with star (*): 0*,2*,3*,5*,6*
-    Returned neighboring_candidates are: 0* (father), 2* (brother), 3* (direct child), 6* (direct child) ; not 5* (pb 4)
-    We ignore situations (return empty set) where s has no valide father
-                0*
-             -> ^ <-
-            |   |   |
-            s   1   2*
-         -> ^ <-
-        |   |   |
-        3*  4   6*
-            ^
-            |
-            5*
-
-    :param graph:
-    :param s:
-    :param possible_candidates:
-    :return:
-    """
-    if len(graph.successors(s)) != 1: raise Exception("Error")
-    father=graph.successors(s)[0]
-    if father not in possible_candidates: return set()
-    #Start analysis
-    candidates=set([father]) | (set(graph.predecessors(father)) & possible_candidates ) | (set(graph.predecessors(s)) & possible_candidates )
-    return candidates
-'''
 
 
 def ordered_photometric_candidates(p_graph,n,candidates):
