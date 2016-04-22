@@ -1,4 +1,5 @@
 import re,itertools
+import networkx as nx
 from skgtimage.core.graph import IrDiGraph,transitive_reduction
 
 def __analyze_sentence__(g,desc) :
@@ -24,6 +25,19 @@ def __analyze_sentence__(g,desc) :
 
 def graph_factory(desc):
     g=IrDiGraph()
+    #Remove spaces
+    nospace_desc=re.sub(' ','',desc)
+    #Remove == -> =
+    nospace_desc=re.sub('==','=',nospace_desc)
+    #Split into sentences (separator is ';')
+    descs=re.split(';',nospace_desc)
+    #
+    for d in descs : __analyze_sentence__(g,d)
+    #
+    return g
+
+def fromstring(desc,g=None):
+    if g is None: g=nx.DiGraph()
     #Remove spaces
     nospace_desc=re.sub(' ','',desc)
     #Remove == -> =
