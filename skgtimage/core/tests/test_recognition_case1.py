@@ -17,7 +17,7 @@ image=np.array([ [1, 1, 1, 1, 1, 1],
 # KNOWLEDGE
 t_graph=sgi.core.graph_factory("B,C<A")
 p_graph=sgi.core.graph_factory("A<B<C")
-tp_model=sgi.core.TPModel(t_graph,[p_graph])
+#tp_model=sgi.core.TPModel(t_graph,[p_graph])
 
 #TRUTH
 regionA=np.where(image>0,1,0)
@@ -32,6 +32,7 @@ regionC=np.where(image==3,1,0)
 #PHOTOMETRY
 #       A -> B -> C
 ###############################
+'''
 class TestRecognitionUseCase1(unittest.TestCase):
     def setUp(self):
         self.residues=[ np.where(image==i,1,0) for i in [1,2,3] ]
@@ -74,3 +75,4 @@ if __name__ == '__main__':
     #With verbose
     suite = unittest.TestLoader().loadTestsFromTestCase(TestRecognitionUseCase1)
     unittest.TextTestRunner(verbosity=2).run(suite)
+'''

@@ -41,7 +41,7 @@ class TestIO(unittest.TestCase):
         self.current_test_path=os.path.join(os.path.join(self.current_module_path,'tests/'),'dirio/')
 
 
-        self.tp_model=skit.core.TPModel(self.t_graph,[self.p_graph])
+        #self.tp_model=skit.core.TPModel(self.t_graph,[self.p_graph])
 
     ############
     #SAVE GRAPH WITH PICKLE

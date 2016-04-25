@@ -7,7 +7,8 @@ import helper
 
 root_name="image01"
 input_dir="Database/image01/truth"
-save_dir="Database/image01/kmeans_3classes/"
+#save_dir="Database/image01/kmeans_3classes/"
+save_dir="Database/image01/test_refactoryin/"
 if not os.path.exists(save_dir) : os.mkdir(save_dir)
 
 

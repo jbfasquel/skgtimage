@@ -77,17 +77,6 @@ def nb_automorphisms(graphs):
 
 
 
-def unrelevant_inputs(io,nodes):
-    result=set(nodes)-set(io.keys())
-    return result
-
-
-def ambiguous_inputs(io):
-    inputs_leading_to_multiple_outputs=set()
-    for i in io:
-        if len(io[i]) > 1: inputs_leading_to_multiple_outputs|=set([i])
-    return inputs_leading_to_multiple_outputs
-
 def remove_node(g,n):
     edges_to_add=[]
     succ=g.successors(n)
@@ -111,23 +100,6 @@ def unmatched_nodes(isomorphisms,nodes):
         if is_involved is False: unmatchings |= set([n])
     return unmatchings
 
-def iorelationships(isomorphisms):
-    """
-
-    :param isomorphisms
-    :return: dictionnaries where keys are outputs of the surjection and values are related inputs (possibly severals)
-    """
-    inputs=set()
-    for i in isomorphisms:
-        inputs|=set(i.keys())
-
-    io={}
-    for i in inputs:
-        io[i]=set()
-    for i in isomorphisms:
-        for k in i:
-            io[k] |= set([i[k]])
-    return io
 
 def oirelationships(io):
     oi={}
@@ -142,84 +114,6 @@ def oirelationships(io):
                 if o not in oi: oi[o]=set([i])
                 else: oi[o] |= set([i])
     return oi
-
-
-def id2residues(residues,io):
-    oi={}
-    for i in io:
-        for o in io[i]:
-            if o not in oi: oi[o]=set([i])
-            else: oi[o] |= set([i])
-
-    id2r={}
-    for o in oi.keys():
-        targets=list(oi[o])
-        current_residue=residues[targets[0]]
-        for j in range(1,len(targets)):
-            current_residue=np.logical_or(current_residue,residues[targets[j]])
-        id2r[o]=current_residue
-    return id2r
-
-def update_graphs(graphs,residues,matching):
-    id2res=id2residues(residues,matching)
-    for k in id2res:
-        for g in graphs:
-            g.set_region(k,fill_region(id2res[k]))
-
-#############################################################################################
-#############################################################################################
-#####################      NEW                              #################################
-#############################################################################################
-#############################################################################################
-def unambiguous_matchings(matching):
-    result={}
-    reverse_matching=oirelationships(matching)
-    for i in matching:
-        input=i
-        output=matching[i]
-        if (len(output)==1):
-            target=list(output)[0]
-            target_inputs=reverse_matching[target]
-            if (len(target_inputs)==1):
-                result[i]=matching[i]
-    return result
-
-def ambiguous_matchings(matching):
-    result={}
-    for i in matching:
-        if len(matching[i])>1: result[i]=matching[i]
-    return result
-
-def sub_common_isomorphisms(common_isomorphisms,io):
-    result=[]
-    for iso in common_isomorphisms:
-        valid=True
-        for e in io:
-            if e not in iso: valid=False
-        if valid: result+=[iso]
-    return result
-
-def filtered_common_subgraph_isomorphisms_v1(matching,common_isomorphisms):
-    okmat=unambiguous_matchings(matching)
-    nokmat=ambiguous_matchings(matching)
-    new_common_isomorphisms=sub_common_isomorphisms(common_isomorphisms,okmat)
-    io=iorelationships(new_common_isomorphisms)
-    return io,new_common_isomorphisms
-
-
-def filtered_common_subgraph_isomorphisms_v2(matching,common_isomorphisms):
-    okmat=unambiguous_matchings(matching)
-    stats=[]
-    for iso in common_isomorphisms:
-        measure=0
-        for e in okmat:
-            if list(okmat[e])[0] == iso[e]:
-                measure+=1
-        stats+=[measure]
-    print(stats)
-    indice=stats.index(max(stats))
-    new_matching=common_isomorphisms[indice]
-    return new_matching
 
 
 

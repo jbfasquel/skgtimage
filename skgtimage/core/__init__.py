@@ -27,9 +27,6 @@ from .topology import *
 ##### BUILD GRAPH FROM REGIONS
 from .photometry import *
 
-##### MODEL: API
-from .model import *
-
 ##### PARSER
 from .factory import *
 

@@ -1,6 +1,6 @@
 import numpy as np
 import networkx as nx
-from skgtimage.core.matching import generate_common_subgraphisomorphisms,iorelationships,energie_dist,energie_sim
+from skgtimage.core.matching import generate_common_subgraphisomorphisms,energie_dist,energie_sim
 from skgtimage.core.brothers import find_groups_of_brothers
 from skgtimage.core.search_base import search_leaf_nodes
 

@@ -37,9 +37,10 @@ def compute_energie(p_iso,image,residues,p_graph,ref_p_graph):
         diff=stats[query_node_prev]-stats[query_node_current]
         energie-=diff
     return energie
-
+'''
 #print(common_isomorphisms)
 for p_iso in common_isomorphisms:
     print("ISO: ", p_iso)
     energie=compute_energie(p_iso,image,new_residues,built_p_graph,p_graph)
     print("--> ", energie)
+'''

@@ -19,10 +19,6 @@ class IGraph(nx.DiGraph):
         :param attr: as in networkx.DiGraph.__init__
         :return: nothing
 
-        :example:
-            >>> import skgtimage as sgt
-            >>> sgt.core.IDiGraph() #doctest: +ELLIPSIS
-            <skgtimage.core.graph.IrDiGraph object at ...>
         """
         super(IGraph,self).__init__(data,**attr)
         self.__image=image
@@ -92,10 +88,6 @@ class IPGraph:
         :param attr: as in networkx.DiGraph.__init__
         :return: nothing
 
-        :example:
-            >>> import skgtimage as sgt
-            >>> sgt.core.IPGraph() #doctest: +ELLIPSIS
-            <skgtimage.core.graph.IrDiGraph object at ...>
         """
         self.__image=image
         self.i_graph=None

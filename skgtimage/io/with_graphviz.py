@@ -85,49 +85,6 @@ def plot_graphs_regions_new(graphs,nb_rows=None):
         n_plot+=1
 
 
-def plot_model(model,segmentations=[]):
-    import matplotlib.pyplot as plt
-    #First row is for the image and the two graphs -> 3 cols
-    nb_cols=1+len(model.p_graphs)
-    if model.get_image() is not None: nb_cols+=1
-    nb_regions=len(model.t_graph.segmented_nodes())+len(segmentations)
-    nb_rows=int(1+np.ceil(float(nb_regions)/nb_cols))
-    #Plot the first row
-    n_plot=1
-    if model.get_image() is not None:
-        plt.subplot(nb_rows,nb_cols,n_plot);n_plot+=1
-        plt.imshow(model.get_image(),cmap="gray",interpolation="nearest");plt.axis('off')
-        plt.title("Image")
-    plt.subplot(nb_rows,nb_cols,n_plot);n_plot+=1
-    skgti.io.plot_graph(model.t_graph)
-    plt.title("Topological graph")
-    for i in range(0,len(model.p_graphs)):
-        plt.subplot(nb_rows,nb_cols,n_plot+i)
-        #skgti.io.plot_graph(model.p_graphs[i],tree=False)
-        skgti.io.plot_graph(model.p_graphs[i])
-        plt.title("Photometric graph")
-    #Start next
-    subplot_id=nb_cols
-    #Plot segmented regions
-    for i in range(0,len(segmentations)):
-        subplot_id+=1
-        plt.subplot(nb_rows,nb_cols,subplot_id)
-        plt.title("Segmentation "+str(i+1))
-        plt.imshow(segmentations[i],cmap="gray",interpolation="nearest");plt.axis('off')
-
-    #Plot segmented regions
-    #subplot_id=nb_cols+1
-    names=sorted(list(model.t_graph.segmented_nodes()))
-    for i in range(0,len(names)):
-        subplot_id+=1
-        plt.subplot(nb_rows,nb_cols,subplot_id)
-        name=names[i]
-        region=model.get_region(name)
-        if type(name)!=str:
-            plt.title("Region "+str(name))
-        else: plt.title("Region "+name)
-        plt.imshow(region,cmap="gray",vmin=0,vmax=1,interpolation="nearest");plt.axis('off')
-
 def plot_graph(graph,nodes=None,tree=True):
     import matplotlib.pyplot as plt
     save_graph('tmp',graph,nodes,tree,directory=None)
@@ -214,21 +171,6 @@ def save_graph(name,graph,nodes=None,tree=True,directory=None,save_regions=False
                 '''
                 else: raise Exception("Not a 2D image")
                 '''
-def save_model(directory,tp_model):
-    #create dir
-    if not os.path.exists(directory) : os.mkdir(directory)
-    #image
-    image=tp_model.get_image()
-    if (image is not None) and (len(image.shape) == 2):
-        filename=os.path.join(directory,"image.png");
-        sp.misc.imsave(filename, image)
-    #save topological graph
-    save_graph('topology_apriori',tp_model.t_graph,nodes=[],tree=True,directory=directory,save_regions=True)
-    save_graph('topology_context',tp_model.t_graph,nodes=None,tree=True,directory=directory,save_regions=False)
-    #save photometric graphs
-    for i in range(0,len(tp_model.p_graphs)):
-        save_graph('photometry_apriori_'+str(i),tp_model.p_graphs[i],nodes=[],tree=False,directory=directory,save_regions=False)
-        save_graph('photometry_context_'+str(i),tp_model.p_graphs[i],nodes=None,tree=False,directory=directory,save_regions=False)
 
 def plot_graph_matching(graph1,graph2,matching,tree=True):
     import matplotlib.pyplot as plt
@@ -304,48 +246,3 @@ def save_graph_matching(name,graph1,graph2,matching,tree=True,directory=None,sav
         a.draw(name+".png") #;a.draw("tmp.svg")
         a.draw(name+".svg") #;a.draw("tmp.svg")
 
-'''
-def plot_graph_surjection(graph1,graph2,surjection,tree=True):
-    import matplotlib.pyplot as plt
-    save_graph_surjection('tmp',graph1,graph2,surjection,tree,directory=None)
-    tmp_image=sp.misc.imread("tmp.png")
-    os.remove("tmp.png")
-    os.remove("tmp.svg")
-    plt.imshow(tmp_image);plt.axis('off')
-
-
-def save_graph_surjection(name,graph1,graph2,surjection,tree=True,directory=None,save_regions=False):
-    bi_graph=nx.DiGraph()
-    bi_graph.add_nodes_from(graph1)
-    bi_graph.add_edges_from(graph1.edges())
-    bi_graph.add_nodes_from(graph2)
-    bi_graph.add_edges_from(graph2.edges())
-
-    a=nx.to_agraph(bi_graph)
-
-    #Global layout
-    if tree:
-        a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
-        a.graph_attr['splines']='spline'
-        a.layout(prog='dot')
-    else:
-        #a.layout(prog='neato')
-        #a.layout(prog='circo')
-        a.layout(prog='twopi')
-    #Marking nodes corresponding to, e.g., already segmented regions
-    for k in surjection.keys():
-        for l in surjection[k]:
-            a.add_edge(l,k) #after the layout has been set
-            a.get_edge(l,k).attr['color']='red'
-            a.get_edge(l,k).attr['splines']='curved'
-
-    #Hack for plottin with matplotlib -> png -> numpy array -> imshow
-    if directory is None:
-        a.draw(name+".png") #;a.draw("tmp.svg")
-        a.draw(name+".svg") #;a.draw("tmp.svg")
-    else:
-        if not os.path.exists(directory) : os.mkdir(directory)
-        filename=os.path.join(directory,name)
-        a.draw(filename+".png") #;a.draw("tmp.svg")
-        a.draw(filename+".svg") #;a.draw("tmp.svg")
-'''
