@@ -110,18 +110,7 @@ def unmatched_nodes(isomorphisms,nodes):
             if n in iso.keys(): is_involved=True
         if is_involved is False: unmatchings |= set([n])
     return unmatchings
-'''
-def __is_surjective__(outputs2inputs):
-    input_points=list(outputs2inputs.values())
-    is_surjection=True
-    for i in range(0,len(input_points)):
-        ref_set=input_points[i]
-        for j in range(0,len(input_points)):
-            if i !=j:
-                intersection=ref_set & input_points[j]
-                if len(intersection) != 0: is_surjection=False
-    return is_surjection
-'''
+
 def iorelationships(isomorphisms):
     """
 
@@ -139,28 +128,7 @@ def iorelationships(isomorphisms):
         for k in i:
             io[k] |= set([i[k]])
     return io
-'''
-def find_sub_surjection(isomorphisms):
-    """
 
-    :param isomorphisms
-    :return: dictionnaries where keys are outputs of the surjection and values are related inputs (possibly severals)
-    """
-    inputs=set()
-    for i in isomorphisms:
-        inputs|=set(i.keys())
-
-    outputs2inputs={}
-    for iso in isomorphisms:
-        for k in iso.keys():
-            target=iso[k]
-            if target not in outputs2inputs: outputs2inputs[target]=set()
-            outputs2inputs[target] |= set([k])
-    if __is_surjective__(outputs2inputs) is False:
-        return None
-
-    return outputs2inputs
-'''
 def oirelationships(io):
     oi={}
     for i in io:
@@ -197,126 +165,6 @@ def update_graphs(graphs,residues,matching):
     for k in id2res:
         for g in graphs:
             g.set_region(k,fill_region(id2res[k]))
-
-
-'''
-def update_residues(residues,t_graph,surjection,unrelated_nodes):
-    """
-    :param residues:
-    :param t_graph:
-    :param surjection:
-    :return:
-    """
-    #MERGE UNRELATED NODES (REGION RESIDUES FIRST)
-    final_residues=np.copy(residues)
-    for n in unrelated_nodes:
-        fathers=list(t_graph.successors(n))
-        if len(fathers) > 1: raise Exception("Error")
-        f=fathers[0]
-        #print(np.max(final_residues[f]),np.max(final_residues[n]))
-        #print(np.min(final_residues[f]),np.min(final_residues[n]))
-        final_residues[f]=np.logical_or(final_residues[f],final_residues[n])
-    #ASSIGN
-    id2residues={}
-    for i in surjection.keys():
-        targets=list(surjection[i])
-        current_residue=final_residues[targets[0]]
-        for j in range(1,len(targets)):
-            current_residue=np.logical_or(current_residue,final_residues[targets[j]])
-        id2residues[i]=current_residue
-
-    return id2residues
-    #all_nodes=
-    #unmatched_nodes=
-'''
-
-
-
-'''
-def identify_from_labels(image,labelled_image,t_graph,p_graph,nodes,return_detailed=False):
-    residues=residues_from_labels(labelled_image)
-    sub_p_graph=transitive_reduction(transitive_closure(p_graph).subgraph(nodes))
-    #sub_t_graph=skgti.core.transitive_reduction(skgti.core.transitive_closure(tp_model.t_graph.subgraph(l)))
-    sub_t_graph=transitive_reduction(transitive_closure(t_graph).subgraph(nodes))
-    built_t_graph,new_residues=topological_graph_from_residues(residues)
-    n=number_of_brother_links(sub_p_graph)
-    built_p_graph=photometric_graph_from_residues(image,new_residues,n)
-    #Matching
-    t_isomorphisms=find_subgraph_isomorphims(transitive_closure(built_t_graph),transitive_closure(sub_t_graph))
-    p_isomorphisms=find_subgraph_isomorphims(transitive_closure(built_p_graph),transitive_closure(sub_p_graph))
-    matchings=find_common_isomorphisms([p_isomorphisms,t_isomorphisms])
-    # SURJECTION
-    surj=find_sub_surjection(matchings)
-    # FINAL REGIONS
-    unrelated_nodes=unmatched_nodes(matchings,built_t_graph.nodes())
-    target2residues=update_residues(new_residues,built_t_graph,surj,unrelated_nodes)
-    if return_detailed:
-        return target2residues,built_t_graph,built_p_graph,surj,matchings,t_isomorphisms,p_isomorphisms,new_residues
-    else:
-        return target2residues
-'''
-
-
-def t_filtering_v1(matching,residues,t_graph,p_graph):
-    nodes=unrelevant_inputs(matching,t_graph.nodes())
-    #final_residues=np.copy(residues)
-    for n in nodes:
-        succ=t_graph.successors(n)
-        if len(succ) > 1: raise("Error")
-        print(n,"->",succ)
-        if len(succ) == 1 :
-            father=succ[0]
-            #Residue
-            residues[father]=np.logical_or(residues[father],residues[n])
-            #Adapt graphs
-            remove_node(t_graph,n)
-            remove_node(p_graph,n)
-
-    #return final_residues,t_graph,p_graph
-
-def p_filtering(matching,image,residues,t_graph,p_graph):
-    nodes=ambiguous_inputs(matching)
-    #final_residues=np.copy(residues)
-    ##################
-    # Photometric distances BUT between TOPOLOGICAL neighbors !!!!
-    stats=[]
-    for r in residues:
-        stats+=[region_stat(image,r,fct=np.mean,mc=False)]
-    #print(stats)
-
-    for n in nodes:
-        #list_of_adj=p_graph.successors(n)+p_graph.predecessors(n)
-        list_of_adj=t_graph.successors(n)+t_graph.predecessors(n)
-        list_of_dist=[]
-        for a in list_of_adj:
-            list_of_dist+=[abs(stats[a]-stats[n])]
-
-        indice_of_min_dist=np.argmin(list_of_dist)
-        closest_node=list_of_adj[indice_of_min_dist]
-        print(list_of_adj," -> ",list_of_dist)
-        print("closest:",closest_node)
-        #Residue
-        residues[closest_node]=np.logical_or(residues[closest_node],residues[n])
-        #Adapt graphs
-        remove_node(t_graph,n)
-        remove_node(p_graph,n)
-        #Update matching
-        del matching[n]
-
-
-    '''
-    for n in nodes:
-        #
-        succ=t_graph.successors(n)
-        if len(succ) > 1: raise("Error")
-        father=succ[0]
-        #Residue
-        final_residues[father]=np.logical_or(final_residues[father],final_residues[n])
-        #Adapt graphs
-        remove_node(t_graph,n)
-        remove_node(p_graph,n)
-    '''
-    #return final_residues,t_graph,p_graph
 
 #############################################################################################
 #############################################################################################
@@ -375,52 +223,11 @@ def filtered_common_subgraph_isomorphisms_v2(matching,common_isomorphisms):
 
 
 
-def t_filtering_v2(image,residues,matching,t_graph,p_graph):
-    nodes=unrelevant_inputs(matching,t_graph.nodes())
-
-    ##################
-    # Photometric distances BUT between TOPOLOGICAL neighbors !!!!
-    stats=[]
-    for r in residues:
-        stats+=[region_stat(image,r,fct=np.mean,mc=False)]
-
-
-    #final_residues=np.copy(residues)
-    for n in nodes:
-        #intensity distance versus successor
-        succ=t_graph.successors(n)
-        if len(succ) > 1: raise("Error")
-        father=succ[0]
-        d_succ=abs(stats[father]-stats[n])
-        #intensity distance versus successor
-        pred=t_graph.predecessors(n)
-        if len(pred) > 1: raise("Error")
-        child=pred[0]
-        d_pred=abs(stats[child]-stats[n])
-
-        #################
-        #merge with closest
-        if d_succ<d_pred:
-            #Residue
-            residues[father]=np.logical_or(residues[father],residues[n])
-            #Adapt graphs
-            remove_node(t_graph,n)
-            remove_node(p_graph,n)
-        else:
-            #Residue
-            residues[child]=np.logical_or(residues[child],residues[n])
-            #Adapt graphs
-            remove_node(t_graph,n)
-            remove_node(p_graph,n)
-
-
 #############################################################################################
 #############################################################################################
 #####################      NEW    ENERGY                    #################################
 #############################################################################################
 #############################################################################################
-
-
 
 
 def energie_dist(query_graph,ref_graph,iso):
