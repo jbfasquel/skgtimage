@@ -5,36 +5,36 @@
 import unittest
 import skgtimage as sgi
 
-class TestParsing(unittest.TestCase):
+class TestFactoryFromString(unittest.TestCase):
     def setUp(self):
         pass
     ####################################
     #   A ->  B  ->  C
     ####################################
     def test01(self):
-        g=sgi.core.graph_factory(" A,B < C")
+        g=sgi.core.from_string(" A,B < C")
         self.assertEqual(set(g.nodes()),set(['A','B','C']))
         self.assertEqual(set(g.edges()),set([('B','C'), ('A','C')]))
-        g=sgi.core.graph_factory(" A < C > B")
+        g=sgi.core.from_string(" A < C > B")
         self.assertEqual(set(g.nodes()),set(['A','B','C']))
         self.assertEqual(set(g.edges()),set([('B','C'), ('A','C')]))
-        g=sgi.core.graph_factory(" A < C; C > B")
+        g=sgi.core.from_string(" A < C; C > B")
         self.assertEqual(set(g.nodes()),set(['A','B','C']))
         self.assertEqual(set(g.edges()),set([('B','C'), ('A','C')]))
-        g=sgi.core.graph_factory(" A < C; B < C")
+        g=sgi.core.from_string(" A < C; B < C")
         self.assertEqual(set(g.nodes()),set(['A','B','C']))
         self.assertEqual(set(g.edges()),set([('B','C'), ('A','C')]))
 
     def test02(self):
-        g=sgi.core.graph_factory(" node1,node2 < node3")
+        g=sgi.core.from_string(" node1,node2 < node3")
         self.assertEqual(set(g.nodes()),set(['node1', 'node3', 'node2']))
         self.assertEqual(set(g.edges()),set([('node1', 'node3'), ('node2', 'node3')]))
 
     def test03(self):
-        g=sgi.core.graph_factory(" A < B == C < D")
+        g=sgi.core.from_string(" A < B == C < D")
         self.assertEqual(set(g.nodes()),set(['C', 'B', 'D', 'A']))
         self.assertEqual(set(g.edges()),set([('C', 'B'), ('C', 'D'), ('B', 'C'), ('A', 'B')]))
-        g=sgi.core.graph_factory(" A < B ; B == C; C < D")
+        g=sgi.core.from_string(" A < B ; B == C; C < D")
         self.assertEqual(set(g.nodes()),set(['C', 'B', 'D', 'A']))
         self.assertEqual(set(g.edges()),set([('C', 'B'), ('C', 'D'), ('B', 'C'), ('A', 'B')]))
 
@@ -43,5 +43,5 @@ class TestParsing(unittest.TestCase):
 
 if __name__ == '__main__':
     #With verbose
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestParsing)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestFactoryFromString)
     unittest.TextTestRunner(verbosity=2).run(suite)

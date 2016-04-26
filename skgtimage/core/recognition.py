@@ -324,10 +324,7 @@ def greedy_refinement_v3(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching):
                 min_distance=ordered_target_distances[0]
                 matching=(e,ordered_target_candidates[0])
                 mindistance2matching[min_distance]=matching
-        '''
-        for e in remaining_nodes2ordered_candidates:
-            print("Node ",e," neighbors: ",remaining_nodes2ordered_candidates[e], " (dist: ",remaining_nodes2ordered_distances[e],")")
-        '''
+
         for d in sorted(mindistance2matching):
             print("Distance:", d, " Matching = ",mindistance2matching[d])
 

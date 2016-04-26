@@ -8,7 +8,7 @@ import helper
 root_name="image01"
 input_dir="Database/image01/truth"
 #save_dir="Database/image01/kmeans_3classes/"
-save_dir="Database/image01/test_refactoryin/"
+save_dir="Database/image01/test_refactoring/"
 if not os.path.exists(save_dir) : os.mkdir(save_dir)
 
 
@@ -31,15 +31,14 @@ roi=sp.misc.imread(os.path.join(input_dir,"region_file.png"))
 l_image=np.ma.array(image, mask=np.logical_not(roi))
 labelled_image=skgti.utils.kmeans(l_image,3,n_seedings=30)
 
-labelled_image=skgti.core.manage_boundaries(labelled_image,roi)
-helper.save_initial_context(save_dir,"01_context",image,labelled_image,t_graph,p_graph)
+tmp=skgti.core.manage_boundaries(labelled_image,roi) #optional: just for display
+helper.save_initial_context(save_dir,"01_context",image,tmp,t_graph,p_graph)
 
 ###########################################
 # BUILDING GRAPHS
 ###########################################
-built_t_graph,new_residues=skgti.core.topological_graph_from_labels(labelled_image)
-built_p_graph=skgti.core.photometric_graph_from_residues(image,new_residues)
-helper.save_built_graphs(save_dir,"02_",built_t_graph,built_p_graph,new_residues)
+built_t_graph,built_p_graph=skgti.core.from_labelled_image(image,labelled_image,roi,manage_bounds=True)
+helper.save_built_graphs(save_dir,"02_",built_t_graph,built_p_graph)
 
 ###########################################
 # MATCHINGS

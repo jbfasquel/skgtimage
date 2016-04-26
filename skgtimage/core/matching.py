@@ -76,31 +76,6 @@ def nb_automorphisms(graphs):
     return auto
 
 
-
-def remove_node(g,n):
-    edges_to_add=[]
-    succ=g.successors(n)
-    prec=g.predecessors(n)
-    for p in prec:
-        for s in succ:
-            edges_to_add+=[(p,s)]
-    g.remove_node(n)
-    for e in edges_to_add:
-        g.add_edge(e[0],e[1])
-
-
-
-
-def unmatched_nodes(isomorphisms,nodes):
-    unmatchings=set()
-    for n in nodes:
-        is_involved=False
-        for iso in isomorphisms:
-            if n in iso.keys(): is_involved=True
-        if is_involved is False: unmatchings |= set([n])
-    return unmatchings
-
-
 def oirelationships(io):
     oi={}
     for i in io:
@@ -114,15 +89,6 @@ def oirelationships(io):
                 if o not in oi: oi[o]=set([i])
                 else: oi[o] |= set([i])
     return oi
-
-
-
-#############################################################################################
-#############################################################################################
-#####################      NEW    ENERGY                    #################################
-#############################################################################################
-#############################################################################################
-
 
 def energie_dist(query_graph,ref_graph,iso):
     oi=oirelationships(iso)

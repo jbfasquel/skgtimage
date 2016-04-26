@@ -64,7 +64,7 @@ res4=np.array([ [0, 0, 0, 0, 0, 0, 0],
 #SITUATION WITH 'INEXACT GRAPH MATCHING'
 #SEGMENTED REGION C HAS AN OUTLIER (i.e. value '3' surrounded by ones)
 ###############################
-class TestTopologyFactory4(unittest.TestCase):
+class TestTopologyFactory(unittest.TestCase):
     ####################################
     #   EXECUTE TWICE THE FUNCTION: SHOULD NOT MODIFY RESIDUES AND NEW RESIDUES
     ####################################
@@ -94,5 +94,5 @@ class TestTopologyFactory4(unittest.TestCase):
 
 if __name__ == '__main__':
     #With verbose
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestTopologyFactory4)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestTopologyFactory)
     unittest.TextTestRunner(verbosity=2).run(suite)
