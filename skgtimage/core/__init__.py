@@ -33,5 +33,9 @@ from .factory import *
 ##### MATCHING
 from .matching import *
 
+##### MATCHER
+from .matcher import *
+
+
 ##### RECOGNITION
 from .recognition import *

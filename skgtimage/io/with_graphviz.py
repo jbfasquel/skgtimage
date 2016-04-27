@@ -9,6 +9,244 @@ import scipy as sp;from scipy import misc
 import skgtimage as skgti
 
 
+def matching2links(matching):
+    return [ (i,matching[i]) for i in matching]
+
+##############################
+# TOP FUNCTION FOR SAVING ALL "MATCHER" CONTENT
+##############################
+def save_matcher_details(matcher,directory=None,save_all_iso=False):
+    if not os.path.exists(directory) : os.mkdir(directory)
+    ##############################
+    #Saving a priori knowledge
+    ##############################
+    save_graph_refactorying(matcher.ref_t_graph,name="ref_topological",directory=directory+"01_apiori/",tree=True)
+    save_graph_refactorying(matcher.ref_p_graph,name="ref_photometric",directory=directory+"01_apiori/",tree=False)
+    ##############################
+    #Saving built graphs and regions
+    ##############################
+    save_graph_refactorying(matcher.built_t_graph,name="topological",directory=directory+"02_built_topology/",tree=True)
+    save_graphregions_refactorying(matcher.built_t_graph,directory=directory+"02_built_topology/")
+    save_graph_refactorying(matcher.built_p_graph,name="photometric",directory=directory+"02_built_photometry/",tree=False)
+    save_graphregions_refactorying(matcher.built_p_graph,directory=directory+"02_built_photometry/")
+    ##############################
+    #Saving all isomorphisms (if save_all_iso == True)
+    ##############################
+    if save_all_iso:
+        for i in range(0,len(matcher.t_isomorphisms)):
+            matching_links=matching2links(matcher.t_isomorphisms[i])
+            save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="3_iso_t_"+str(i),directory=directory+"03_matching/",tree=True)
+            save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="3_iso_p_"+str(i),directory=directory+"03_matching/",tree=True)
+        for i in range(0,len(matcher.p_isomorphisms)):
+            matching_links=matching2links(matcher.p_isomorphisms[i])
+            save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="3_iso_t_"+str(i),directory=directory+"03_matching/",tree=True)
+            save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="3_iso_p_"+str(i),directory=directory+"03_matching/",tree=True)
+
+    ##############################
+    #Saving common isomorphisms and related energies
+    ##############################
+    #Common isomorphisms
+    for i in range(0,len(matcher.common_isomorphisms)):
+        matching_links=matching2links(matcher.common_isomorphisms[i])
+        save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="2_common_iso_t_"+str(i),directory=directory+"03_matching/",tree=True)
+        save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="2_common_iso_p_"+str(i),directory=directory+"03_matching/",tree=True)
+    #Energies
+    fullfilename=os.path.join(directory+"03_matching/","2_all_energies.csv")
+    csv_file=open(fullfilename, "w")
+    c_writer = csv.writer(csv_file,dialect='excel')
+    c_writer.writerow(["Common iso"]+[i for i in range(0,len(matcher.common_isomorphisms))])
+    c_writer.writerow(['Eie dist']+[i for i in matcher.eie_dist])
+    c_writer.writerow(['Eie sim']+[i for i in matcher.eie_sim])
+    csv_file.close()
+
+    ##############################
+    #Saving matching
+    ##############################
+    matching_links=matching2links(matcher.matching)
+    save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="1_matching_t",directory=directory+"03_matching/",tree=True)
+    save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="1_matching_p",directory=directory+"03_matching/",tree=True)
+
+    ##############################
+    #Saving merging
+    ##############################
+    #All merging
+    matching_links=matching2links(matcher.matching)
+    save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"04_merges/",tree=True)
+    save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"04_merges/",tree=True)
+    #All intermediate graphs
+    for i in range(0,len(matcher.ordered_merges)):
+        save_graph_links_refactorying(matcher.t_graph_merges[i],matcher.ref_t_graph,[matching_links],['red'],name="merging_t_step_"+str(i),directory=directory+"04_merges/",tree=True)
+        save_graph_links_refactorying(matcher.p_graph_merges[i],matcher.ref_p_graph,[matching_links],['red'],name="merging_p_step_"+str(i),directory=directory+"04_merges/",tree=True)
+
+
+    ##############################
+    #Final result
+    ##############################
+    save_graphregions_refactorying(matcher.relabelled_final_t_graph,directory=directory+"05_final/")
+    #print(matcher.relabelled_final_t_graph.nodes())
+    #print(matcher.relabelled_final_t_graph.get_region('A'))
+    #img=matcher.relabelled_final_t_graph.get_region('A')
+
+
+##############################
+# FUNCTION FOR DISPLAY
+##############################
+def plot_graph_links(source_graph,target_graph,link_lists=[],colors=[]):
+    """
+    Plot graph using graphviz and matplotlib
+    :param graph: graph to be plotted
+    :return: None
+    """
+    import matplotlib.pyplot as plt
+    save_graph_links_refactorying(source_graph,target_graph,link_lists,colors,name="tmp")
+    tmp_image=sp.misc.imread("tmp.png")
+    os.remove("tmp.png");os.remove("tmp.svg")
+    plt.imshow(tmp_image);plt.axis('off')
+
+
+def plot_graph_refactorying(graph):
+    """
+    Plot graph using graphviz and matplotlib
+    :param graph: graph to be plotted
+    :return: None
+    """
+    import matplotlib.pyplot as plt
+    save_graph_refactorying(graph,name="tmp")
+    tmp_image=sp.misc.imread("tmp.png")
+    os.remove("tmp.png");os.remove("tmp.svg")
+    plt.imshow(tmp_image);plt.axis('off')
+
+def plot_graph_with_regions_refactorying(graph,nb_rows=1,slice=None):
+    """
+
+    :param graph: graph to be plotted, including image and regions
+    :param nb_rows: for matplotlib layout
+    :param slice: in case of 3D images
+    :return: None
+    """
+    import matplotlib.pyplot as plt
+    nb_elts=1+1+len(graph.nodes())
+    nb_cols=int(np.ceil(float(nb_elts)/nb_rows))
+    #Graph
+    n_plot=1
+    plt.subplot(nb_rows,nb_cols,n_plot)
+    skgti.io.plot_graph_refactorying(graph);plt.title("Graph")
+    #Image
+    n_plot+=1
+    image=graph.get_image()
+    plt.subplot(nb_rows,nb_cols,n_plot)
+    plt.imshow(image,"gray");plt.axis('off');plt.title("Image")
+    #Regions
+    n_plot+=1
+    all_nodes=list(sorted(graph.nodes()))
+    for i in range(0,len(all_nodes)):
+        n=all_nodes[i]
+        region=graph.get_region(n)
+        plt.subplot(nb_rows,nb_cols,n_plot+i)
+        plt.imshow(region,"gray");plt.axis('off');plt.title(str(n))
+
+##############################
+# FUNCTION FOR SAVING
+##############################
+def save_graphregions_refactorying(graph,directory=None,slice=None):
+    if directory is not None:
+        if not os.path.exists(directory) : os.mkdir(directory)
+
+    for n in graph.nodes():
+        current_region=graph.get_region(n)
+        if current_region is not None:
+            if len(current_region.shape) == 2:
+                image_uint8=current_region.astype(np.uint8)
+                max=np.max(image_uint8)
+                if max != 255 : image_uint8=255*(image_uint8.astype(np.float)/max).astype(np.uint8)
+                #print(np.max(current_region),current_region)
+                filename="region_"+str(n)+".png"
+                if directory is not None: filename=os.path.join(directory,filename);
+                sp.misc.imsave(filename, image_uint8)
+
+            else: raise Exception("Not a 2D image")
+
+def save_graph_refactorying(graph,name,directory=None,tree=True,colored_nodes=[]):
+    #To pygraphviz AGraph object
+    a=nx.to_agraph(graph)
+    #Global layout
+    if tree:
+        a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
+        a.layout(prog='dot')
+    else:
+        #a.layout(prog='neato')
+        #a.layout(prog='circo')
+        a.layout(prog='twopi')
+    #Marking nodes corresponding to, e.g., already segmented regions
+    for n in colored_nodes:
+        #a.get_node(n).attr['shape']='box' #Shape
+        #a.get_node(n).attr['color']='red' #Border
+        a.get_node(n).attr['style']='filled';a.get_node(n).attr['fillcolor']='red';
+
+    #Hack for plottin with matplotlib -> png -> numpy array -> imshow
+    if directory is None:
+        a.draw(name+".png") #;a.draw("tmp.svg")
+        a.draw(name+".svg") #;a.draw("tmp.svg")
+    else:
+        if not os.path.exists(directory) : os.mkdir(directory)
+        filename=os.path.join(directory,name)
+        a.draw(filename+".png") #;a.draw("tmp.svg")
+        a.draw(filename+".svg") #;a.draw("tmp.svg")
+
+
+def save_graph_links_refactorying(source_graph,target_graph,link_lists=[],colors=[],name="matching",directory=None,tree=True):
+    """
+    typically invokation (g1,g2,link_lists=[ [(a,b),(c,d)] , [(k,l),(u,v)] ],colors=["red","green"], name=...)
+    :param source_graph:
+    :param target_graph:
+    :param links: new edges (e.g. modeling matching between graph nodes)
+    :param colors:
+    :param name:
+    :param directory:
+    :param tree:
+    :return:
+    """
+    #bi_graph=nx.DiGraph()
+    bi_graph=nx.MultiDiGraph() #To support multiedges: e.g. link (==edge) corresponding to an existing edge
+    bi_graph.add_nodes_from(source_graph)
+    bi_graph.add_edges_from(source_graph.edges())
+    bi_graph.add_nodes_from(target_graph)
+    bi_graph.add_edges_from(target_graph.edges())
+    a=nx.to_agraph(bi_graph)
+
+    #Global layout
+    if tree:
+        a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
+        a.graph_attr['splines']='spline'
+        a.layout(prog='dot')
+    else:
+        #a.layout(prog='neato')
+        #a.layout(prog='circo')
+        a.layout(prog='twopi')
+    #Marking nodes corresponding to, e.g., already segmented regions
+    for i in range(0,len(link_lists)):
+        color=colors[i]
+        links=link_lists[i]
+        for link in links:
+            a.add_edge(link[0],link[1]) #after the layout has been set
+            a.get_edge(link[0],link[1]).attr['color']=color
+            a.get_edge(link[0],link[1]).attr['splines']='curved'
+
+    #Hack for plottin with matplotlib -> png -> numpy array -> imshow
+    if directory is None:
+        a.draw(name+".png") #;a.draw("tmp.svg")
+        a.draw(name+".svg") #;a.draw("tmp.svg")
+    else:
+        if not os.path.exists(directory) : os.mkdir(directory)
+        filename=os.path.join(directory,name)
+        a.draw(filename+".png") #;a.draw("tmp.svg")
+        a.draw(filename+".svg") #;a.draw("tmp.svg")
+
+
+#############################
+# OLD OLD OLD
+#############################
+
 def save_to_csv(graph,dir=None,name="intensities"):
     if dir is None:
         fullfilename=name+".csv"
@@ -115,6 +353,9 @@ def plot_graphs_regions(graphs,regions,nodes=None,tree=True):
         plt.subplot(nb_rows,nb_cols,current_index)
         plt.imshow(regions[i],cmap="gray",vmin=0,vmax=1,interpolation="nearest");plt.axis('off');plt.title("Region "+str(i))
 
+
+
+
 def save_graph(name,graph,nodes=None,tree=True,directory=None,save_regions=False,save_residues=False):
     #To pygraphviz AGraph object
     a=nx.to_agraph(graph)
@@ -129,7 +370,8 @@ def save_graph(name,graph,nodes=None,tree=True,directory=None,save_regions=False
         a.layout(prog='twopi')
     #Marking nodes corresponding to, e.g., already segmented regions
     specific_nodes=nodes
-    if specific_nodes is None: specific_nodes=graph.segmented_nodes()
+    #if specific_nodes is None: specific_nodes=graph.segmented_nodes()
+    if specific_nodes is None: specific_nodes=graph.nodes()
     for n in specific_nodes:
         #a.get_node(n).attr['shape']='box' #Shape
         #a.get_node(n).attr['color']='red' #Border
@@ -145,7 +387,7 @@ def save_graph(name,graph,nodes=None,tree=True,directory=None,save_regions=False
         a.draw(filename+".png") #;a.draw("tmp.svg")
         a.draw(filename+".svg") #;a.draw("tmp.svg")
     #Save mean intensities
-    save_to_csv(graph,directory,"mean_intensities")
+    #save_to_csv(graph,directory,"mean_intensities")
     #Save regions
     if save_regions:
         for n in graph.nodes():
@@ -180,6 +422,14 @@ def plot_graph_matching(graph1,graph2,matching,tree=True):
     os.remove("tmp.svg")
     plt.imshow(tmp_image);plt.axis('off')
 
+def plot_graph_matching_and_merge(graph1,graph2,matching,merges,tree=True):
+    import matplotlib.pyplot as plt
+    save_graph_matching_and_merge('tmp',graph1,graph2,matching,merges,tree,directory=None)
+    tmp_image=sp.misc.imread("tmp.png")
+    os.remove("tmp.png")
+    os.remove("tmp.svg")
+    plt.imshow(tmp_image);plt.axis('off')
+
 
 def plot_graphs_matching(graphs1,graphs2,matching,tree=True,nb_rows=1,titles=None):
     #nb_rows=1
@@ -204,6 +454,52 @@ def plot_graph_matchings(graph1,graph2,matchings,tree=True,nb_rows=1):
         plot_graph_matching(graph1,graph2,matchings[i],tree)
 
 
+def save_graph_matching_and_merge(name,graph1,graph2,matching,merges,tree=True,directory=None,save_regions=False):
+    bi_graph=nx.DiGraph()
+    bi_graph.add_nodes_from(graph1)
+    bi_graph.add_edges_from(graph1.edges())
+    bi_graph.add_nodes_from(graph2)
+    bi_graph.add_edges_from(graph2.edges())
+
+    a=nx.to_agraph(bi_graph)
+
+    #Global layout
+    if tree:
+        a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
+        a.graph_attr['splines']='spline'
+        a.layout(prog='dot')
+    else:
+        #a.layout(prog='neato')
+        #a.layout(prog='circo')
+        a.layout(prog='twopi')
+    #Marking nodes corresponding to, e.g., already segmented regions
+    for k in matching.keys():
+        if type(matching[k])!=set:
+            a.add_edge(k,matching[k]) #after the layout has been set
+            a.get_edge(k,matching[k]).attr['color']='red'
+            a.get_edge(k,matching[k]).attr['splines']='curved'
+        else:
+            for l in matching[k]:
+                a.add_edge(k,l) #after the layout has been set
+                a.get_edge(k,l).attr['color']='red'
+                a.get_edge(k,l).attr['splines']='curved'
+
+    #Merges
+    for m in merges:
+        a.add_edge(m[0],m[1]) #after the layout has been set
+        a.get_edge(m[0],m[1]).attr['color']='green'
+        a.get_edge(m[0],m[1]).attr['splines']='curved'
+
+
+    #Hack for plottin with matplotlib -> png -> numpy array -> imshow
+    if directory is None:
+        a.draw(name+".png") #;a.draw("tmp.svg")
+        a.draw(name+".svg") #;a.draw("tmp.svg")
+    else:
+        if not os.path.exists(directory) : os.mkdir(directory)
+        filename=os.path.join(directory,name)
+        a.draw(name+".png") #;a.draw("tmp.svg")
+        a.draw(name+".svg") #;a.draw("tmp.svg")
 
 def save_graph_matching(name,graph1,graph2,matching,tree=True,directory=None,save_regions=False):
     bi_graph=nx.DiGraph()

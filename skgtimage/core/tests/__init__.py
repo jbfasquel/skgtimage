@@ -15,4 +15,5 @@ from .test_recognition_case3 import *
 from .test_recognition_case4 import *
 from .test_factory_from_label_region import *
 from .test_factory_topology import *
+from .test_identification1 import *
 from .test_transitive_closure_reduction import *

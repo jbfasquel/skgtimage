@@ -58,6 +58,7 @@ def from_string(desc,g=None):
 def from_regions(image,regions):
     built_t_graph,new_residues=topological_graph_from_residues(regions)
     built_p_graph=photometric_graph_from_residues(image,new_residues)
+    built_t_graph.set_image(image);built_p_graph.set_image(image)
     return built_t_graph,built_p_graph
 
 def from_labelled_image(image,labelled_image,roi=None,manage_bounds=False,thickness=2):
