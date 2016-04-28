@@ -40,8 +40,8 @@ id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,mana
 ##########
 '''
 #Prepare matcher
-#tmp_matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,filtering=True,thickness=2)
-tmp_matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,filtering=False,thickness=2)
+#tmp_matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=True)
+tmp_matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False)
 #Matching
 tmp_matcher.compute_maching(True)
 #io

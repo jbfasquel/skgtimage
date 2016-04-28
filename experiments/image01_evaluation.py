@@ -43,34 +43,6 @@ print("Our approach vs truth (good classif rate)",classif_result)
 
 
 ######################################
-#MEANSHIFT 3 CLASSES
-######################################
-
-save_dir="Database/image01/meanshift_3classes_vs_3expected/"
-image_gray=sp.misc.imread(os.path.join(save_dir,"01_context_image.png")) #;plt.imshow(image_gray,"gray");plt.show();quit()
-######
-# COMPARISON WITH TRUTH
-classif,region2sim=helper.compared_with_truth(image_gray,t_desc,p_desc,root_dir+"truth",save_dir+"06_relabelled_built_t_graph",save_dir+"07_eval_classif/")
-print("%%%%%%%%%%%%%%%%%%%%%%")
-print("Evaluation of classification of all region vs truth")
-print("Our approach vs truth (good classif rate): ",classif)
-print("Our approach vs truth (similarities): ", region2sim)
-######
-# COMPARISON WITH RAW SEGMENTATION
-segmentation=sp.misc.imread(os.path.join(save_dir,"01_context_segmentation.png")) #plt.imshow(segmentation,"gray");plt.show();quit()
-truth_t_graph,truth_p_graph=skgti.io.from_dir(t_desc,p_desc,image_gray,root_dir+"truth")
-result_t_graph,result_p_graph=skgti.io.from_dir(t_desc,p_desc,image_gray,save_dir+"06_relabelled_built_t_graph")
-
-related_truth=skgti.utils.combine(truth_t_graph,['file','paper','text'],[0,127,255])
-related_result=skgti.utils.combine(result_t_graph,['file','paper','text'],[0,127,255])
-
-classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation(segmentation,related_result,related_truth,truth_t_graph,save_dir+"07_eval_vs_raw_seg/",[0,127,255],['file','paper','text'])
-print("%%%%%%%%%%%%%%%%%%%%%%")
-print("Ability of removing segmentation imperfection")
-print("Raw segmentation vs truth (good classif rate)",classif_rawsegmentation)
-print("Our approach vs truth (good classif rate)",classif_result)
-
-######################################
 #MEANSHIFT 4 CLASSES
 ######################################
 save_dir="Database/image01/meanshift_4classes_vs_3expected/"

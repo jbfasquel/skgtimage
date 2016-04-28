@@ -102,7 +102,7 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     #All merging
     matching_links=matching2links(matcher.matching)
     save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"05_merges/",tree=True)
-    save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"05_merges/",tree=True)
+    save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_p",directory=directory+"05_merges/",tree=True)
     #All intermediate graphs
     for i in range(0,len(matcher.ordered_merges)):
         save_graph_links_refactorying(matcher.t_graph_merges[i],matcher.ref_t_graph,[matching_links],['red'],name="merging_t_step_"+str(i),directory=directory+"05_merges/",tree=True)

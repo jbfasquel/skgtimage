@@ -76,24 +76,6 @@ id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=None,man
 #id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=False,thickness=2,filtering=False,verbose=False)
 
 ##########
-# VERSION 2
-##########
-'''
-#Prepare matcher
-#tmp_matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,filtering=True,thickness=2)
-tmp_matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,filtering=False,thickness=2)
-#Matching
-tmp_matcher.compute_maching(True)
-#io
-skgti.io.pickle_matcher(tmp_matcher,save_dir+"test.pkl")
-matcher=skgti.io.unpickle_matcher(save_dir+"test.pkl")
-#Merge
-matcher.compute_merge()
-#Final graph
-matcher.update_final_graph()
-id2r=matcher.get_id2regions()
-'''
-##########
 # SAVING DETAILS
 ##########
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False,slices=range(0,image.shape[2]))

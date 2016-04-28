@@ -78,6 +78,8 @@ class IPMatcher:
 
     def update_final_graph(self):
         (self.relabelled_final_t_graph,self.relabelled_final_p_graph)=rename_nodes([self.final_t_graph,self.final_p_graph],self.matching)
+        self.relabelled_final_t_graph.set_image(self.query_t_graph.get_image())
+        self.relabelled_final_p_graph.set_image(self.query_t_graph.get_image())
 
     def get_id2regions(self):
         get_id2regions={}
