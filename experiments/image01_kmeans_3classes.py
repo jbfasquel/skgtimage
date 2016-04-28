@@ -38,7 +38,6 @@ print("Raw segmentation vs truth: ",classif_rawsegmentation, "(proposed method G
 '''
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
 helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)
-
 '''
 tmp=skgti.core.manage_boundaries(labelled_image,roi) #optional: just for display
 helper.save_initial_context(save_dir,"01_context",image,tmp,t_graph,p_graph)
