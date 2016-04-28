@@ -3,6 +3,18 @@
 #Licence: BSD 3 clause
 
 import networkx as nx
+import pickle
+
+def pickle_matcher(matcher,filename):
+    file=open(filename, 'wb')
+    pickle.dump(matcher,file)
+    file.close()
+
+def unpickle_matcher(filename):
+    file=open(filename, 'rb')
+    matcher=pickle.load(file)
+    return matcher
+
 
 def save_graph_pickle(filename,g):
     nx.write_gpickle(g, filename)

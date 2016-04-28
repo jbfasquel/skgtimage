@@ -93,7 +93,7 @@ class IPGraph:
         self.i_graph=None
         self.p_graph=None
 
-
+'''
 #test
 import numpy as np
 image=np.ones((5,5))
@@ -106,3 +106,4 @@ ig.add_node(0)
 #print(ig.nodes())
 print(ig)
 print(ig.get_region(0))
+'''

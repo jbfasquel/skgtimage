@@ -302,6 +302,13 @@ def greedy_refinement_v3(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching):
     remaining_nodes=set(t_graph.nodes())-initial_matched_nodes
     print("Remaining nodes",remaining_nodes)
     modification_historisation=[]
+
+    ###################
+    #if no merge is needed
+    if len(remaining_nodes)==0:
+        return t_graph.copy(),p_graph.copy(),modification_historisation
+
+
     ###################
     #Start test
     ###################

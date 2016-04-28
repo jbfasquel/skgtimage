@@ -1,14 +1,15 @@
-from skgtimage.core.recognition import recognize_version2,greedy_refinement_v3,rename_nodes
+from skgtimage.core.recognition import recognize_version2,greedy_refinement_v3,remove_smallest_leaf_regions,rename_nodes
 from skgtimage.core.factory import from_string,from_labelled_image
+import copy
 
-def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,verbose=False):
+def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=False):
     #A priori graphs
     t_graph=from_string(t_desc)
     p_graph=from_string(p_desc)
     #Built graphs
     built_t_graph,built_p_graph=from_labelled_image(image,labelled_image,roi,manage_bounds)
     #Perform recognition by inexact-graph matching
-    matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph)
+    matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering)
     matcher.compute_maching(verbose)
     matcher.compute_merge()
     matcher.update_final_graph()
@@ -16,12 +17,27 @@ def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=
     #Return
     return id2r,matcher
 
-
+def matcher_factory(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False):
+    #A priori graphs
+    t_graph=from_string(t_desc)
+    p_graph=from_string(p_desc)
+    #Built graphs
+    built_t_graph,built_p_graph=from_labelled_image(image,labelled_image,roi,manage_bounds)
+    #Prepare matcher
+    matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering)
+    return matcher
 
 class IPMatcher:
-    def __init__(self,built_t_graph,built_p_graph,ref_t_graph,ref_p_graph):
+    def __init__(self,built_t_graph,built_p_graph,ref_t_graph,ref_p_graph,filtering=False):
         self.built_t_graph=built_t_graph
         self.built_p_graph=built_p_graph
+        self.query_t_graph=copy.deepcopy(built_t_graph)
+        self.query_p_graph=copy.deepcopy(built_p_graph)
+
+        self.filtering=filtering
+        if self.filtering:
+            remove_smallest_leaf_regions(self.query_t_graph,self.query_p_graph)
+
         self.ref_t_graph=ref_t_graph
         self.ref_p_graph=ref_p_graph
         #Initial matching and related isomorphisms
@@ -44,13 +60,13 @@ class IPMatcher:
         self.relabelled_final_p_graph=None
 
     def compute_maching(self,verbose=False):
-        self.matching,self.common_isomorphisms,self.t_isomorphisms,self.p_isomorphisms,self.eie_sim,self.eie_dist=recognize_version2(self.built_t_graph,
+        self.matching,self.common_isomorphisms,self.t_isomorphisms,self.p_isomorphisms,self.eie_sim,self.eie_dist=recognize_version2(self.query_t_graph,
                                                                                                        self.ref_t_graph,
-                                                                                                       self.built_p_graph,
+                                                                                                       self.query_p_graph,
                                                                                                        self.ref_p_graph,verbose)
     def compute_merge(self):
-        self.final_t_graph,self.final_p_graph,histo=greedy_refinement_v3(self.built_t_graph,
-                                                                          self.built_p_graph,
+        self.final_t_graph,self.final_p_graph,histo=greedy_refinement_v3(self.query_t_graph,
+                                                                          self.query_p_graph,
                                                                           self.ref_t_graph,
                                                                           self.ref_p_graph,self.matching)
         self.t_graph_merges=[i[0] for i in histo]

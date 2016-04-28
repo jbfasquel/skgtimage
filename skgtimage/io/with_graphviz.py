@@ -15,8 +15,29 @@ def matching2links(matching):
 ##############################
 # TOP FUNCTION FOR SAVING ALL "MATCHER" CONTENT
 ##############################
-def save_matcher_details(matcher,directory=None,save_all_iso=False):
+def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directory=None,save_all_iso=False,slices=[]):
     if not os.path.exists(directory) : os.mkdir(directory)
+
+    ##############################
+    #Image and labelled_image
+    ##############################
+    context_dir=directory+"00_context/"
+    if not os.path.exists(context_dir) : os.mkdir(context_dir)
+    if image is not None:
+        if roi is not None:
+            l_image=np.ma.array(image.astype(np.float), mask=np.logical_not(roi)).filled(np.min(image)-1)
+        if len(image.shape) == 2:
+            __save_image2d__(image,os.path.join(context_dir,"image.png"))
+            __save_image2d__(l_image,os.path.join(context_dir,"image_roi.png"))
+        elif len(image.shape) == 3:
+            __save_image3d__(image,context_dir+"image/",slices,True)
+            __save_image3d__(l_image,context_dir+"image_roi/",slices,True)
+    if labelled_image is not None:
+        if len(labelled_image.shape) == 2:
+            __save_image2d__(labelled_image,os.path.join(context_dir,"labelled_image.png"))
+        elif len(labelled_image.shape) == 3:
+            __save_image3d__(labelled_image,context_dir+"labelled_image/",slices,True)
+
     ##############################
     #Saving a priori knowledge
     ##############################
@@ -26,21 +47,30 @@ def save_matcher_details(matcher,directory=None,save_all_iso=False):
     #Saving built graphs and regions
     ##############################
     save_graph_refactorying(matcher.built_t_graph,name="topological",directory=directory+"02_built_topology/",tree=True)
-    save_graphregions_refactorying(matcher.built_t_graph,directory=directory+"02_built_topology/")
+    save_graphregions_refactorying(matcher.built_t_graph,directory=directory+"02_built_topology/",slices=slices)
     save_graph_refactorying(matcher.built_p_graph,name="photometric",directory=directory+"02_built_photometry/",tree=False)
-    save_graphregions_refactorying(matcher.built_p_graph,directory=directory+"02_built_photometry/")
+    save_graphregions_refactorying(matcher.built_p_graph,directory=directory+"02_built_photometry/",slices=slices)
+    save_intensities(matcher.built_p_graph,directory=directory+"02_built_photometry/")
+    ##############################
+    #Saving filtered built graphs and regions
+    ##############################
+    save_graph_refactorying(matcher.query_t_graph,name="topological",directory=directory+"03_filtered_built_topology/",tree=True)
+    save_graphregions_refactorying(matcher.query_t_graph,directory=directory+"03_filtered_built_topology/",slices=slices)
+    save_graph_refactorying(matcher.query_p_graph,name="photometric",directory=directory+"03_filtered_built_photometry/",tree=False)
+    save_graphregions_refactorying(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/",slices=slices)
+    save_intensities(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/")
     ##############################
     #Saving all isomorphisms (if save_all_iso == True)
     ##############################
     if save_all_iso:
         for i in range(0,len(matcher.t_isomorphisms)):
             matching_links=matching2links(matcher.t_isomorphisms[i])
-            save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="3_iso_t_"+str(i),directory=directory+"03_matching/",tree=True)
-            save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="3_iso_p_"+str(i),directory=directory+"03_matching/",tree=True)
+            save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="3_iso_t_"+str(i),directory=directory+"04_matching/",tree=True)
+            save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="3_iso_p_"+str(i),directory=directory+"04_matching/",tree=True)
         for i in range(0,len(matcher.p_isomorphisms)):
             matching_links=matching2links(matcher.p_isomorphisms[i])
-            save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="3_iso_t_"+str(i),directory=directory+"03_matching/",tree=True)
-            save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="3_iso_p_"+str(i),directory=directory+"03_matching/",tree=True)
+            save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="3_iso_t_"+str(i),directory=directory+"04_matching/",tree=True)
+            save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="3_iso_p_"+str(i),directory=directory+"04_matching/",tree=True)
 
     ##############################
     #Saving common isomorphisms and related energies
@@ -48,10 +78,10 @@ def save_matcher_details(matcher,directory=None,save_all_iso=False):
     #Common isomorphisms
     for i in range(0,len(matcher.common_isomorphisms)):
         matching_links=matching2links(matcher.common_isomorphisms[i])
-        save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="2_common_iso_t_"+str(i),directory=directory+"03_matching/",tree=True)
-        save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="2_common_iso_p_"+str(i),directory=directory+"03_matching/",tree=True)
+        save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="2_common_iso_t_"+str(i),directory=directory+"04_matching/",tree=True)
+        save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="2_common_iso_p_"+str(i),directory=directory+"04_matching/",tree=True)
     #Energies
-    fullfilename=os.path.join(directory+"03_matching/","2_all_energies.csv")
+    fullfilename=os.path.join(directory+"04_matching/","2_all_energies.csv")
     csv_file=open(fullfilename, "w")
     c_writer = csv.writer(csv_file,dialect='excel')
     c_writer.writerow(["Common iso"]+[i for i in range(0,len(matcher.common_isomorphisms))])
@@ -63,31 +93,29 @@ def save_matcher_details(matcher,directory=None,save_all_iso=False):
     #Saving matching
     ##############################
     matching_links=matching2links(matcher.matching)
-    save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="1_matching_t",directory=directory+"03_matching/",tree=True)
-    save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="1_matching_p",directory=directory+"03_matching/",tree=True)
+    save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="1_matching_t",directory=directory+"04_matching/",tree=True)
+    save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="1_matching_p",directory=directory+"04_matching/",tree=True)
 
     ##############################
     #Saving merging
     ##############################
     #All merging
     matching_links=matching2links(matcher.matching)
-    save_graph_links_refactorying(matcher.built_t_graph,matcher.ref_t_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"04_merges/",tree=True)
-    save_graph_links_refactorying(matcher.built_p_graph,matcher.ref_p_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"04_merges/",tree=True)
+    save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"05_merges/",tree=True)
+    save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"05_merges/",tree=True)
     #All intermediate graphs
     for i in range(0,len(matcher.ordered_merges)):
-        save_graph_links_refactorying(matcher.t_graph_merges[i],matcher.ref_t_graph,[matching_links],['red'],name="merging_t_step_"+str(i),directory=directory+"04_merges/",tree=True)
-        save_graph_links_refactorying(matcher.p_graph_merges[i],matcher.ref_p_graph,[matching_links],['red'],name="merging_p_step_"+str(i),directory=directory+"04_merges/",tree=True)
+        save_graph_links_refactorying(matcher.t_graph_merges[i],matcher.ref_t_graph,[matching_links],['red'],name="merging_t_step_"+str(i),directory=directory+"05_merges/",tree=True)
+        save_graph_links_refactorying(matcher.p_graph_merges[i],matcher.ref_p_graph,[matching_links],['red'],name="merging_p_step_"+str(i),directory=directory+"05_merges/",tree=True)
 
 
     ##############################
     #Final result
     ##############################
-    save_graphregions_refactorying(matcher.relabelled_final_t_graph,directory=directory+"05_final/")
-    #print(matcher.relabelled_final_t_graph.nodes())
-    #print(matcher.relabelled_final_t_graph.get_region('A'))
-    #img=matcher.relabelled_final_t_graph.get_region('A')
-
-
+    save_graph_refactorying(matcher.relabelled_final_t_graph,name="topological",directory=directory+"06_final/",tree=True)
+    save_graph_refactorying(matcher.relabelled_final_p_graph,name="photometric",directory=directory+"06_final/",tree=True)
+    save_graphregions_refactorying(matcher.relabelled_final_t_graph,directory=directory+"06_final/",slices=slices)
+    save_intensities(matcher.relabelled_final_p_graph,directory=directory+"06_final/")
 ##############################
 # FUNCTION FOR DISPLAY
 ##############################
@@ -148,23 +176,61 @@ def plot_graph_with_regions_refactorying(graph,nb_rows=1,slice=None):
 ##############################
 # FUNCTION FOR SAVING
 ##############################
-def save_graphregions_refactorying(graph,directory=None,slice=None):
+def save_intensities(graph,directory=None,filename="intensities"):
+    if not os.path.exists(directory) : os.mkdir(directory)
+    csv_file=open(os.path.join(directory,filename+".csv"), "w")
+    c_writer = csv.writer(csv_file,dialect='excel')
+    for n in graph.nodes():
+        c_writer.writerow([n]+[graph.get_mean_residue_intensity(n)])
+    csv_file.close()
+
+
+def __save_image2d__(image,filename,do_rescale=True):
+    mini,maxi=np.min(image),np.max(image)
+    if (maxi-mini != 0) and do_rescale:
+        tmp_image=(image.astype(np.float)-mini)*(255.0)/(maxi-mini)
+        sp.misc.imsave(filename, tmp_image.astype(np.uint8))
+    else:
+        sp.misc.imsave(filename, image.astype(np.uint8))
+
+def __save_image3d__(image,directory,slices=[],do_rescale=True):
+    #Directory
+    if not os.path.exists(directory) : os.mkdir(directory)
+    #Rescale
+    mini,maxi=np.min(image),np.max(image)
+    if (maxi-mini != 0) and do_rescale:
+        tmp_image=(image.astype(np.float)-mini)*(255.0)/(maxi-mini)
+    else:
+        tmp_image=image
+    #Save
+    for s in slices:
+        current_slice=tmp_image[:,:,s]
+        filename=os.path.join(directory,"slice_"+str(s)+".png");
+        __save_image2d__(current_slice,filename,False)
+
+def save_graphregions_refactorying(graph,directory=None,slices=[]):
     if directory is not None:
         if not os.path.exists(directory) : os.mkdir(directory)
 
     for n in graph.nodes():
         current_region=graph.get_region(n)
         if current_region is not None:
+            #Save in generic npy format
+            filename="region_"+str(n)+".npy"
+            if directory is not None: filename=os.path.join(directory,filename);
+            np.save(filename,current_region)
+            #Save in human viewable formats: png for 2D images, png slices for 3D images
             if len(current_region.shape) == 2:
-                image_uint8=current_region.astype(np.uint8)
-                max=np.max(image_uint8)
-                if max != 255 : image_uint8=255*(image_uint8.astype(np.float)/max).astype(np.uint8)
-                #print(np.max(current_region),current_region)
                 filename="region_"+str(n)+".png"
                 if directory is not None: filename=os.path.join(directory,filename);
-                sp.misc.imsave(filename, image_uint8)
+                __save_image2d__(current_region,filename)
 
-            else: raise Exception("Not a 2D image")
+            elif len(current_region.shape) == 3:
+                slice_dir=directory+"region_"+str(n)+"/"
+                if not os.path.exists(slice_dir) : os.mkdir(slice_dir)
+                __save_image3d__(current_region,slice_dir,slices,True)
+
+            else: raise Exception("Not a 2D nor a 3D image")
 
 def save_graph_refactorying(graph,name,directory=None,tree=True,colored_nodes=[]):
     #To pygraphviz AGraph object
