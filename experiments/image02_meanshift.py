@@ -23,8 +23,11 @@ id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,mana
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,True,slices=[45])
 '''
-# EVALUATION
+matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
+# EVALUATION VS TRUTH
 import helper
 classif,region2sim=helper.compared_with_truth(image,t_desc,p_desc,truth_dir,save_dir+"06_final",save_dir+"07_eval_classif/",slices=[45])
 print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = " , region2sim)
 
+# EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
+helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)

@@ -17,6 +17,7 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
     l_truth_image=np.ma.array(truth_image, mask=np.logical_not(roi))
 
     #Reference result
+    matcher.relabelled_final_t_graph.set_image(image) #hack to save mixed region residues
     result_image=skgti.io.generate_single_image(matcher.relabelled_final_t_graph,res2int)
     l_result_image=np.ma.array(result_image, mask=np.logical_not(roi))
     ref_classif=skgti.utils.goodclassification_rate(l_result_image,l_truth_image)
