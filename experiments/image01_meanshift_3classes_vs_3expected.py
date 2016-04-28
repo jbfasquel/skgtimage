@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import skgtimage as skgti
 
 truth_dir="Database/image01/truth/"
-save_dir="Database/image01/meanshift_3classes_vs_3expected_refactorying/"
+save_dir="Database/image01/meanshift_3classes_vs_3expected/"
 
 
 t_desc="text<paper<file"

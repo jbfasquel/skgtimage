@@ -26,6 +26,34 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
     performances=[]
     for i in range(0,len(matcher.common_isomorphisms)):
         current_matching=matcher.common_isomorphisms[i]
+        #tmp_directory
+        tmp_dir=result_dir+"iso_"+str(i)+"/" #;if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
+        matching_links=skgti.io.matching2links(current_matching)
+        skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
+
+        final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v3(matcher.query_t_graph,
+                                                                      matcher.query_p_graph,
+                                                                      matcher.ref_t_graph,
+                                                                      matcher.ref_p_graph,current_matching)
+
+        ordered_merges=[i[2] for i in histo]
+        skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_t",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_p",directory=tmp_dir,tree=True)
+
+
+        (relabelled_final_t_graph,relabelled_final_p_graph)=skgti.core.rename_nodes([final_t_graph,final_p_graph],current_matching)
+        relabelled_final_t_graph.set_image(image) #hack to save mixed region residues
+        # GENERATING IMAGES COMBINING REGIONS RESIDUES WITH SPECIFICS INTENSITIES
+        result_image=skgti.io.generate_single_image(relabelled_final_t_graph,res2int)
+        l_result_image=np.ma.array(result_image, mask=np.logical_not(roi))
+        #####
+        # COMPUTING THE CLASSIFICATION RATE
+        classif=skgti.utils.goodclassification_rate(l_result_image,l_truth_image)
+        classif=np.round(classif,3)
+        performances+=[classif]
+
+        '''
         try :
             #tmp_directory
             tmp_dir=result_dir+"iso_"+str(i)+"/" #;if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
@@ -52,15 +80,11 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
             # COMPUTING THE CLASSIFICATION RATE
             classif=skgti.utils.goodclassification_rate(l_result_image,l_truth_image)
             classif=np.round(classif,3)
-
-            #save_built_graphs(save_dir,"06_relabelled_"+str(i)+"_",relabelled_final_t_graph,relabelled_final_p_graph)
-            #classif,region2sim=compared_with_truth(image,t_desc,p_desc,truth_dir,save_dir+"06_relabelled_"+str(i)+"_built_t_graph",save_dir+"07_eval_classif_"+str(i)+"/")
-            #print("Eie dis: ",eie_dist[i]," - Eie sim: ", eie_sim[i], " --> classif: " , classif)
             performances+=[classif]
         except Exception as e:
             print("exception ",e)
             performances+=["Failed"]
-
+        '''
     #####
     # SAVING TO CSV
     import csv
