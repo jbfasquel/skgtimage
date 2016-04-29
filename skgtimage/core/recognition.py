@@ -87,9 +87,10 @@ def recognize_version2(query_t_graph,ref_t_graph,query_p_graph,ref_p_graph,retur
     #1) Find common matchings
     ###########################################################################################
     common_isomorphisms,isomorphisms_per_graph=generate_common_subgraphisomorphisms([query_t_graph,query_p_graph],[ref_t_graph,ref_p_graph])
-    #print("Nb t iso",len(isomorphisms_per_graph[0]))
-    #print("Nb p iso",len(isomorphisms_per_graph[1]))
-    #print("Nb common iso",len(common_isomorphisms))
+    print("Nb t iso",len(isomorphisms_per_graph[0]))
+    print("Nb p iso",len(isomorphisms_per_graph[1]))
+    print("Nb common iso",len(common_isomorphisms))
+    if len(common_isomorphisms) == 0: raise Exception("No common iso")
     ###########################################################################################
     #2) Compute energies regarding similarities
     ###########################################################################################

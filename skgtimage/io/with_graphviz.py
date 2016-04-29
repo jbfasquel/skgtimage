@@ -75,47 +75,51 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     ##############################
     #Saving common isomorphisms and related energies
     ##############################
-    #Common isomorphisms
-    for i in range(0,len(matcher.common_isomorphisms)):
-        matching_links=matching2links(matcher.common_isomorphisms[i])
-        save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="2_common_iso_t_"+str(i),directory=directory+"04_matching/",tree=True)
-        save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="2_common_iso_p_"+str(i),directory=directory+"04_matching/",tree=True)
-    #Energies
-    fullfilename=os.path.join(directory+"04_matching/","2_all_energies.csv")
-    csv_file=open(fullfilename, "w")
-    c_writer = csv.writer(csv_file,dialect='excel')
-    c_writer.writerow(["Common iso"]+[i for i in range(0,len(matcher.common_isomorphisms))])
-    c_writer.writerow(['Eie dist']+[i for i in matcher.eie_dist])
-    c_writer.writerow(['Eie sim']+[i for i in matcher.eie_sim])
-    csv_file.close()
+    if matcher.common_isomorphisms is not None:
+        #Common isomorphisms
+        for i in range(0,len(matcher.common_isomorphisms)):
+            matching_links=matching2links(matcher.common_isomorphisms[i])
+            save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="2_common_iso_t_"+str(i),directory=directory+"04_matching/",tree=True)
+            save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="2_common_iso_p_"+str(i),directory=directory+"04_matching/",tree=True)
+        #Energies
+        fullfilename=os.path.join(directory+"04_matching/","2_all_energies.csv")
+        csv_file=open(fullfilename, "w")
+        c_writer = csv.writer(csv_file,dialect='excel')
+        c_writer.writerow(["Common iso"]+[i for i in range(0,len(matcher.common_isomorphisms))])
+        c_writer.writerow(['Eie dist']+[i for i in matcher.eie_dist])
+        c_writer.writerow(['Eie sim']+[i for i in matcher.eie_sim])
+        csv_file.close()
 
     ##############################
     #Saving matching
     ##############################
-    matching_links=matching2links(matcher.matching)
-    save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="1_matching_t",directory=directory+"04_matching/",tree=True)
-    save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="1_matching_p",directory=directory+"04_matching/",tree=True)
+    if matcher.matching is not None:
+        matching_links=matching2links(matcher.matching)
+        save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="1_matching_t",directory=directory+"04_matching/",tree=True)
+        save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="1_matching_p",directory=directory+"04_matching/",tree=True)
 
     ##############################
     #Saving merging
     ##############################
-    #All merging
-    matching_links=matching2links(matcher.matching)
-    save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"05_merges/",tree=True)
-    save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_p",directory=directory+"05_merges/",tree=True)
-    #All intermediate graphs
-    for i in range(0,len(matcher.ordered_merges)):
-        save_graph_links_refactorying(matcher.t_graph_merges[i],matcher.ref_t_graph,[matching_links],['red'],name="merging_t_step_"+str(i),directory=directory+"05_merges/",tree=True)
-        save_graph_links_refactorying(matcher.p_graph_merges[i],matcher.ref_p_graph,[matching_links],['red'],name="merging_p_step_"+str(i),directory=directory+"05_merges/",tree=True)
+    if matcher.matching is not None:
+        #All merging
+        matching_links=matching2links(matcher.matching)
+        save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"05_merges/",tree=True)
+        save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_p",directory=directory+"05_merges/",tree=True)
+        #All intermediate graphs
+        for i in range(0,len(matcher.ordered_merges)):
+            save_graph_links_refactorying(matcher.t_graph_merges[i],matcher.ref_t_graph,[matching_links],['red'],name="merging_t_step_"+str(i),directory=directory+"05_merges/",tree=True)
+            save_graph_links_refactorying(matcher.p_graph_merges[i],matcher.ref_p_graph,[matching_links],['red'],name="merging_p_step_"+str(i),directory=directory+"05_merges/",tree=True)
 
 
     ##############################
     #Final result
     ##############################
-    save_graph_refactorying(matcher.relabelled_final_t_graph,name="topological",directory=directory+"06_final/",tree=True)
-    save_graph_refactorying(matcher.relabelled_final_p_graph,name="photometric",directory=directory+"06_final/",tree=True)
-    save_graphregions_refactorying(matcher.relabelled_final_t_graph,directory=directory+"06_final/",slices=slices)
-    save_intensities(matcher.relabelled_final_p_graph,directory=directory+"06_final/")
+    if matcher.relabelled_final_t_graph is not None:
+        save_graph_refactorying(matcher.relabelled_final_t_graph,name="topological",directory=directory+"06_final/",tree=True)
+        save_graph_refactorying(matcher.relabelled_final_p_graph,name="photometric",directory=directory+"06_final/",tree=True)
+        save_graphregions_refactorying(matcher.relabelled_final_t_graph,directory=directory+"06_final/",slices=slices)
+        save_intensities(matcher.relabelled_final_p_graph,directory=directory+"06_final/")
 ##############################
 # FUNCTION FOR DISPLAY
 ##############################
