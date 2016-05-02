@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy as sp;from scipy import misc
 import skgtimage as skgti
 
-save_dir="Database/image00/test_refactorying3d/"
+save_dir="Database/image00/test01_3D/"
 if not os.path.exists(save_dir) : os.mkdir(save_dir)
 
 # IMAGE

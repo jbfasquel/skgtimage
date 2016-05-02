@@ -8,7 +8,6 @@ import helper
 truth_dir="Database/image01/truth/"
 save_dir="Database/image01/kmeans_3classes/"
 
-
 t_desc="text<paper<file"
 p_desc="text<file<paper"
 
@@ -24,9 +23,11 @@ id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,mana
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 #matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
-# EVALUATION VS TRUTH
-import helper
 
+####################################
+# EVALUATION
+####################################
+import helper
 classif,region2sim=helper.compared_with_truth(image,t_desc,p_desc,truth_dir,save_dir+"06_final",save_dir+"07_eval_classif/")
 print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = " , region2sim)
 # EVALUATION VS RAWSEGMENTATION
