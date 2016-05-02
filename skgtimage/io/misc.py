@@ -32,7 +32,10 @@ def from_dir(desc_t,desc_p,image,directory):
     p_graph.set_image(image)
     if len(image.shape)==2:
         for n in t_graph.nodes():
-            region=sp.misc.imread(os.path.join(directory,"region_"+str(n)+".png"))
+            if os.path.exists(os.path.join(directory,"region_"+str(n)+".npy")):
+                region=np.load(os.path.join(directory,"region_"+str(n)+".npy"))
+            else:
+                region=sp.misc.imread(os.path.join(directory,"region_"+str(n)+".png"))
             t_graph.set_region(n,region)
             p_graph.set_region(n,region)
 

@@ -136,7 +136,8 @@ class IrDiGraph(nx.DiGraph):
     def update_intensities(self,image):
         from skgtimage.core.photometry import region_stat
         for n in self.nodes():
-            intensity=region_stat(image,self.get_residue(n))
+            region=self.get_residue(n)
+            intensity=region_stat(image,region)
             self.set_mean_residue_intensity(n,intensity)
 
     def set_mean_residue_intensity(self,n,value):

@@ -4,7 +4,7 @@
 
 
 import networkx as nx
-
+from skgtimage.core.topology import fill_region
 
 class IGraph(nx.DiGraph):
     """With automatically assigned attribute 'region' to each node (numpy array, 'None' by default)
@@ -59,14 +59,12 @@ class IGraph(nx.DiGraph):
         """
         return self.node[n]['region']
 
+    def get_filledregion(self,n):
+        return fill_region(self.node[n]['region'])
+
     def get_mean_residue_intensity(self,n):
         return 0.0
 
-    def segmented_nodes(self):
-        s=set()
-        for n in self.nodes():
-            if self.get_region(n) is not None: s = s | set([n])
-        return s
 
 
     def __str__(self):

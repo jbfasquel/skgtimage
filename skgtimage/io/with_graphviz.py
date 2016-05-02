@@ -24,6 +24,7 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     context_dir=directory+"00_context/"
     if not os.path.exists(context_dir) : os.mkdir(context_dir)
     if image is not None:
+        l_image=image
         if roi is not None:
             l_image=np.ma.array(image.astype(np.float), mask=np.logical_not(roi)).filled(np.min(image)-1)
         if len(image.shape) == 2:
