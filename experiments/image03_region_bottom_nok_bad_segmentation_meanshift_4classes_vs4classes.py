@@ -6,7 +6,7 @@ import skgtimage as skgti
 import helper
 
 truth_dir="Database/image03/truth_bottom/"
-save_dir="Database/image03/bottom_meanshift_nok_bad_segmentation_4classes_versus4expected_refactorying/"
+save_dir="Database/image03/bottom_meanshift_nok_bad_segmentation_4classes_versus4expected/"
 
 # KNOWLEDGE
 t_desc="E<D;G<F;D,F,H,I<C<B<A"

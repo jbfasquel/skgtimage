@@ -8,7 +8,7 @@ import skgtimage as skgti
 # MISC INFORMATIONS
 #########
 truth_dir="Database/image03/truth_top/"
-save_dir="Database/image03/top_meanshift_ok_5classes_versus4expected_refactorying/"
+save_dir="Database/image03/top_meanshift_ok_5classes_versus4expected/"
 
 #########
 # A PRIORI KNOWLEDGE

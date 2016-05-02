@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 truth_dir="Database/image03/truth_bottom/"
-save_dir="Database/image03/bottom_meanshift_ok_filtering_5classes_versus4expected_refactorying/"
+save_dir="Database/image03/bottom_meanshift_ok_filtering_5classes_versus4expected/"
 
 # KNOWLEDGE
 t_desc="E<D;G<F;D,F,H,I<C<B<A"
