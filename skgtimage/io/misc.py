@@ -8,7 +8,7 @@ import scipy as sp;from scipy import misc
 def compute_intensitymap(t_graph,do_round=False):
     mapping={}
     for n in t_graph.nodes():
-        residue=t_graph.get_residue(n)
+        #residue=t_graph.get_residue(n)
         intensity=t_graph.get_mean_residue_intensity(n)
         if do_round : intensity=np.round(intensity,0)
         mapping[n]=intensity
@@ -17,7 +17,8 @@ def compute_intensitymap(t_graph,do_round=False):
 def generate_single_image(t_graph,mapping=None):
     result=np.zeros(t_graph.get_image().shape)
     for n in t_graph.nodes():
-        residue=t_graph.get_residue(n)
+        #residue=t_graph.get_residue(n)
+        residue=t_graph.get_region(n)
         if mapping is not None:
             intensity=mapping[n]
         else:

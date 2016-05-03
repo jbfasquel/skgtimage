@@ -93,7 +93,7 @@ def oirelationships(io):
 def energie_dist(query_graph,ref_graph,iso):
     oi=oirelationships(iso)
     list_of_nodes=decreasing_ordered_nodes(ref_graph)
-    print(list_of_nodes)
+    #print(list_of_nodes)
     intensities=[]
     for i in range(0,len(list_of_nodes)):
         current_element=list_of_nodes[i]
@@ -112,7 +112,7 @@ def energie_dist(query_graph,ref_graph,iso):
             mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
         intensities+=[mean_intensity]
     #Compute distances:
-    print(intensities)
+    #print(intensities)
     eie=0
     for i in range(0,len(list_of_nodes)-1):
         eie+=np.abs(intensities[i]-intensities[i+1])

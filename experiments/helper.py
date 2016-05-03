@@ -33,11 +33,16 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
         skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
         skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
 
+        '''
         final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v3(matcher.query_t_graph,
                                                                       matcher.query_p_graph,
                                                                       matcher.ref_t_graph,
                                                                       matcher.ref_p_graph,current_matching)
-
+        '''
+        final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v4(matcher.query_t_graph,
+                                                                      matcher.query_p_graph,
+                                                                      matcher.ref_t_graph,
+                                                                      matcher.ref_p_graph,current_matching)
         ordered_merges=[i[2] for i in histo]
         skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_t",directory=tmp_dir,tree=True)
         skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_p",directory=tmp_dir,tree=True)

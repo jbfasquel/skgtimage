@@ -125,18 +125,19 @@ class IrDiGraph(nx.DiGraph):
         nx.DiGraph.add_node(self, n, attr_dict=attr_dict, **attr)
         self.node[n]['region']=None
         self.node[n]['mean_residue']=None
-
+    '''
     def get_residue(self,n):
         import numpy as np
         residue=np.copy(self.get_region(n))
         for e in self.predecessors(n):
             residue=np.logical_and(residue,np.logical_not(self.get_region(e)))
         return residue
-
+    '''
     def update_intensities(self,image):
         from skgtimage.core.photometry import region_stat
         for n in self.nodes():
-            region=self.get_residue(n)
+            #region=self.get_residue(n)
+            region=self.get_region(n)
             intensity=region_stat(image,region)
             self.set_mean_residue_intensity(n,intensity)
 

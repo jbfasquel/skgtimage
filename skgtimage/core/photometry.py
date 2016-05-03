@@ -111,6 +111,81 @@ def sort_labels_by_stat(image,labelled_image,fct=np.mean,mc=False,component=0,re
         ordered_indices=np.array(ordered_indices)+1
         return ordered_indices
 
+def photometric_graph_from_residues_refactorying(image,residues):
+    """
+    return photometric graph where similar nodes (i.e. brothers) correspond to smallest mean intensity differences
+    the number of similarity differences are
+
+    :param image:
+    :param residues:
+    :param brother_links: number of brother links to consider
+    :return:
+    """
+    #################################
+    #Nodes: one node per residue
+    #################################
+    g=IrDiGraph(image=image)
+    for i in range(0,len(residues)):
+        g.add_node(i)
+        g.set_region(i,residues[i])
+
+    #################################
+    #Edges: according to photometry
+    #################################
+    update_photometric_graph(g)
+    '''
+    ordered_indices,stats=sort_region_indices_by_stat(image,residues,fct=np.mean,mc=False,return_stats=True)
+
+    for i in range(0,len(ordered_indices)):
+        node=ordered_indices[i]
+        value=stats[i]
+        g.set_mean_residue_intensity(node,value)
+
+    increasing_ordered=ordered_indices[::-1]
+    increasing_stats=stats[::-1]
+    for i in range(0,len(increasing_ordered)-1):
+        g.add_edge(increasing_ordered[i],increasing_ordered[i+1])
+    '''
+    #################################
+    #Return the final graph
+    return g
+'''
+def update_intensities(graph):
+    pass
+'''
+
+def merge_nodes_photometry(graph,source,target):
+    new_region=np.logical_or(graph.get_region(source),graph.get_region(target))
+    graph.remove_node(source)
+    graph.set_region(target,new_region)
+    update_photometric_graph(graph)
+
+
+def update_photometric_graph(graph):
+    """
+    :param graph: assume to model photometric relationships
+    :return:
+    """
+    ############
+    #First update all region mean intensities
+    for n in graph.nodes():
+        region=graph.get_region(n)
+        intensity=region_stat(graph.get_image(),region)
+        graph.set_mean_residue_intensity(n,intensity)
+    ############
+    #Second: update edges
+    intensity2node={}
+    for n in graph.nodes():
+        intensity2node[graph.get_mean_residue_intensity(n)]=n
+    increas_ordered_intensities=sorted(intensity2node)
+    graph.remove_edges_from(graph.edges()) #remove all existing edges first
+    #Add new edges
+    for i in range(0,len(increas_ordered_intensities)-1):
+        a=intensity2node[increas_ordered_intensities[i]]
+        b=intensity2node[increas_ordered_intensities[i+1]]
+        graph.add_edge(a,b)
+
+
 
 def photometric_graph_from_residues(image,residues):
     """

@@ -102,7 +102,7 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     ##############################
     #Saving merging
     ##############################
-    if matcher.matching is not None:
+    if (matcher.matching is not None) and (matcher.ordered_merges is not None):
         #All merging
         matching_links=matching2links(matcher.matching)
         save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,matcher.ordered_merges],['red','green'],name="matching_t",directory=directory+"05_merges/",tree=True)

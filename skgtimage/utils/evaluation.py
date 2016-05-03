@@ -31,7 +31,8 @@ def compute_sim_between_graph_regions(result_graph,truth_graph):
 def combine_refactorying(graph,nodes2label):
     result=np.zeros(graph.get_image().shape)
     for n in nodes2label:
-        result=np.ma.masked_array(result, mask=graph.get_residue(n)).filled(nodes2label[n])
+        #result=np.ma.masked_array(result, mask=graph.get_residue(n)).filled(nodes2label[n])
+        result=np.ma.masked_array(result, mask=graph.get_region(n)).filled(nodes2label[n])
     return result
 
 def combine(graph,nodes,labels,shape=None):

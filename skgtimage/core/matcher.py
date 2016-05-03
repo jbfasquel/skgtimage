@@ -1,5 +1,5 @@
-from skgtimage.core.recognition import recognize_version2,greedy_refinement_v3,remove_smallest_leaf_regions,rename_nodes
-from skgtimage.core.factory import from_string,from_labelled_image
+from skgtimage.core.recognition import recognize_version2,greedy_refinement_v3,greedy_refinement_v4,remove_smallest_leaf_regions,rename_nodes
+from skgtimage.core.factory import from_string,from_labelled_image,from_labelled_image_refactorying
 import copy
 
 def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=False):
@@ -16,6 +16,17 @@ def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=
     id2r=matcher.get_id2regions()
     #Return
     return id2r,matcher
+
+def matcher_factory_refactorying(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False):
+    #A priori graphs
+    t_graph=from_string(t_desc)
+    p_graph=from_string(p_desc)
+    #Built graphs
+    built_t_graph,built_p_graph=from_labelled_image_refactorying(image,labelled_image,roi,manage_bounds)
+    #Prepare matcher
+    matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering)
+    return matcher
+
 
 def matcher_factory(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False):
     #A priori graphs
@@ -65,10 +76,17 @@ class IPMatcher:
                                                                                                        self.query_p_graph,
                                                                                                        self.ref_p_graph,verbose)
     def compute_merge(self):
+        '''
         self.final_t_graph,self.final_p_graph,histo=greedy_refinement_v3(self.query_t_graph,
                                                                           self.query_p_graph,
                                                                           self.ref_t_graph,
                                                                           self.ref_p_graph,self.matching)
+        '''
+        self.final_t_graph,self.final_p_graph,histo=greedy_refinement_v4(self.query_t_graph,
+                                                                          self.query_p_graph,
+                                                                          self.ref_t_graph,
+                                                                          self.ref_p_graph,self.matching)
+
         self.t_graph_merges=[i[0] for i in histo]
         self.p_graph_merges=[i[1] for i in histo]
         self.ordered_merges=[i[2] for i in histo]

@@ -1,9 +1,11 @@
 import numpy as np
 import networkx as nx
-from skgtimage.core.matching import generate_common_subgraphisomorphisms,energie_dist,energie_sim
+from skgtimage.core.matching import generate_common_subgraphisomorphisms,energie_dist,energie_sim,find_common_isomorphisms,find_subgraph_isomorphims
 from skgtimage.core.brothers import find_groups_of_brothers
 from skgtimage.core.search_base import search_leaf_nodes
-
+from skgtimage.core.topology import topological_merging_candidates,merge_nodes_topology
+from skgtimage.core.photometry import merge_nodes_photometry
+from skgtimage.core.graph import transitive_closure
 
 def rename_nodes(graphs,matching):
     resulting_graphs=[]
@@ -87,9 +89,11 @@ def recognize_version2(query_t_graph,ref_t_graph,query_p_graph,ref_p_graph,retur
     #1) Find common matchings
     ###########################################################################################
     common_isomorphisms,isomorphisms_per_graph=generate_common_subgraphisomorphisms([query_t_graph,query_p_graph],[ref_t_graph,ref_p_graph])
+    '''
     print("Nb t iso",len(isomorphisms_per_graph[0]))
     print("Nb p iso",len(isomorphisms_per_graph[1]))
     print("Nb common iso",len(common_isomorphisms))
+    '''
     if len(common_isomorphisms) == 0: raise Exception("No common iso")
     ###########################################################################################
     #2) Compute energies regarding similarities
@@ -113,12 +117,12 @@ def recognize_version2(query_t_graph,ref_t_graph,query_p_graph,ref_p_graph,retur
     else:
         max_eie=max(eie_dist)
         nb=eie_dist.count(max_eie)
-        if nb != 1 : raise Exception("erreur")
+        #if nb != 1 : raise Exception("erreur")
         index_of_max=eie_dist.index(max_eie)
         matching=common_isomorphisms[index_of_max]
 
-    print("eie_sim:", eie_sim)
-    print("eie_dist:", eie_dist)
+    #print("eie_sim:", eie_sim)
+    #print("eie_dist:", eie_dist)
 
     return matching,common_isomorphisms,isomorphisms_per_graph[0],isomorphisms_per_graph[1],eie_sim,eie_dist
 
@@ -193,6 +197,7 @@ def neighboring_candidates(graph,s,possible_candidates):
     :param possible_candidates:
     :return:
     """
+    print("recognition.neighboring_candidates DEPRECATED: use topology.topological_merging_candidates instead")
     if len(graph.successors(s)) != 1: raise Exception("Error")
     father=graph.successors(s)[0]
     #if father not in possible_candidates: return set()
@@ -204,6 +209,7 @@ def neighboring_candidates(graph,s,possible_candidates):
 
 
 def apply_merging(t_graph,p_graph,source,target):
+    print("recognition.apply_merging DEPRECATED: use topology.merge_nodes_topology photometry.merge_nodes_photometry instead")
     if len(t_graph.successors(source)) != 1: raise Exception("error")
     ###########################
     # topology
@@ -276,6 +282,156 @@ def check_merging_consistency(new_t_graph,new_p_graph,ref_t_graph,ref_p_graph,re
     if is_valid is False:
         a=10 #to capture debug
     return is_valid
+
+def compute_intensity_ordering(p_graph,nodes):
+    i2r={}
+    for n in nodes:
+        intensity=p_graph.get_mean_residue_intensity(n)
+        i2r[intensity]=n
+    ordered_nodes=[ i2r[i] for i in sorted(i2r)]
+    return ordered_nodes
+
+def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,current_p_graph,ref_t_graph,ref_p_graph,ref_matching):
+    #Optimization
+    previous_order=compute_intensity_ordering(previous_p_graph,ref_matching.keys())
+    current_order=compute_intensity_ordering(current_p_graph,ref_matching.keys())
+    print("ordered_nodes before: ", previous_order, " vs now: ", current_order)
+    # testing topology -> if false -> definitevely false
+    if ref_matching not in find_subgraph_isomorphims(transitive_closure(current_t_graph),transitive_closure(ref_t_graph)): return False
+
+    #Check versus the reference photometric graph without brothers (to reduce computation time)
+    simplified_ref_p_graph=hack(previous_p_graph,ref_matching) #p_graph considered in matching, i.e. without "brothers"
+    validity=check_merging_consistency(current_t_graph,current_p_graph,ref_t_graph,simplified_ref_p_graph,ref_matching)
+    #If modifications have involved photometric relationships "inversions" (previous validity is therefore false)
+    #we check wheter matching still exist by considering the "full" reference photometric graph with all possible "brothers" (more time consuming)
+    #In such a case, ref_matching can be modified (e.g. valid photometric inversion)
+    if validity == False:
+        print("Testing merging consistency with all brothers")
+        validity=check_merging_consistency(current_t_graph,current_p_graph,ref_t_graph,ref_p_graph,ref_matching)
+
+    return validity
+
+
+
+def check_merge_validity_vok(previous_t_graph,previous_p_graph,current_t_graph,current_p_graph,ref_t_graph,ref_p_graph,ref_matching):
+    #Check versus the reference photometric graph without brothers (to reduce computation time)
+    simplified_ref_p_graph=hack(previous_p_graph,ref_matching) #p_graph considered in matching, i.e. without "brothers"
+    validity=check_merging_consistency(current_t_graph,current_p_graph,ref_t_graph,simplified_ref_p_graph,ref_matching)
+    #If modifications have involved photometric relationships "inversions" (previous validity is therefore false)
+    #we check wheter matching still exist by considering the "full" reference photometric graph with all possible "brothers" (more time consuming)
+    #In such a case, ref_matching can be modified (e.g. valid photometric inversion)
+    if validity == False:
+        print("Testing merging consistency with all brothers")
+        validity=check_merging_consistency(current_t_graph,current_p_graph,ref_t_graph,ref_p_graph,ref_matching)
+
+    return validity
+
+
+def cost2merge(t_graph,p_graph,nodes,possible_targets):
+    d2m={}
+    for e in nodes:
+        #Posible merging candidates intersected with initial_matched_nodes
+        #Pour image03_region_top_ok_meanshift_5classes_vs4classes_refactorying: permettra d'avoir les "trous" de "ville fleurie" correctement identified
+        target_candidates=topological_merging_candidates(t_graph,e) & set(possible_targets)
+        intensity_of_e=p_graph.get_mean_residue_intensity(e)
+        for t in target_candidates:
+            intensity_of_t=p_graph.get_mean_residue_intensity(t)
+            distance=abs(intensity_of_e-intensity_of_t)
+            if distance in d2m:
+                d2m[distance]+=[(e,t)]
+            else:
+                d2m[distance]=[(e,t)]
+
+    candidates=[]
+    for d in sorted(d2m):
+        candidates+=d2m[d]
+
+    return candidates,d2m
+
+def greedy_refinement_v4(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=False):
+    """
+    While remaining unknown nodes:
+        1) For each r in remaining unknown nodes: find topological neighbors that are known, and compute photometric distances
+        2) Merge the node of remaining unknown nodes depicting the smallest distance and then: merge=(node,target)
+            2-a) If graph consistency is preserved: update the list of remaining unknown nodes.
+                 Else: undo merge, and remove merge=(node,target) from possibilities
+
+    Reestimate each time distances...
+    :param t_graph:
+    :param p_graph:
+    :param ref_t_graph:
+    :param ref_p_graph:
+    :param ref_matching:
+    :return:
+    """
+    #########
+    #Initially, matched nodes (identified) are those of the initial matching
+    initial_matched_nodes=set(ref_matching.keys())
+    remaining_nodes=set(t_graph.nodes())-initial_matched_nodes
+    print("Remaining nodes",remaining_nodes)
+    modification_historisation=[]
+
+    ###################
+    #if no merge is needed
+    if len(remaining_nodes)==0:
+        return t_graph.copy(),p_graph.copy(),modification_historisation
+
+    ###################
+    #Start test
+    ###################
+    #invalid_merge=[]
+    previous_t_graph=t_graph
+    previous_p_graph=p_graph
+    #min_distance_order=0
+    while len(remaining_nodes)>0:
+        ordered_merging_candidates,d2m=cost2merge(previous_t_graph,previous_p_graph,remaining_nodes,initial_matched_nodes)
+        #d2m example: {0.59999999999999998: [(4, 1),(x,y)], 0.90000000000000002: [(2, 3)], 0.38518518518518519: [(4, 0)]}
+        #ordered_merging_candidates example: [(4, 0),(4, 1),(x,y),(2, 3)]
+        current_candidate_index=0
+        stop_condition=False
+        while stop_condition==False:
+            merge=ordered_merging_candidates[current_candidate_index]
+
+            if visual_debug:
+                from skgtimage.io import plot_graph_links,matching2links;import matplotlib.pyplot as plt
+                ordered_merges=[i[2] for i in modification_historisation]
+                plot_graph_links(t_graph,ref_t_graph,link_lists=[matching2links(ref_matching),ordered_merges,[merge]],colors=['red','green','yellow']);plt.show()
+
+            ###########################
+            #Apply merging on graph copies (temporarly node merging)
+            ###########################
+            current_t_graph=previous_t_graph.copy()
+            current_p_graph=previous_p_graph.copy()
+            merge_nodes_photometry(current_p_graph,merge[0],merge[1])
+            merge_nodes_topology(current_t_graph,merge[0],merge[1])
+
+            ###########################
+            #Check that topological and photometric constraints are still verified after (temporarly node merging)
+            ###########################
+            validity=check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,current_p_graph,ref_t_graph,ref_p_graph,ref_matching)
+
+            ###########################
+            #Use validity to decide whether the next merge should be tested (within the "ordered_merging_candidates" list)
+            ###########################
+            if validity == False:
+                print(ordered_merging_candidates, " Merge: ", merge, " -> NOK")
+                stop_condition=False
+                current_candidate_index+=1
+                if current_candidate_index == len(ordered_merging_candidates): raise Exception("Impossible to merge")
+            else:
+                print(ordered_merging_candidates, " Merge: ", merge, " -> OK")
+                previous_t_graph=current_t_graph
+                previous_p_graph=current_p_graph
+                modification_historisation+=[(previous_t_graph,previous_p_graph,merge)]
+                remaining_nodes=set(current_t_graph.nodes())-initial_matched_nodes
+                stop_condition=True
+
+        #print("Remaining nodes: ", remaining_nodes)
+    ###################
+    #End test
+    ###################
+    return current_t_graph,current_p_graph,modification_historisation
+
 
 def greedy_refinement_v3(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching):
     """
@@ -418,8 +574,9 @@ def hack(built_p,matching):
                 built_p.add_edge(e[0],father)
             built_p.remove_node(n)
         elif len(built_p.successors(n)) == 0:
-            pred=built_p.predecessors(n)[0]
-            built_p.remove_edge(pred,n)
+            if len(built_p.predecessors(n)) !=0:
+                pred=built_p.predecessors(n)[0]
+                built_p.remove_edge(pred,n)
             built_p.remove_node(n)
 
     #Relabelling to be conform to initial reference graph
