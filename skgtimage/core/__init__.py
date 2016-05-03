@@ -6,9 +6,6 @@ from __future__ import absolute_import
 
 
 ##### GRAPH STRUCTURE
-from .ipgraph import *
-
-##### GRAPH STRUCTURE
 from .graph import *
 
 ##### GRAPH SEARCH ALGORITHMS

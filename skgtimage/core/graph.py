@@ -6,9 +6,6 @@ Truc
 """
 import networkx as nx
 
-
-
-
 def get_sub_graphs(graphs,nodes):
     sub_graphs=[]
     for g in graphs:
@@ -75,18 +72,6 @@ def transitive_reduction(g):
                     if g.has_edge(n1, n4):
                         g.remove_edge(n1, n4)
     return g
-    '''
-    #Use this for acyclic graph ??? -> Problem for photometric graph
-    closed_g=transitive_closure(g) #reduction is done on the transitive closure of the graph
-    nodes = closed_g.nodes()
-    #edges = g.edges()
-    for x in nodes:
-       for y in nodes:
-          for z in nodes:
-              if (x, y) != (y, z) and (x, y) != (x, z):
-                  if ((x, y) in closed_g.edges()) and ((y, z) in closed_g.edges()) and ((x, z) in closed_g.edges()): closed_g.remove_edge(x,z)
-    return closed_g
-    '''
 
 class IrDiGraph(nx.DiGraph):
     """With automatically assigned attribute 'region' to each node (numpy array, 'None' by default)
@@ -125,14 +110,7 @@ class IrDiGraph(nx.DiGraph):
         nx.DiGraph.add_node(self, n, attr_dict=attr_dict, **attr)
         self.node[n]['region']=None
         self.node[n]['mean_residue']=None
-    '''
-    def get_residue(self,n):
-        import numpy as np
-        residue=np.copy(self.get_region(n))
-        for e in self.predecessors(n):
-            residue=np.logical_and(residue,np.logical_not(self.get_region(e)))
-        return residue
-    '''
+
     def update_intensities(self,image):
         from skgtimage.core.photometry import region_stat
         for n in self.nodes():

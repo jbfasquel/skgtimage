@@ -73,25 +73,6 @@ def from_regions_refactorying(image,regions):
     built_t_graph.set_image(image);built_p_graph.set_image(image)
     return built_t_graph,built_p_graph
 
-
-def from_regions(image,regions):
-    built_t_graph,new_residues=topological_graph_from_residues(regions)
-    built_p_graph=photometric_graph_from_residues(image,new_residues)
-    built_t_graph.set_image(image);built_p_graph.set_image(image)
-    return built_t_graph,built_p_graph
-
-def from_labelled_image(image,labelled_image,roi=None,manage_bounds=False,thickness=2):
-    #To remove noise at labelled_image boundaries
-    if manage_bounds:
-        if type(labelled_image) == np.ma.masked_array :
-            roi=np.logical_not(labelled_image.mask)
-        new_labelled_image=manage_boundaries(labelled_image,roi,thickness)
-        return from_labelled_image(image,new_labelled_image,roi,False)
-    #Regions (residues) from labels
-    regions=labelled_image2regions(labelled_image,roi)
-    #Built graphs from regions
-    return from_regions(image,regions)
-
 def labelled_image2regions(labelled_image,roi=None):
     """
         Generate regions from labelled image: each region correspond to a specific label
@@ -135,3 +116,23 @@ def manage_boundaries(image,roi=None,thickness=2):
     return modified_image
 
 
+'''
+def from_regions(image,regions):
+    built_t_graph,new_residues=topological_graph_from_residues(regions)
+    built_p_graph=photometric_graph_from_residues(image,new_residues)
+    built_t_graph.set_image(image);built_p_graph.set_image(image)
+    return built_t_graph,built_p_graph
+'''
+'''
+def from_labelled_image(image,labelled_image,roi=None,manage_bounds=False,thickness=2):
+    #To remove noise at labelled_image boundaries
+    if manage_bounds:
+        if type(labelled_image) == np.ma.masked_array :
+            roi=np.logical_not(labelled_image.mask)
+        new_labelled_image=manage_boundaries(labelled_image,roi,thickness)
+        return from_labelled_image(image,new_labelled_image,roi,False)
+    #Regions (residues) from labels
+    regions=labelled_image2regions(labelled_image,roi)
+    #Built graphs from regions
+    return from_regions(image,regions)
+'''

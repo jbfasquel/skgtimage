@@ -1,5 +1,5 @@
 from skgtimage.core.recognition import recognize_version2,greedy_refinement_v3,greedy_refinement_v4,remove_smallest_leaf_regions,rename_nodes
-from skgtimage.core.factory import from_string,from_labelled_image,from_labelled_image_refactorying
+from skgtimage.core.factory import from_string,from_labelled_image_refactorying
 import copy
 
 def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=False):
@@ -7,7 +7,7 @@ def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=
     t_graph=from_string(t_desc)
     p_graph=from_string(p_desc)
     #Built graphs
-    built_t_graph,built_p_graph=from_labelled_image(image,labelled_image,roi,manage_bounds)
+    built_t_graph,built_p_graph=from_labelled_image_refactorying(image,labelled_image,roi,manage_bounds)
     #Perform recognition by inexact-graph matching
     matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering)
     matcher.compute_maching(verbose)
@@ -16,7 +16,7 @@ def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=
     id2r=matcher.get_id2regions()
     #Return
     return id2r,matcher
-
+'''
 def matcher_factory_refactorying(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False):
     #A priori graphs
     t_graph=from_string(t_desc)
@@ -26,14 +26,14 @@ def matcher_factory_refactorying(image,labelled_image,t_desc,p_desc,roi=None,man
     #Prepare matcher
     matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering)
     return matcher
-
+'''
 
 def matcher_factory(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False):
     #A priori graphs
     t_graph=from_string(t_desc)
     p_graph=from_string(p_desc)
     #Built graphs
-    built_t_graph,built_p_graph=from_labelled_image(image,labelled_image,roi,manage_bounds)
+    built_t_graph,built_p_graph=from_labelled_image_refactorying(image,labelled_image,roi,manage_bounds)
     #Prepare matcher
     matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering)
     return matcher
@@ -76,12 +76,7 @@ class IPMatcher:
                                                                                                        self.query_p_graph,
                                                                                                        self.ref_p_graph,verbose)
     def compute_merge(self):
-        '''
-        self.final_t_graph,self.final_p_graph,histo=greedy_refinement_v3(self.query_t_graph,
-                                                                          self.query_p_graph,
-                                                                          self.ref_t_graph,
-                                                                          self.ref_p_graph,self.matching)
-        '''
+
         self.final_t_graph,self.final_p_graph,histo=greedy_refinement_v4(self.query_t_graph,
                                                                           self.query_p_graph,
                                                                           self.ref_t_graph,
