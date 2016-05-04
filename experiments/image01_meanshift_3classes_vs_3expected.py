@@ -12,7 +12,7 @@ t_desc="text<paper<file"
 p_desc="text<file<paper"
 
 image=sp.misc.imread(truth_dir+"image.png")
-roi=sp.misc.imread(truth_dir+"region_file.png")
+roi=sp.misc.imread(truth_dir+"roi.png")
 
 # SEGMENTATION MEANSHIFT
 

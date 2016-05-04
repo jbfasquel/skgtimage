@@ -13,7 +13,7 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
     res2int=skgti.io.compute_intensitymap(truth_t_graph,do_round=True)
     truth_image=skgti.io.generate_single_image(truth_t_graph,res2int)
     head=list(skgti.core.find_head(truth_t_graph))[0]
-    roi=truth_t_graph.get_region(head)
+    roi=skgti.core.fill_region(truth_t_graph.get_region(head))
     l_truth_image=np.ma.array(truth_image, mask=np.logical_not(roi))
 
     #Reference result
@@ -33,12 +33,6 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
         skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
         skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
 
-        '''
-        final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v3(matcher.query_t_graph,
-                                                                      matcher.query_p_graph,
-                                                                      matcher.ref_t_graph,
-                                                                      matcher.ref_p_graph,current_matching)
-        '''
         final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v4(matcher.query_t_graph,
                                                                       matcher.query_p_graph,
                                                                       matcher.ref_t_graph,
@@ -59,38 +53,6 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
         classif=np.round(classif,3)
         performances+=[classif]
 
-        '''
-        try :
-            #tmp_directory
-            tmp_dir=result_dir+"iso_"+str(i)+"/" #;if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
-            matching_links=skgti.io.matching2links(current_matching)
-            skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
-            skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
-
-            final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v3(matcher.query_t_graph,
-                                                                          matcher.query_p_graph,
-                                                                          matcher.ref_t_graph,
-                                                                          matcher.ref_p_graph,current_matching)
-
-            ordered_merges=[i[2] for i in histo]
-            skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_t",directory=tmp_dir,tree=True)
-            skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_p",directory=tmp_dir,tree=True)
-
-
-            (relabelled_final_t_graph,relabelled_final_p_graph)=skgti.core.rename_nodes([final_t_graph,final_p_graph],current_matching)
-            relabelled_final_t_graph.set_image(image) #hack to save mixed region residues
-            # GENERATING IMAGES COMBINING REGIONS RESIDUES WITH SPECIFICS INTENSITIES
-            result_image=skgti.io.generate_single_image(relabelled_final_t_graph,res2int)
-            l_result_image=np.ma.array(result_image, mask=np.logical_not(roi))
-            #####
-            # COMPUTING THE CLASSIFICATION RATE
-            classif=skgti.utils.goodclassification_rate(l_result_image,l_truth_image)
-            classif=np.round(classif,3)
-            performances+=[classif]
-        except Exception as e:
-            print("exception ",e)
-            performances+=["Failed"]
-        '''
     #####
     # SAVING TO CSV
     import csv
@@ -108,7 +70,7 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
     print("Eies sim: ",matcher.eie_sim)
     print("performances: ",performances)
 
-
+'''
 def influence_of_commonisos(image,common_isomorphisms,eie_dist,eie_sim,built_t_graph,built_p_graph,t_graph,p_graph,t_desc,p_desc,input_dir,save_dir):
     performances=[]
     for i in range(0,len(common_isomorphisms)):
@@ -142,7 +104,7 @@ def influence_of_commonisos(image,common_isomorphisms,eie_dist,eie_sim,built_t_g
     print("Eies dis: ",eie_dist)
     print("Eies sim: ",eie_sim)
     print("performances: ",performances)
-
+'''
 
 def generate_absdiff_inunint8(result,ref):
     diff_result=np.abs(result.astype(np.float)-ref.astype(np.float))
@@ -158,71 +120,6 @@ def slice2png(image,slice):
     return image2D.astype(np.uint8)
 
 
-'''
-def compared_with_rawsegmentation(segmentation,related_result,related_truth,truth_t_graph,comparison_dir,levels=None,ids=None):
-    if not os.path.exists(comparison_dir) : os.mkdir(comparison_dir)
-
-    head=list(skgti.core.find_head(truth_t_graph))[0]
-    roi=truth_t_graph.get_region(head)
-    l_related_truth=np.ma.array(related_truth, mask=np.logical_not(roi))
-    l_related_result=np.ma.array(related_result, mask=np.logical_not(roi))
-    l_segmentation=np.ma.array(segmentation, mask=np.logical_not(roi))
-
-    #####
-    # COMPUTING THE CLASSIFICATION RATE
-    classif_result=skgti.utils.goodclassification_rate(l_related_result,l_related_truth)
-    classif_result=np.round(classif_result,3)
-    classif_rawsegmentation=skgti.utils.goodclassification_rate(l_segmentation,l_related_truth)
-    classif_rawsegmentation=np.round(classif_rawsegmentation,3)
-
-    #####
-    # COMPUTING SIMILARITIES
-    sims=None
-    if levels is not None:
-        sims=[]
-        for i in range(0,len(levels)):
-            l=levels[i]
-            true_region=np.where(related_truth==l,1,0)
-            seg_region=np.where(segmentation==l,1,0)
-            sim=skgti.utils.similarity_index(seg_region,true_region)
-            sim=np.round(sim,3)
-            sims+=[sim]
-
-
-
-    #####
-    # SAVING TO CSV
-    fullfilename=os.path.join(comparison_dir,"classifrates.csv")
-    csv_file=open(fullfilename, "w")
-    c_writer = csv.writer(csv_file,dialect='excel')
-    c_writer.writerow(["Comparison type","good classification rate (1.0==100%)"])
-    c_writer.writerow(['From result (our method)']+[classif_result])
-    c_writer.writerow(['From raw segmentation']+[classif_rawsegmentation])
-    if sims is not None:
-        c_writer.writerow(['similarities']+[i for i in sims])
-        c_writer.writerow(['related ids']+[i for i in ids])
-    csv_file.close()
-    #####
-    # SAVING IMAGES
-    sp.misc.imsave(comparison_dir+"raw_segmentation.png",segmentation.astype(np.uint8))
-    c_segmentation=skgti.utils.extract_subarray(segmentation,roi)
-    sp.misc.imsave(comparison_dir+"raw_segmentation_cropped.png",c_segmentation.astype(np.uint8))
-
-    sp.misc.imsave(comparison_dir+"obtained_result.png",related_result.astype(np.uint8))
-    c_related_result=skgti.utils.extract_subarray(related_result,roi)
-    sp.misc.imsave(comparison_dir+"obtained_result_cropped.png",c_related_result.astype(np.uint8))
-
-    sp.misc.imsave(comparison_dir+"truth.png",related_truth.astype(np.uint8))
-    c_related_truth=skgti.utils.extract_subarray(related_truth,roi)
-    sp.misc.imsave(comparison_dir+"truth_cropped.png",c_related_truth.astype(np.uint8))
-
-    #diff
-    sp.misc.imsave(comparison_dir+"diff_obtained_result_vs_truth.png",generate_absdiff_inunint8(c_related_result,c_related_truth))
-    sp.misc.imsave(comparison_dir+"diff_rawsegmentation_vs_truth.png",generate_absdiff_inunint8(c_segmentation,c_related_truth))
-    sp.misc.imsave(comparison_dir+"diff_obtained_result_vs_rawsegmentation.png",generate_absdiff_inunint8(c_segmentation,c_related_result))
-
-    return classif_result,classif_rawsegmentation
-'''
 def compared_with_rawsegmentation_refactorying(segmentation_filename,t_desc,p_desc,image,region2segmentintensities,result_dir,truth_dir,comparison_dir):
     #Preparing data
     segmentation=sp.misc.imread(segmentation_filename)
@@ -231,13 +128,11 @@ def compared_with_rawsegmentation_refactorying(segmentation_filename,t_desc,p_de
     result_t_graph,result_p_graph=skgti.io.from_dir(t_desc,p_desc,image,result_dir)
     related_result=skgti.utils.combine_refactorying(result_t_graph,region2segmentintensities)
 
-
-
     #Comparison
     if not os.path.exists(comparison_dir) : os.mkdir(comparison_dir)
 
     head=list(skgti.core.find_head(truth_t_graph))[0]
-    roi=truth_t_graph.get_region(head)
+    roi=skgti.core.fill_region(truth_t_graph.get_region(head))
     l_related_truth=np.ma.array(related_truth, mask=np.logical_not(roi))
     l_related_result=np.ma.array(related_result, mask=np.logical_not(roi))
     l_segmentation=np.ma.array(segmentation, mask=np.logical_not(roi))
@@ -333,7 +228,7 @@ def compared_with_truth(image_gray,t_desc,p_desc,truth_dir,result_dir,comparison
     #####
     # GENERATING MASKED IMAGES
     head=list(skgti.core.find_head(truth_t_graph))[0]
-    roi=truth_t_graph.get_region(head)
+    roi=skgti.core.fill_region(truth_t_graph.get_region(head))
     l_truth_image=np.ma.array(truth_image, mask=np.logical_not(roi))
     l_result_image=np.ma.array(result_image, mask=np.logical_not(roi))
 
