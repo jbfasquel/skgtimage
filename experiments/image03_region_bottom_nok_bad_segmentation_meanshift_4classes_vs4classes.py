@@ -13,7 +13,7 @@ t_desc="E<D;G<F;D,F,H,I<C<B<A"
 p_desc="B=F<D=H<I=E<C=A=G"
 # IMAGE: COLOR AND GRAY
 image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
-roi=sp.misc.imread(os.path.join(truth_dir,"region_A.png"))
+roi=sp.misc.imread(os.path.join(truth_dir,"roi.png"))
 image=skgti.utils.rgb2gray(image_rgb)
 
 # SEGMENTATION
@@ -25,6 +25,7 @@ label=skgti.utils.mean_shift(image_chsv,0.12,roi,True,True) #0.1 OK
 matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False)
 matcher.compute_maching(True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
+
 '''
 id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=False,verbose=True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)

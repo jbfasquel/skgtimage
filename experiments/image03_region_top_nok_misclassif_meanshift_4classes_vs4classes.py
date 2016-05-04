@@ -23,7 +23,7 @@ p_desc="G=B<E=F<H=D<A=C"
 #COLOR IMAGE
 image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
 #ROI
-roi=sp.misc.imread(os.path.join(truth_dir,"region_A.png"))
+roi=sp.misc.imread(os.path.join(truth_dir,"roi.png"))
 #GRAYSCALE IMAGE
 image=skgti.utils.rgb2gray(image_rgb)
 

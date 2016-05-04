@@ -10,6 +10,7 @@ import skgtimage as skgti
 #############
 #For general crop: dilated union of ROIs
 #############
+'''
 input_bottom="Database/image03/FullResolution/Truth_bottom/"
 input_top="Database/image03/FullResolution/Truth_top/"
 ref_roi=sp.misc.imread(os.path.join(input_top,"region_A.png"))+sp.misc.imread(os.path.join(input_bottom,"region_A.png"))
@@ -41,7 +42,7 @@ for i in ['A','B','C','D','E','F','G','H']:
     image=skgti.utils.extract_subarray(image,ref_roi)
     image=image[::download,::download]
     sp.misc.imsave(os.path.join(output,"region_"+i+".png"),image)
-
+'''
 ######################################
 #PREPARE GROUNDTRUTH TOP
 ######################################
@@ -125,3 +126,59 @@ sp.misc.imsave(os.path.join(output,"regionE.png"),i_region)
 
 #plt.imshow(F,"gray");plt.show()
 '''
+######################################
+#PREPARE GROUNDTRUTH TOP: FILLED REGIONS -> RESIDUES
+######################################
+'''
+input="Database/image03/truth_top_filled/"
+output="Database/image03/truth_top/"
+A=sp.misc.imread(os.path.join(input,"region_A.png"))
+B=sp.misc.imread(os.path.join(input,"region_B.png"))
+new=A-B
+sp.misc.imsave(os.path.join(output,"region_A.png"),new)
+C=sp.misc.imread(os.path.join(input,"region_C.png"))
+D=sp.misc.imread(os.path.join(input,"region_D.png"))
+new=B-C-D
+sp.misc.imsave(os.path.join(output,"region_B.png"),new)
+G=sp.misc.imread(os.path.join(input,"region_G.png"))
+new=C-G
+sp.misc.imsave(os.path.join(output,"region_C.png"),new)
+sp.misc.imsave(os.path.join(output,"region_G.png"),G)
+E=sp.misc.imread(os.path.join(input,"region_E.png"))
+F=sp.misc.imread(os.path.join(input,"region_F.png"))
+H=sp.misc.imread(os.path.join(input,"region_H.png"))
+new=D-E-F
+sp.misc.imsave(os.path.join(output,"region_D.png"),new)
+new=E-H
+sp.misc.imsave(os.path.join(output,"region_E.png"),new)
+sp.misc.imsave(os.path.join(output,"region_F.png"),F)
+sp.misc.imsave(os.path.join(output,"region_H.png"),H)
+'''
+######################################
+#PREPARE GROUNDTRUTH BOTTOM: FILLED REGIONS -> RESIDUES
+######################################
+input="Database/image03/truth_bottom_filled/"
+output="Database/image03/truth_bottom/"
+A=sp.misc.imread(os.path.join(input,"region_A.png"))
+B=sp.misc.imread(os.path.join(input,"region_B.png"))
+new=A-B
+sp.misc.imsave(os.path.join(output,"region_A.png"),new)
+C=sp.misc.imread(os.path.join(input,"region_C.png"))
+new=B-C
+sp.misc.imsave(os.path.join(output,"region_B.png"),new)
+
+D=sp.misc.imread(os.path.join(input,"region_D.png"))
+H=sp.misc.imread(os.path.join(input,"region_H.png"))
+F=sp.misc.imread(os.path.join(input,"region_F.png"))
+I=sp.misc.imread(os.path.join(input,"region_I.png"))
+new=C-D-H-F-I
+sp.misc.imsave(os.path.join(output,"region_C.png"),new)
+
+E=sp.misc.imread(os.path.join(input,"region_E.png"))
+new=D-E
+sp.misc.imsave(os.path.join(output,"region_D.png"),new)
+
+G=sp.misc.imread(os.path.join(input,"region_G.png"))
+new=F-G
+sp.misc.imsave(os.path.join(output,"region_F.png"),new)
+

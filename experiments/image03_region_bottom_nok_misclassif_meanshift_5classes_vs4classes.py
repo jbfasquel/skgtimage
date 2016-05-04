@@ -12,7 +12,7 @@ t_desc="E<D;G<F;D,F,H,I<C<B<A"
 p_desc="B=F<D=H<I=E<C=A=G"
 # IMAGE: COLOR AND GRAY
 image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
-roi=sp.misc.imread(os.path.join(truth_dir,"region_A.png"))
+roi=sp.misc.imread(os.path.join(truth_dir,"roi.png"))
 image=skgti.utils.rgb2gray(image_rgb)
 
 # SEGMENTATION
