@@ -100,18 +100,17 @@ class TestGraphSearchBase(unittest.TestCase):
     #   BROTHER LINKS
     ####################################
     def test06(self):
-        tmp=sgi.core.graph_factory("A<B<C<D")
+        tmp=sgi.core.from_string("A<B<C<D")
         self.assertEqual(sgi.core.number_of_brother_links(tmp),0)
-        tmp=sgi.core.graph_factory("A=B<C<D")
+        tmp=sgi.core.from_string("A=B<C<D")
         self.assertEqual(sgi.core.number_of_brother_links(tmp),1)
-        tmp=sgi.core.graph_factory("A=B=C<D")
+        tmp=sgi.core.from_string("A=B=C<D")
         self.assertEqual(sgi.core.number_of_brother_links(tmp),2)
-        tmp=sgi.core.graph_factory("A=B<C=D")
+        tmp=sgi.core.from_string("A=B<C=D")
         self.assertEqual(sgi.core.number_of_brother_links(tmp),2)
 
-'''
+
 if __name__ == '__main__':
     #With verbose
     suite = unittest.TestLoader().loadTestsFromTestCase(TestGraphSearchBase)
     unittest.TextTestRunner(verbosity=2).run(suite)
-'''

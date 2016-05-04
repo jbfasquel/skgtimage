@@ -9,21 +9,26 @@ import numpy as np
 # IMAGE
 image=np.array([[1,1,1,1,1,1,1],
                 [1,2,2,2,1,1,1],
-                [1,2,3,2,1,3,1],
-                [1,2,3,2,1,3,1],
+                [1,2,3,2,1,3.1,1],
+                [1,2,3,2,1,3.1,1],
                 [1,2,2,2,1,1,1],
                 [1,1,1,1,1,1,1]],np.float)
-label=image
+label=np.array([[1,1,1,1,1,1,1],
+                [1,2,2,2,1,1,1],
+                [1,2,3,2,1,4,1],
+                [1,2,3,2,1,4,1],
+                [1,2,2,2,1,1,1],
+                [1,1,1,1,1,1,1]],np.float)
 # KNOWLEDGE
 t_desc="C<B<A;D<A"
 p_desc="A<B<C=D"
-#tp_model=sgi.core.TPModel(t_graph,[p_graph])
 
 # REGIONS
-A=np.where(image>=1,1,0)
-B=skgti.core.fill_region(np.where(image==2,1,0))
-C=np.logical_and(B,np.where(image>=3,1,0))
-D=np.where(image==3,1,0)-C
+A=np.where(label==1,1,0)
+B=np.where(label==2,1,0)
+C=np.where(label==3,1,0)
+D=np.where(label==4,1,0)
+
 
 
 ###############################

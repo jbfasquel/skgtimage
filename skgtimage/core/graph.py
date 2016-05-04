@@ -5,6 +5,36 @@
 Truc
 """
 import networkx as nx
+import numpy as np
+
+def labelled_image2regions(labelled_image,roi=None):
+    """
+        Generate regions from labelled image: each region correspond to a specific label
+    """
+    #If explicit ROI (i.e. explicit as not integrated within an image of type np.ma.masked_array
+    if roi is not None:
+        tmp_masked_array=np.ma.masked_array(labelled_image, mask=np.logical_not(roi))
+        return labelled_image2regions(tmp_masked_array)
+    #Use histogram to find labels
+    regions=[]
+    if type(labelled_image) == np.ma.masked_array :
+        mask_roi=np.logical_not(labelled_image.mask)
+        min_image,max_image=labelled_image.compressed().min(),labelled_image.compressed().max()
+        hist,bins = np.histogram(labelled_image.compressed(), bins=max_image-min_image+1,range=(min_image,max_image+1))
+        bins=bins[0:bins.size-1]
+        for i in range(0,len(hist)):
+            if hist[i] != 0:
+                new_region=np.where(labelled_image==bins[i],1,0)
+                new_region=np.logical_and(mask_roi,new_region)
+                regions+=[new_region]
+    else:
+        min_image,max_image=labelled_image.min(),labelled_image.max()
+        hist,bins = np.histogram(labelled_image, bins=max_image-min_image+1,range=(min_image,max_image+1))
+        bins=bins[0:bins.size-1]
+        for i in range(0,len(hist)):
+            if hist[i] != 0: regions+=[np.where(labelled_image==bins[i],1,0)]
+    return regions
+
 
 def get_sub_graphs(graphs,nodes):
     sub_graphs=[]

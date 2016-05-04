@@ -24,13 +24,12 @@ t_desc="B<A"
 p_desc="A<B"
 
 #TRUTH
-A=np.ones((5,5))
 B=np.array([[0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 0],
                 [0, 1, 1, 1, 0],
                 [0, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0]])
-
+A=np.ones((5,5))-B
 ###############################
 #AMBIGUITY ON TOPOLOGY BUT NOT IN PHOTOMETRY
 #TOPOLOGY

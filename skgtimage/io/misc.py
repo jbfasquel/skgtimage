@@ -1,6 +1,7 @@
 import os
 import numpy as np
-from skgtimage.core.factory import graph_factory
+from skgtimage.core.factory import from_string
+from skgtimage.core.graph import IrDiGraph
 from skgtimage.core.search_base import find_head
 import scipy as sp;from scipy import misc
 
@@ -27,8 +28,8 @@ def generate_single_image(t_graph,mapping=None):
     return result
 
 def from_dir(desc_t,desc_p,image,directory):
-    t_graph=graph_factory(desc_t)
-    p_graph=graph_factory(desc_p)
+    t_graph=from_string(desc_t,IrDiGraph())
+    p_graph=from_string(desc_p,IrDiGraph())
     t_graph.set_image(image)
     p_graph.set_image(image)
     if len(image.shape)==2:

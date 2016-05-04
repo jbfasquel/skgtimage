@@ -1,8 +1,6 @@
 #Author: Jean-Baptiste Fasquel <Jean-Baptiste.Fasquel@univ-angers.fr>, LARIS Laboratory, Angers University, France
 #Copyright (C) 2015 Jean-Baptiste Fasquel
 #Licence: BSD 3 clause
-
-
 import numpy as np
 import networkx as nx
 from skgtimage.core.parameters import regions_from_residues
@@ -11,8 +9,6 @@ from skgtimage.core.photometry import region_stat
 from skgtimage.core.topology import fill_region
 from skgtimage.core.brothers import find_groups_of_brothers,compute_possible_graphs
 from skgtimage.core.search_base import decreasing_ordered_nodes
-
-
 
 def find_subgraph_isomorphims(query_graph,ref_graph):
     matcher=nx.isomorphism.DiGraphMatcher(query_graph,ref_graph)

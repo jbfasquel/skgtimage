@@ -70,7 +70,7 @@ image=np.ma.MaskedArray(image,mask=np.logical_not(roi))
 # |     |
 # -->1--
 # Effect: 2 and 1 are split is separated regions
-expected_graph=skgti.core.graph_factory("1<0")
+expected_graph=skgti.core.from_string("1<0")
 image=np.array([[0, 0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 1, 2, 0, 0],
                 [0, 0, 1, 2, 1, 2, 0],
@@ -87,13 +87,5 @@ built_g,new_residues=skgti.core.topological_graph_from_labels(image)
 ############
 # PLOT EXPECTED AND BUILT GRAPHS
 ############
-plt.subplot(121);skgti.io.plot_graph(expected_graph);plt.title("Expected")
-plt.subplot(122);skgti.io.plot_graph(built_g);plt.title("Built");plt.show()
-
-############
-# PLOT BUILT GRAPH WITH REGIONS
-############
-filled_new_residues=skgti.core.fill_regions(new_residues)
-for i in range(0,len(filled_new_residues)): built_g.set_region(i,filled_new_residues[i])
-skgti.io.plot_model(skgti.core.TPModel(t_graph=built_g,image=image));plt.show()
-
+plt.subplot(121);skgti.io.plot_graph_refactorying(expected_graph);plt.title("Expected")
+plt.subplot(122);skgti.io.plot_graph_refactorying(built_g);plt.title("Built");plt.show()

@@ -29,6 +29,8 @@ skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 import helper
 classif,region2sim=helper.compared_with_truth(image,t_desc,p_desc,truth_dir,save_dir+"06_final",save_dir+"07_eval_classif/")
 print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = " , region2sim)
+'''
+
 # EVALUATION VS RAWSEGMENTATION
 region2segmentintensities={'text':127,'paper':0,'file':255}
 classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation_refactorying(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,
@@ -37,3 +39,4 @@ print("Raw segmentation vs truth: ",classif_rawsegmentation, "(proposed method G
 
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
 helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)
+'''

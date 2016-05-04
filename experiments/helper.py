@@ -114,7 +114,8 @@ def influence_of_commonisos(image,common_isomorphisms,eie_dist,eie_sim,built_t_g
     for i in range(0,len(common_isomorphisms)):
         current_matching=common_isomorphisms[i]
         try :
-            final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v3(built_t_graph,built_p_graph,t_graph,p_graph,current_matching)
+            #final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v3(built_t_graph,built_p_graph,t_graph,p_graph,current_matching)
+            final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v4(built_t_graph,built_p_graph,t_graph,p_graph,current_matching)
             (relabelled_final_t_graph,relabelled_final_p_graph)=skgti.core.rename_nodes([final_t_graph,final_p_graph],current_matching)
             relabelled_final_t_graph.set_image(image) #hack to save mixed region residues
 

@@ -1,7 +1,8 @@
 import numpy as np
 from skgtimage.core.graph import IrDiGraph
 from skgtimage.core.topology import fill_region
-#def region_stat(image,region,fct=np.mean,gray=True,component=None):
+
+
 def region_stat(image,region,fct=np.mean,mc=False):
     """
     Compute a photometric statistics within a region of the image
@@ -128,38 +129,19 @@ def photometric_graph_from_residues_refactorying(image,residues):
     for i in range(0,len(residues)):
         g.add_node(i)
         g.set_region(i,residues[i])
-
     #################################
     #Edges: according to photometry
     #################################
     update_photometric_graph(g)
-    '''
-    ordered_indices,stats=sort_region_indices_by_stat(image,residues,fct=np.mean,mc=False,return_stats=True)
-
-    for i in range(0,len(ordered_indices)):
-        node=ordered_indices[i]
-        value=stats[i]
-        g.set_mean_residue_intensity(node,value)
-
-    increasing_ordered=ordered_indices[::-1]
-    increasing_stats=stats[::-1]
-    for i in range(0,len(increasing_ordered)-1):
-        g.add_edge(increasing_ordered[i],increasing_ordered[i+1])
-    '''
     #################################
     #Return the final graph
     return g
-'''
-def update_intensities(graph):
-    pass
-'''
 
 def merge_nodes_photometry(graph,source,target):
     new_region=np.logical_or(graph.get_region(source),graph.get_region(target))
     graph.remove_node(source)
     graph.set_region(target,new_region)
     update_photometric_graph(graph)
-
 
 def update_photometric_graph(graph):
     """

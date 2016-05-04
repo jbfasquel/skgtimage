@@ -6,9 +6,9 @@
 import numpy as np
 import scipy as sp; from scipy import ndimage
 import networkx as nx
-from skgtimage.core.graph import IrDiGraph,transitive_reduction,mat2graph,graph2mat,transitive_reduction_matrix
+from skgtimage.core.graph import IrDiGraph,transitive_reduction,mat2graph,graph2mat,transitive_reduction_matrix,labelled_image2regions
 from skgtimage.core.search_base import recursive_predecessors
-
+#from skgtimage.core.factory import
 
 def fill_regions(regions):
     filled_regions=[fill_region(r) for r in regions]
@@ -20,28 +20,9 @@ def fill_region(r):
     filled=sp.ndimage.morphology.binary_fill_holes(r,se).astype(np.uint8)
     return filled
 
-def residues_from_labels(labelled_image):
-    tmp_label=labelled_image+1 #to avoid confusion with 0s from masked area (roi)
-    min_label=np.min(tmp_label)
-    max_label=np.max(tmp_label)
-    #residues=[np.where(tmp_label==i,1,0) for i in range(min_label,max_label+1)]
-    residues=[]
-    for i in range(min_label,max_label+1):
-        tmp=np.where(tmp_label==i,1,0)
-        if np.sum(tmp)>0: residues+=[tmp]
-    return residues
-
-def topological_graph_from_labels(labelled_image):
-    '''
-    tmp_label=labelled_image+1 #to avoid confusion with 0s from masked area (roi)
-    min_label=np.min(tmp_label)
-    max_label=np.max(tmp_label)
-    residues=[np.where(tmp_label==i,1,0) for i in range(min_label,max_label+1)]
-    for r in residues:
-        print("res: ", np.min(r),np.max(r))
-    '''
-    residues=residues_from_labels(labelled_image)
-    return topological_graph_from_residues(residues,copy=False)
+def topological_graph_from_labels(labelled_image,roi=None):
+    residues=labelled_image2regions(labelled_image,roi)
+    return topological_graph_from_residues_refactorying(residues,copy=False)
 
 
 def inclusions_from_residues(residues,filled_residues):
@@ -179,33 +160,3 @@ def merge_nodes_topology(graph,source,target):
         graph.remove_edge(e[0],e[1])
     #Remove node
     graph.remove_node(source)
-
-def topological_graph_from_residues(residues,copy=True):
-    import scipy as sp; from scipy import ndimage
-    working_residues=residues
-    if copy:
-        working_residues=[np.copy(r) for r in residues]
-    filled_residues=fill_regions(working_residues)
-    adj_included,working_residues=inclusions_from_residues(working_residues,filled_residues)
-
-    ###################
-    #Build graph
-    adj_included=transitive_reduction_matrix(adj_included)
-    g=IrDiGraph()
-    #Nodes
-    for i in range(0,adj_included.shape[0]): g.add_node(i)
-    #Edges
-    for i in range(0,adj_included.shape[0]):
-        for j in range(0,adj_included.shape[1]):
-            if (i != j) and (adj_included[i,j]!=0):
-                g.add_edge(i,j)
-    #g=transitive_reduction(g)
-    nodes=g.nodes()
-    for i in range(0,len(nodes)):
-        filled_r=fill_region(working_residues[i])
-        g.set_region(nodes[i],filled_r)
-
-    return g,working_residues
-
-
-
