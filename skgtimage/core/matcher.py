@@ -1,4 +1,7 @@
-from skgtimage.core.recognition import recognize_version2,greedy_refinement_v4,remove_smallest_leaf_regions,rename_nodes
+from skgtimage.core.graph import rename_nodes
+from skgtimage.core.filtering import remove_smallest_regions
+from skgtimage.core.subisomorphism import best_common_subgraphisomorphism
+from skgtimage.core.propagation import propagate
 from skgtimage.core.factory import from_string,from_labelled_image_refactorying
 import copy
 
@@ -36,7 +39,7 @@ class IPMatcher:
 
         self.filtering=filtering
         if self.filtering:
-            remove_smallest_leaf_regions(self.query_t_graph,self.query_p_graph)
+            remove_smallest_regions(self.query_t_graph,self.query_p_graph)
 
         self.ref_t_graph=ref_t_graph
         self.ref_p_graph=ref_p_graph
@@ -49,8 +52,8 @@ class IPMatcher:
         self.matching=None
         #Merging
         self.ordered_merges=None
-        self.t_graph_merges=None
-        self.p_graph_merges=None
+        #self.t_graph_merges=None
+        #self.p_graph_merges=None
         #Graphs after merges
         self.final_t_graph=None
         self.final_p_graph=None
@@ -60,20 +63,20 @@ class IPMatcher:
         self.relabelled_final_p_graph=None
 
     def compute_maching(self,verbose=False):
-        self.matching,self.common_isomorphisms,self.t_isomorphisms,self.p_isomorphisms,self.eie_sim,self.eie_dist=recognize_version2(self.query_t_graph,
+        self.matching,self.common_isomorphisms,self.t_isomorphisms,self.p_isomorphisms,self.eie_sim,self.eie_dist=best_common_subgraphisomorphism(self.query_t_graph,
                                                                                                        self.ref_t_graph,
                                                                                                        self.query_p_graph,
                                                                                                        self.ref_p_graph,verbose)
     def compute_merge(self):
 
-        self.final_t_graph,self.final_p_graph,histo=greedy_refinement_v4(self.query_t_graph,
+        self.final_t_graph,self.final_p_graph,self.ordered_merges=propagate(self.query_t_graph,
                                                                           self.query_p_graph,
                                                                           self.ref_t_graph,
                                                                           self.ref_p_graph,self.matching)
 
-        self.t_graph_merges=[i[0] for i in histo]
-        self.p_graph_merges=[i[1] for i in histo]
-        self.ordered_merges=[i[2] for i in histo]
+        #self.t_graph_merges=[i[0] for i in histo]
+        #self.p_graph_merges=[i[1] for i in histo]
+        #self.ordered_merges=[i[2] for i in histo]
 
     def update_final_graph(self):
         (self.relabelled_final_t_graph,self.relabelled_final_p_graph)=rename_nodes([self.final_t_graph,self.final_p_graph],self.matching)

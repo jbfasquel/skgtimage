@@ -30,8 +30,8 @@ image_chsv=skgti.utils.rgb2chsv(image_rgb)
 label=skgti.utils.mean_shift(image_chsv,0.1,roi,True,True) #0.1 OK
 
 built_t_graph,built_p_graph=skgti.core.from_labelled_image_refactorying(image,label)
-skgti.io.save_graph_refactorying(built_p_graph,name="photo",directory=save_dir+"tmp/",tree=True)
-skgti.io.save_graphregions_refactorying(built_p_graph,directory=save_dir+"tmp/")
+skgti.io.save_graph(built_p_graph,name="photo",directory=save_dir+"tmp/",tree=True)
+skgti.io.save_graphregions(built_p_graph,directory=save_dir+"tmp/")
 skgti.io.save_intensities(built_p_graph,directory=save_dir+"tmp/")
 
 #skgti.io.plot_graph_with_regions_refactorying(built_t_graph);plt.show();quit()

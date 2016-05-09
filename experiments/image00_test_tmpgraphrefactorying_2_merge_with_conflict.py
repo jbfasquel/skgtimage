@@ -32,4 +32,4 @@ t_desc="C,B<A";t_graph=skgti.core.from_string(t_desc)
 p_desc="A<B<C";p_graph=skgti.core.from_string(p_desc)
 
 id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=True)
-skgti.io.plot_graph_with_regions_refactorying(matcher.relabelled_final_t_graph);plt.show()
+skgti.io.plot_graph_with_regions(matcher.relabelled_final_t_graph);plt.show()

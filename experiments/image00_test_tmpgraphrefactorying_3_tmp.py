@@ -36,4 +36,4 @@ plt.subplot(122)
 skgti.io.plot_graph_refactorying(built_p_graph);plt.show();quit()
 '''
 id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=True)
-skgti.io.plot_graph_with_regions_refactorying(matcher.relabelled_final_t_graph);plt.show()
+skgti.io.plot_graph_with_regions(matcher.relabelled_final_t_graph);plt.show()

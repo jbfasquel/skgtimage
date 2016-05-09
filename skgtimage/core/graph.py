@@ -7,6 +7,38 @@ Truc
 import networkx as nx
 import numpy as np
 
+def extract_subgraph(built_p,subnodes):
+    """
+    Return
+    :return:
+    """
+    built_p=built_p.copy()
+    nodes_to_remove=set(built_p.nodes())-set(subnodes)
+    for n in nodes_to_remove:
+        if len(built_p.successors(n)) == 1:
+            father=built_p.successors(n)[0]
+            top_edge=(n,father)
+            built_p.remove_edge(top_edge[0],top_edge[1])
+            #Bottom edge
+            bottom_edges=[(i,n) for i in built_p.predecessors(n)]
+            for e in bottom_edges:
+                built_p.remove_edge(e[0],e[1])
+                built_p.add_edge(e[0],father)
+            built_p.remove_node(n)
+        elif len(built_p.successors(n)) == 0:
+            if len(built_p.predecessors(n)) !=0:
+                pred=built_p.predecessors(n)[0]
+                built_p.remove_edge(pred,n)
+            built_p.remove_node(n)
+    return built_p
+
+
+def rename_nodes(graphs,matching):
+    resulting_graphs=[]
+    for g in graphs:
+        resulting_graphs+=[nx.relabel_nodes(g,matching)]
+    return tuple(resulting_graphs)
+
 def labelled_image2regions(labelled_image,roi=None):
     """
         Generate regions from labelled image: each region correspond to a specific label

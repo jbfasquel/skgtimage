@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import skgtimage as skgti
 
 
-def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir):
+def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir,slices=None):
     result_dir=save_dir+"08_eie_influence/"
     if not os.path.exists(result_dir) : os.mkdir(result_dir)
 
@@ -30,16 +30,16 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
         #tmp_directory
         tmp_dir=result_dir+"iso_"+str(i)+"/" #;if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
         matching_links=skgti.io.matching2links(current_matching)
-        skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
-        skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
 
-        final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v4(matcher.query_t_graph,
+        final_t_graph,final_p_graph,ordered_merges=skgti.core.propagate(matcher.query_t_graph,
                                                                       matcher.query_p_graph,
                                                                       matcher.ref_t_graph,
                                                                       matcher.ref_p_graph,current_matching)
-        ordered_merges=[i[2] for i in histo]
-        skgti.io.save_graph_links_refactorying(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_t",directory=tmp_dir,tree=True)
-        skgti.io.save_graph_links_refactorying(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,ordered_merges],['red','green'],name="common_iso_merge_p",directory=tmp_dir,tree=True)
+        #ordered_merges=[i[2] for i in histo]
+        skgti.io.save_graph_links(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,ordered_merges],['red','green'],label_lists=[[],range(0,len(ordered_merges)+1)],name="common_iso_merge_t",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,ordered_merges],['red','green'],label_lists=[[],range(0,len(ordered_merges)+1)],name="common_iso_merge_p",directory=tmp_dir,tree=True)
 
 
         (relabelled_final_t_graph,relabelled_final_p_graph)=skgti.core.rename_nodes([final_t_graph,final_p_graph],current_matching)
@@ -47,6 +47,18 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
         # GENERATING IMAGES COMBINING REGIONS RESIDUES WITH SPECIFICS INTENSITIES
         result_image=skgti.io.generate_single_image(relabelled_final_t_graph,res2int)
         l_result_image=np.ma.array(result_image, mask=np.logical_not(roi))
+        #####
+        # SAVING IMAGES
+        if len(result_image.shape)==2:
+            sp.misc.imsave(tmp_dir+"_image.png",result_image.astype(np.uint8))
+            sp.misc.imsave(tmp_dir+"_truth.png",truth_image.astype(np.uint8))
+            sp.misc.imsave(tmp_dir+"_result.png",result_image.astype(np.uint8))
+        if len(result_image.shape)==3:
+            for s in slices:
+                sp.misc.imsave(tmp_dir+"_image_"+str(s)+".png",slice2png(result_image,s))
+                sp.misc.imsave(tmp_dir+"_truth_"+str(s)+".png",slice2png(truth_image,s))
+                sp.misc.imsave(tmp_dir+"_result_"+str(s)+".png",slice2png(result_image,s))
+
         #####
         # COMPUTING THE CLASSIFICATION RATE
         classif=skgti.utils.goodclassification_rate(l_result_image,l_truth_image)
@@ -69,42 +81,6 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
     print("Eies dis: ",matcher.eie_dist)
     print("Eies sim: ",matcher.eie_sim)
     print("performances: ",performances)
-
-'''
-def influence_of_commonisos(image,common_isomorphisms,eie_dist,eie_sim,built_t_graph,built_p_graph,t_graph,p_graph,t_desc,p_desc,input_dir,save_dir):
-    performances=[]
-    for i in range(0,len(common_isomorphisms)):
-        current_matching=common_isomorphisms[i]
-        try :
-            #final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v3(built_t_graph,built_p_graph,t_graph,p_graph,current_matching)
-            final_t_graph,final_p_graph,histo=skgti.core.greedy_refinement_v4(built_t_graph,built_p_graph,t_graph,p_graph,current_matching)
-            (relabelled_final_t_graph,relabelled_final_p_graph)=skgti.core.rename_nodes([final_t_graph,final_p_graph],current_matching)
-            relabelled_final_t_graph.set_image(image) #hack to save mixed region residues
-
-            save_built_graphs(save_dir,"06_relabelled_"+str(i)+"_",relabelled_final_t_graph,relabelled_final_p_graph)
-            classif,region2sim=compared_with_truth(image,t_desc,p_desc,input_dir,save_dir+"06_relabelled_"+str(i)+"_built_t_graph",save_dir+"07_eval_classif_"+str(i)+"/")
-            #print("Eie dis: ",eie_dist[i]," - Eie sim: ", eie_sim[i], " --> classif: " , classif)
-            performances+=[classif]
-        except Exception as e:
-            print("exception ",e)
-            performances+=["Failed"]
-
-    #####
-    # SAVING TO CSV
-    import csv
-    fullfilename=os.path.join(save_dir,"06_classif_vs_commoniso.csv")
-    csv_file=open(fullfilename, "w")
-    c_writer = csv.writer(csv_file,dialect='excel')
-    c_writer.writerow(["Result for each commoniso"])
-    c_writer.writerow(['Eie dist']+[i for i in eie_dist])
-    c_writer.writerow(['Eie sim']+[i for i in eie_sim])
-    c_writer.writerow(['GCR']+[i for i in performances])
-    csv_file.close()
-
-    print("Eies dis: ",eie_dist)
-    print("Eies sim: ",eie_sim)
-    print("performances: ",performances)
-'''
 
 def generate_absdiff_inunint8(result,ref):
     diff_result=np.abs(result.astype(np.float)-ref.astype(np.float))

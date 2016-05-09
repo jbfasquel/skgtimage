@@ -12,6 +12,9 @@ from .graph import *
 from .search_base import *
 from .search_filtered import *
 
+##### FILTERING
+from .filtering import *
+
 ##### SIMILARITIES
 from .brothers import *
 
@@ -28,11 +31,11 @@ from .photometry import *
 from .factory import *
 
 ##### MATCHING
-from .matching import *
+from .subisomorphism import *
 
 ##### MATCHER
 from .matcher import *
 
 
 ##### RECOGNITION
-from .recognition import *
+from .propagation import *

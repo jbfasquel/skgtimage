@@ -87,5 +87,5 @@ built_g,new_residues=skgti.core.topological_graph_from_labels(image)
 ############
 # PLOT EXPECTED AND BUILT GRAPHS
 ############
-plt.subplot(121);skgti.io.plot_graph_refactorying(expected_graph);plt.title("Expected")
-plt.subplot(122);skgti.io.plot_graph_refactorying(built_g);plt.title("Built");plt.show()
+plt.subplot(121);skgti.io.plot_graph(expected_graph);plt.title("Expected")
+plt.subplot(122);skgti.io.plot_graph(built_g);plt.title("Built");plt.show()

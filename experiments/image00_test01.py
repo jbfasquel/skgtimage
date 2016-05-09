@@ -27,8 +27,8 @@ roi=np.array([[0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0]])
 
-t_desc="B<A"
-p_desc="A<B"
+t_desc="C<B<A"
+p_desc="A<B<C"
 
 rA=np.ones((5,5))
 rB=np.array([[0, 0, 0, 0, 0],
@@ -42,7 +42,7 @@ rB=np.array([[0, 0, 0, 0, 0],
 ##########
 id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=False)
 #id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=False,thickness=2,filtering=False,verbose=False)
-
+skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 print(id2r['A'])
 print(np.array_equal(id2r['A'],rA))
 print(np.array_equal(id2r['B'],rB))
@@ -50,5 +50,5 @@ print(np.array_equal(id2r['B'],rB))
 ##########
 # PLOT
 ##########
-skgti.io.plot_graph_with_regions_refactorying(matcher.relabelled_final_t_graph);plt.show()
+skgti.io.plot_graph_with_regions(matcher.relabelled_final_t_graph);plt.show()
 #skgti.io.plot_graph_links(matcher.built_t_graph,matcher.ref_t_graph,[skgti.io.matching2links(matcher.matching),matcher.ordered_merges],['red','green']);plt.show()

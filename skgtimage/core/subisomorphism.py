@@ -3,10 +3,7 @@
 #Licence: BSD 3 clause
 import numpy as np
 import networkx as nx
-from skgtimage.core.parameters import regions_from_residues
-from skgtimage.core.graph import transitive_closure,transitive_reduction
-from skgtimage.core.photometry import region_stat
-from skgtimage.core.topology import fill_region
+from skgtimage.core.graph import transitive_closure
 from skgtimage.core.brothers import find_groups_of_brothers,compute_possible_graphs
 from skgtimage.core.search_base import decreasing_ordered_nodes
 
@@ -22,13 +19,7 @@ def __find_common_isomorphims__(isomorphisms_1,isomorphisms_2):
             if (t == p_iso) and (t is not None) and (p_iso is not None): matchings+=[t]
     return matchings
 
-def find_common_isomorphisms(isomorphisms):
-    matchings=__find_common_isomorphims__(isomorphisms[0],isomorphisms[1])
-    for i in range(2,len(isomorphisms)):
-        matchings=__find_common_isomorphims__(matchings,isomorphisms[i])
-    return matchings
-
-def generate_common_subgraphisomorphisms(query_graphs,ref_graphs):
+def common_subgraphisomorphisms(query_graphs,ref_graphs):
     ###########################################################################################
     #Preparing possible "permutations" within ref_graphs: managing 'brother' nodes
     ###########################################################################################
@@ -59,9 +50,56 @@ def generate_common_subgraphisomorphisms(query_graphs,ref_graphs):
     ###########################################################################################
     #Common isomorphisms: intersection of matchings
     ###########################################################################################
-    common_isomorphisms=find_common_isomorphisms(isomorphisms_per_graph)
+    common_isomorphisms=__find_common_isomorphims__(isomorphisms_per_graph[0],isomorphisms_per_graph[1])
+    for i in range(2,len(isomorphisms_per_graph)):
+        common_isomorphisms=__find_common_isomorphims__(common_isomorphisms,isomorphisms_per_graph[i])
 
     return common_isomorphisms,isomorphisms_per_graph
+
+
+def best_common_subgraphisomorphism(query_t_graph,ref_t_graph,query_p_graph,ref_p_graph,return_details=False):
+    ###########################################################################################
+    #1) Find common matchings
+    ###########################################################################################
+    common_isomorphisms,isomorphisms_per_graph=common_subgraphisomorphisms([query_t_graph,query_p_graph],[ref_t_graph,ref_p_graph])
+    '''
+    print("Nb t iso",len(isomorphisms_per_graph[0]))
+    print("Nb p iso",len(isomorphisms_per_graph[1]))
+    print("Nb common iso",len(common_isomorphisms))
+    '''
+    if len(common_isomorphisms) == 0: raise Exception("No common iso")
+    ###########################################################################################
+    #2) Compute energies regarding similarities
+    ###########################################################################################
+    brothers=find_groups_of_brothers(ref_p_graph)
+    matching=None
+    #Computing energies
+    eie_sim=[]
+    for c_iso in common_isomorphisms:
+        eie_sim+=[energie_sim(query_p_graph,ref_p_graph,c_iso)]
+    eie_dist=[]
+    for c_iso in common_isomorphisms:
+        eie_dist+=[energie_dist(query_p_graph,ref_p_graph,c_iso)]
+    #Taking the best common isomorphisms as result
+    if (len(brothers) != 0) and (len(eie_sim) !=0):
+        min_eie=min(eie_sim)
+        nb=eie_sim.count(min_eie)
+        if nb != 1 : raise Exception("erreur")
+        index_of_min=eie_sim.index(min_eie)
+        matching=common_isomorphisms[index_of_min]
+    else:
+        max_eie=max(eie_dist)
+        nb=eie_dist.count(max_eie)
+        #if nb != 1 : raise Exception("erreur")
+        index_of_max=eie_dist.index(max_eie)
+        matching=common_isomorphisms[index_of_max]
+
+    #print("eie_sim:", eie_sim)
+    #print("eie_dist:", eie_dist)
+
+    return matching,common_isomorphisms,isomorphisms_per_graph[0],isomorphisms_per_graph[1],eie_sim,eie_dist
+
+
 
 def nb_automorphisms(graphs):
     auto=[]
@@ -71,14 +109,12 @@ def nb_automorphisms(graphs):
         auto+=[len(automorphisms)]
     return auto
 
-
 def oirelationships(io):
     oi={}
     for i in io:
         my_val=io[i]
         if type(my_val)==str:
             if my_val not in oi:
-                #my_key=set(my_val])
                 oi[my_val]=set([i])
         else:
             for o in my_val:

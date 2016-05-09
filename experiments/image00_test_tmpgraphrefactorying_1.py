@@ -48,14 +48,14 @@ built_t_graph,built_p_graph=skgti.core.from_labelled_image_refactorying(image,la
 #skgti.core.merge_nodes_topology(built_t_graph,4,1)
 #skgti.core.merge_nodes_topology(built_t_graph,4,3)
 
-matching,common_isomorphisms,t_isomorphisms,p_isomorphisms,eie_sim,eie_dist=skgti.core.recognize_version2(built_t_graph,
+matching,common_isomorphisms,t_isomorphisms,p_isomorphisms,eie_sim,eie_dist=skgti.core.best_common_subgraphisomorphism(built_t_graph,
                                                                                                        t_graph,
                                                                                                        built_p_graph,
                                                                                                        p_graph,False)
 
 #skgti.io.plot_graph_links(built_t_graph,t_graph,link_lists=[skgti.io.matching2links(matching)],colors=['red']);plt.show()
 
-current_t_graph,current_p_graph,modification_historisation=skgti.core.greedy_refinement_v4(built_t_graph,built_p_graph,t_graph,p_graph,matching)
+current_t_graph,current_p_graph,modification_historisation=skgti.core.propagate(built_t_graph,built_p_graph,t_graph,p_graph,matching)
 ordered_merges=[i[2] for i in modification_historisation]
 print(ordered_merges)
 skgti.io.plot_graph_links(built_t_graph,t_graph,link_lists=[skgti.io.matching2links(matching),ordered_merges],colors=['red','green']);plt.show()
