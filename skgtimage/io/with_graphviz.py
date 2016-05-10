@@ -87,8 +87,7 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
         csv_file=open(fullfilename, "w")
         c_writer = csv.writer(csv_file,dialect='excel')
         c_writer.writerow(["Common iso"]+[i for i in range(0,len(matcher.common_isomorphisms))])
-        c_writer.writerow(['Eie dist']+[i for i in matcher.eie_dist])
-        c_writer.writerow(['Eie sim']+[i for i in matcher.eie_sim])
+        c_writer.writerow(['Eie']+[i for i in matcher.eie])
         csv_file.close()
 
     ##############################

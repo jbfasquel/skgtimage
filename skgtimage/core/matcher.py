@@ -47,8 +47,7 @@ class IPMatcher:
         self.t_isomorphisms=None
         self.p_isomorphisms=None
         self.common_isomorphisms=None
-        self.eie_sim=None
-        self.eie_dist=None
+        self.eie=None
         self.matching=None
         #Merging
         self.ordered_merges=None
@@ -63,7 +62,7 @@ class IPMatcher:
         self.relabelled_final_p_graph=None
 
     def compute_maching(self,verbose=False):
-        self.matching,self.common_isomorphisms,self.t_isomorphisms,self.p_isomorphisms,self.eie_sim,self.eie_dist=best_common_subgraphisomorphism(self.query_t_graph,
+        self.matching,self.common_isomorphisms,self.t_isomorphisms,self.p_isomorphisms,self.eie=best_common_subgraphisomorphism(self.query_t_graph,
                                                                                                        self.ref_t_graph,
                                                                                                        self.query_p_graph,
                                                                                                        self.ref_p_graph,verbose)

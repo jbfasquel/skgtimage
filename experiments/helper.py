@@ -75,13 +75,11 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
     c_writer = csv.writer(csv_file,dialect='excel')
     c_writer.writerow(["Reference result (min/max eie): "]+[ref_classif])
     c_writer.writerow(["Result for each commoniso"])
-    c_writer.writerow(['Eie dist']+[i for i in matcher.eie_dist])
-    c_writer.writerow(['Eie sim']+[i for i in matcher.eie_sim])
+    c_writer.writerow(['Eie']+[i for i in matcher.eie])
     c_writer.writerow(['GCR']+[i for i in performances])
     csv_file.close()
 
-    print("Eies dis: ",matcher.eie_dist)
-    print("Eies sim: ",matcher.eie_sim)
+    print("Eies: ",matcher.eie)
     print("performances: ",performances)
 
 def generate_absdiff_inunint8(result,ref):
@@ -90,6 +88,7 @@ def generate_absdiff_inunint8(result,ref):
     diff_result=np.where(diff_result!=0.0,255,0).astype(np.uint8)
     #diff_result=255*diff_result/np.max(diff_result)
     return diff_result.astype(np.uint8)
+
 def slice2png(image,slice):
     mini=np.min(image)
     maxi=np.max(image)

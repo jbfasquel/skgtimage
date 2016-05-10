@@ -37,7 +37,14 @@ id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,mana
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 
-#matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
+'''
+matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
+eie_per_iso=[]
+for c_iso in matcher.common_isomorphisms:
+    eie_per_iso+=[skgti.core.costiso(matcher.query_p_graph,matcher.ref_p_graph,c_iso)]
+print(eie_per_iso)
+'''
+
 
 # EVALUATION VS TRUTH
 import helper
