@@ -29,4 +29,4 @@ classif,region2sim=helper.compared_with_truth(image,t_desc,p_desc,truth_dir,save
 print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = " , region2sim)
 
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
-helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)
+helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir,slices=[45])

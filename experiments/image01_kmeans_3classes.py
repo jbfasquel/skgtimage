@@ -36,7 +36,6 @@ classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation_refa
                                                                                          save_dir+"06_final/",truth_dir,save_dir+"07_eval_vs_raw_seg/")
 print("Raw segmentation vs truth: ",classif_rawsegmentation, "(proposed method GCR=",classif_result,")")
 
-'''
+
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
 helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)
-'''

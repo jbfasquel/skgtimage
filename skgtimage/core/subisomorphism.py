@@ -71,9 +71,71 @@ def best_common_subgraphisomorphism(query_t_graph,ref_t_graph,query_p_graph,ref_
     ###########################################################################################
     #2) Compute energies regarding similarities
     ###########################################################################################
-    brothers=find_groups_of_brothers(ref_p_graph)
-    matching=None
     #Computing energies
+    #matching,eie_sim,eie_dist=cost2isomorphism_v1(query_p_graph,ref_p_graph,common_isomorphisms)
+    matching,eie_sim,eie_dist=cost2isomorphism_v2(query_p_graph,ref_p_graph,common_isomorphisms)
+    #print("eie_sim:", eie_sim)
+    #print("eie_dist:", eie_dist)
+
+    return matching,common_isomorphisms,isomorphisms_per_graph[0],isomorphisms_per_graph[1],eie_sim,eie_dist
+
+def costiso(query_graph,ref_graph,iso):
+    oi=oirelationships(iso)
+    list_of_nodes=decreasing_ordered_nodes(ref_graph)
+    #print(list_of_nodes)
+    intensities=[]
+    cost_brothers=[]
+    for i in range(0,len(list_of_nodes)):
+        current_element=list_of_nodes[i]
+        cost_brothers+=[0.0]
+        ################################################
+        #When brothers: one computes the mean intensity
+        ################################################
+        if len(current_element) > 1:
+            local_intensities=[]
+            for b in current_element:
+                corresponding_node=list(oi[b])[0]
+                local_intensities+=[query_graph.get_mean_residue_intensity(corresponding_node)]
+            for l in range(1,len(local_intensities)):
+                cost_brothers[i]+= -(local_intensities[l]-local_intensities[l-1])
+            mean_intensity=np.mean(np.asarray(local_intensities))
+        ################################################
+        #When simple node: one only retrieves the mean intensity
+        ################################################
+        else:
+            tmp=list(current_element)[0]
+            target=oi[tmp]
+            corresponding_node=list(target)[0]
+            mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
+        ################################################
+        #Keep intensity
+        ################################################
+        intensities+=[mean_intensity]
+    #Compute distances:
+    #print(intensities)
+    global_cost=0
+    for i in range(0,len(list_of_nodes)-1):
+        global_cost+=np.abs(intensities[i]-intensities[i+1])
+    for i in range(0,len(list_of_nodes)):
+        global_cost+=cost_brothers[i]
+    return global_cost
+
+
+def cost2isomorphism_v2(query_p_graph,ref_p_graph,common_isomorphisms):
+    eie_per_iso=[]
+    for c_iso in common_isomorphisms:
+        eie_per_iso+=[costiso(query_p_graph,ref_p_graph,c_iso)]
+
+    #Taking the best common isomorphisms as result
+    matching=None
+    max_eie=max(eie_per_iso)
+    index_of_max=eie_per_iso.index(max_eie)
+    matching=common_isomorphisms[index_of_max]
+
+    return matching,eie_per_iso,eie_per_iso
+
+
+def cost2isomorphism_v1(query_p_graph,ref_p_graph,common_isomorphisms):
     eie_sim=[]
     for c_iso in common_isomorphisms:
         eie_sim+=[energie_sim(query_p_graph,ref_p_graph,c_iso)]
@@ -81,10 +143,12 @@ def best_common_subgraphisomorphism(query_t_graph,ref_t_graph,query_p_graph,ref_
     for c_iso in common_isomorphisms:
         eie_dist+=[energie_dist(query_p_graph,ref_p_graph,c_iso)]
     #Taking the best common isomorphisms as result
+    matching=None
+    brothers=find_groups_of_brothers(ref_p_graph)
     if (len(brothers) != 0) and (len(eie_sim) !=0):
         min_eie=min(eie_sim)
-        nb=eie_sim.count(min_eie)
-        if nb != 1 : raise Exception("erreur")
+        #nb=eie_sim.count(min_eie)
+        #if nb != 1 : raise Exception("erreur")
         index_of_min=eie_sim.index(min_eie)
         matching=common_isomorphisms[index_of_min]
     else:
@@ -94,12 +158,7 @@ def best_common_subgraphisomorphism(query_t_graph,ref_t_graph,query_p_graph,ref_
         index_of_max=eie_dist.index(max_eie)
         matching=common_isomorphisms[index_of_max]
 
-    #print("eie_sim:", eie_sim)
-    #print("eie_dist:", eie_dist)
-
-    return matching,common_isomorphisms,isomorphisms_per_graph[0],isomorphisms_per_graph[1],eie_sim,eie_dist
-
-
+    return matching,eie_sim,eie_dist
 
 def nb_automorphisms(graphs):
     auto=[]
@@ -122,6 +181,7 @@ def oirelationships(io):
                 else: oi[o] |= set([i])
     return oi
 
+
 def energie_dist(query_graph,ref_graph,iso):
     oi=oirelationships(iso)
     list_of_nodes=decreasing_ordered_nodes(ref_graph)
@@ -129,19 +189,26 @@ def energie_dist(query_graph,ref_graph,iso):
     intensities=[]
     for i in range(0,len(list_of_nodes)):
         current_element=list_of_nodes[i]
+        ################################################
         #When brothers: one computes the mean intensity
+        ################################################
         if len(current_element) > 1:
             local_intensities=[]
             for b in current_element:
                 corresponding_node=list(oi[b])[0]
                 local_intensities+=[query_graph.get_mean_residue_intensity(corresponding_node)]
             mean_intensity=np.mean(np.asarray(local_intensities))
+        ################################################
         #When simple node: one only retrieves the mean intensity
+        ################################################
         else:
             tmp=list(current_element)[0]
             target=oi[tmp]
             corresponding_node=list(target)[0]
             mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
+        ################################################
+        #Keep intensity
+        ################################################
         intensities+=[mean_intensity]
     #Compute distances:
     #print(intensities)

@@ -50,12 +50,14 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
         #####
         # SAVING IMAGES
         if len(result_image.shape)==2:
-            sp.misc.imsave(tmp_dir+"_image.png",result_image.astype(np.uint8))
+            sp.misc.imsave(tmp_dir+"_image.png",image.astype(np.uint8))
             sp.misc.imsave(tmp_dir+"_truth.png",truth_image.astype(np.uint8))
             sp.misc.imsave(tmp_dir+"_result.png",result_image.astype(np.uint8))
+            sp.misc.imsave(tmp_dir+"_diff.png",generate_absdiff_inunint8(result_image,truth_image))
+
         if len(result_image.shape)==3:
             for s in slices:
-                sp.misc.imsave(tmp_dir+"_image_"+str(s)+".png",slice2png(result_image,s))
+                sp.misc.imsave(tmp_dir+"_image_"+str(s)+".png",slice2png(image,s))
                 sp.misc.imsave(tmp_dir+"_truth_"+str(s)+".png",slice2png(truth_image,s))
                 sp.misc.imsave(tmp_dir+"_result_"+str(s)+".png",slice2png(result_image,s))
 

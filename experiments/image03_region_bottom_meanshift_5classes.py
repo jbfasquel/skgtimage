@@ -1,54 +1,39 @@
-import os,pickle
+import os
 import numpy as np
-import scipy as sp;from scipy import misc;from scipy import ndimage
-import matplotlib.pyplot as plt
+import scipy as sp;from scipy import misc
 import skgtimage as skgti
+import matplotlib.pyplot as plt
 
 
-#########
-# MISC INFORMATIONS
-#########
-truth_dir="Database/image03/truth_top/"
-save_dir="Database/image03/top_meanshift_ok_filtering_4classes_versus4expected/"
+truth_dir="Database/image03/truth_bottom/"
+save_dir="Database/image03/bottom_meanshift_5classes/"
 
-#########
-# A PRIORI KNOWLEDGE
-#########
-t_desc="C,D<B<A;E,F<D;G<C;H<E"
-p_desc="G=B<E=F<H=D<A=C"
-
-#########
+# KNOWLEDGE
+t_desc="E<D;G<F;D,F,H,I<C<B<A"
+p_desc="B=F<D=H<I=E<C=A=G"
 # IMAGE: COLOR AND GRAY
-#########
-#COLOR IMAGE
 image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
-#ROI
 roi=sp.misc.imread(os.path.join(truth_dir,"roi.png"))
-#GRAYSCALE IMAGE
 image=skgti.utils.rgb2gray(image_rgb)
 
-# MEANSHIFT ON COLOR IMAGE
+# SEGMENTATION
 image_chsv=skgti.utils.rgb2chsv(image_rgb)
-label=skgti.utils.mean_shift(image_chsv,0.12,roi,True,True) #0.1 OK
-################
+label=skgti.utils.mean_shift(image_chsv,0.1,roi,True,True) #0.1 OK
+
 # RECOGNITION
-################
 id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=True,verbose=True)
+#matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
-
-#matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
+matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
 
 # EVALUATION VS TRUTH
 import helper
 classif,region2sim=helper.compared_with_truth(image,t_desc,p_desc,truth_dir,save_dir+"06_final",save_dir+"07_eval_classif/")
 print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = " , region2sim)
-
 # EVALUATION VS RAWSEGMENTATION
-region2segmentintensities={'A':170,'B':85,'D':0,'C':170,'G':85,'E':85,'F':255,'H':0}
+region2segmentintensities={'A':0,'B':63,'C':0,'H':255,'D':127,'E':191,'F':63,'G':0,'I':191}
 classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation_refactorying(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,save_dir+"06_final/",truth_dir,save_dir+"07_eval_vs_raw_seg/")
 print("Raw segmentation vs truth: ",classif_rawsegmentation, "(proposed method GCR=",classif_result,")")
-
-
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
 helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)

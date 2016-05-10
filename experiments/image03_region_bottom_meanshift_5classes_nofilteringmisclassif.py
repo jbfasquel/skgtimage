@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import skgtimage as skgti
 
 truth_dir="Database/image03/truth_bottom/"
-save_dir="Database/image03/bottom_meanshift_nok_misclassif_5classes_versus4expected/"
+save_dir="Database/image03/bottom_meanshift_5classes_nofilteringmisclassif/"
 
 # KNOWLEDGE
 t_desc="E<D;G<F;D,F,H,I<C<B<A"
