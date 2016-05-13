@@ -6,7 +6,7 @@ import skgtimage as skgti
 import helper
 
 truth_dir="Database/image03/truth_bottom/"
-save_dir="Database/image03/bottom_meanshift_4classes_nok_bad_segmentation_/"
+save_dir="Database/image03/bottom_meanshift_4classes_nok_bad_segmentation/"
 
 # KNOWLEDGE
 t_desc="E<D;G<F;D,F,H,I<C<B<A"
@@ -20,15 +20,7 @@ image=skgti.utils.rgb2gray(image_rgb)
 image_chsv=skgti.utils.rgb2chsv(image_rgb)
 label=skgti.utils.mean_shift(image_chsv,0.12,roi,True,True) #0.1 OK
 
-
 # RECOGNITION
-matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False)
+matcher=skgti.core.matcher_factory(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=0)
 matcher.compute_maching(True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
-
-'''
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=False,verbose=True)
-skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
-skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
-matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
-'''

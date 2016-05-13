@@ -18,7 +18,7 @@ roi=sp.misc.imread(truth_dir+"roi.png")
 
 label=skgti.utils.mean_shift(image,10,roi,False,True)
 # RECOGNITION
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=False,verbose=True)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=0,verbose=True)
 
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")

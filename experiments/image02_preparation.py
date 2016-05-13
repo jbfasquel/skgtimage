@@ -25,7 +25,7 @@ for i in ['liver','vessel','tumor']:
     np.save(os.path.join(output,"region_"+i+".npy"),image)
 '''
 
-
+'''
 input="Database/image02/truth_filled/"
 output="Database/image02/truth/"
 
@@ -40,4 +40,15 @@ liver=liver-tumors-vessels
 np.save(os.path.join(output,"region_liver.npy"),liver)
 np.save(os.path.join(output,"region_vessel.npy"),vessels)
 np.save(os.path.join(output,"region_tumor.npy"),tumors)
+'''
+truth_dir="Database/image02/truth/"
+image=np.load(os.path.join(truth_dir,"image_filtered.npy"))
+t_desc="tumor,vessel<liver"
+p_desc="tumor<liver<vessel"
 
+t_graph,p_graph=skgti.io.from_dir(t_desc,p_desc,image,truth_dir)
+#plt.imshow(p_graph.get_image());plt.show()
+skgti.io.plot_graph_histogram(t_graph,p_graph,True)#;plt.show()
+plt.savefig(truth_dir+"histograms.svg",format="svg",bbox_inches='tight')
+plt.savefig(truth_dir+"histograms.png",format="png",bbox_inches='tight')
+plt.gcf().clear()
