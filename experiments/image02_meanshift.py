@@ -19,7 +19,7 @@ roi=np.load(truth_dir+"roi.npy")
 # SEGMENTATION MEANSHIFT
 label=skgti.utils.mean_shift(image,15,roi,False,True) #0.1 OK
 # RECOGNITION
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=True,verbose=True)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=1,verbose=True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,True,slices=[45])
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 #matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")

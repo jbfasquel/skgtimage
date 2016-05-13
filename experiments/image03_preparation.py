@@ -157,6 +157,7 @@ sp.misc.imsave(os.path.join(output,"region_H.png"),H)
 ######################################
 #PREPARE GROUNDTRUTH BOTTOM: FILLED REGIONS -> RESIDUES
 ######################################
+'''
 input="Database/image03/truth_bottom_filled/"
 output="Database/image03/truth_bottom/"
 A=sp.misc.imread(os.path.join(input,"region_A.png"))
@@ -181,4 +182,32 @@ sp.misc.imsave(os.path.join(output,"region_D.png"),new)
 G=sp.misc.imread(os.path.join(input,"region_G.png"))
 new=F-G
 sp.misc.imsave(os.path.join(output,"region_F.png"),new)
+'''
+##########
+#histogram top
+truth_dir="Database/image03/truth_top/"
+t_desc="C,D<B<A;E,F<D;G<C;H<E"
+p_desc="G=B<E=F<H=D<A=C"
+image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
+image=skgti.utils.rgb2gray(image_rgb)
+t_graph,p_graph=skgti.io.from_dir(t_desc,p_desc,image,truth_dir)
+#plt.imshow(p_graph.get_image());plt.show()
+skgti.io.plot_graph_histogram(t_graph,p_graph,True)#;plt.show()
+plt.savefig(truth_dir+"histograms.svg",format="svg",bbox_inches='tight')
+plt.savefig(truth_dir+"histograms.png",format="png",bbox_inches='tight')
+plt.gcf().clear()
+
+##########
+#histogram bottom
+truth_dir="Database/image03/truth_bottom/"
+t_desc="E<D;G<F;D,F,H,I<C<B<A"
+p_desc="B=F<D=H<I=E<C=A=G"
+image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
+image=skgti.utils.rgb2gray(image_rgb)
+t_graph,p_graph=skgti.io.from_dir(t_desc,p_desc,image,truth_dir)
+#plt.imshow(p_graph.get_image());plt.show()
+skgti.io.plot_graph_histogram(t_graph,p_graph,True)#;plt.show()
+plt.savefig(truth_dir+"histograms.svg",format="svg",bbox_inches='tight')
+plt.savefig(truth_dir+"histograms.png",format="png",bbox_inches='tight')
+plt.gcf().clear()
 

@@ -31,15 +31,15 @@ def matcher_factory(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=Fa
     return matcher
 
 class IPMatcher:
-    def __init__(self,built_t_graph,built_p_graph,ref_t_graph,ref_p_graph,filtering=False):
+    def __init__(self,built_t_graph,built_p_graph,ref_t_graph,ref_p_graph,filtering=0):
         self.built_t_graph=built_t_graph
         self.built_p_graph=built_p_graph
         self.query_t_graph=copy.deepcopy(built_t_graph)
         self.query_p_graph=copy.deepcopy(built_p_graph)
 
         self.filtering=filtering
-        if self.filtering:
-            remove_smallest_regions(self.query_t_graph,self.query_p_graph)
+        if self.filtering != 0 :
+            remove_smallest_regions(self.query_t_graph,self.query_p_graph,self.filtering)
 
         self.ref_t_graph=ref_t_graph
         self.ref_p_graph=ref_p_graph

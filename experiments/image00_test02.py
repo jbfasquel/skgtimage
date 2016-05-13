@@ -44,9 +44,9 @@ sp.misc.imsave(truth_dir+"region_B.png",rB)
 ##########
 # VERSION 1
 ##########
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=False)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=1,verbose=False)
 #id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=False,thickness=2,filtering=False,verbose=False)
-#skgti.io.save_matcher_details(matcher,image,label,None,save_dir,False)
+skgti.io.save_matcher_details(matcher,image,label,None,save_dir,False)
 #print(id2r['A'])
 #print(np.array_equal(id2r['A'],rA))
 #print(np.array_equal(id2r['B'],rB))

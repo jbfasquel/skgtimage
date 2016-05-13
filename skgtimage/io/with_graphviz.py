@@ -7,7 +7,7 @@ import os,csv
 import numpy as np
 import scipy as sp;from scipy import misc
 import skgtimage as skgti
-
+import matplotlib.pyplot as plt
 
 def matching2links(matching):
     return [ (i,matching[i]) for i in matching]
@@ -44,12 +44,22 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     ##############################
     save_graph(matcher.ref_t_graph,name="ref_topological",directory=directory+"01_apiori/",tree=True)
     save_graph(matcher.ref_p_graph,name="ref_photometric",directory=directory+"01_apiori/",tree=False)
+    nb_brothers=skgti.core.find_groups_of_brothers(matcher.ref_p_graph)
+    if len(nb_brothers) > 0:
+        all_ref_graphs=skgti.core.compute_possible_graphs(matcher.ref_p_graph) #we add a list of n elements (all possible graphs)
+        for i in range(0,len(all_ref_graphs)):
+            save_graph(all_ref_graphs[i],name="ref_photometric_unwrapped_"+str(i),directory=directory+"01_apiori/",tree=False)
+
     ##############################
     #Saving built graphs and regions
     ##############################
     save_graph(matcher.built_t_graph,name="topological",directory=directory+"02_built_topology/",tree=True)
     save_graphregions(matcher.built_t_graph,directory=directory+"02_built_topology/",slices=slices)
     save_graph(matcher.built_p_graph,name="photometric",directory=directory+"02_built_photometry/",tree=False)
+    skgti.io.plot_graph_histogram(matcher.built_t_graph,matcher.built_p_graph,True)#;plt.show()
+    plt.savefig(directory+"02_built_photometry/"+"histograms.svg",format="svg",bbox_inches='tight')
+    plt.savefig(directory+"02_built_photometry/"+"histograms.png",format="png",bbox_inches='tight')
+    plt.gcf().clear()
     save_graphregions(matcher.built_p_graph,directory=directory+"02_built_photometry/",slices=slices)
     save_intensities(matcher.built_p_graph,directory=directory+"02_built_photometry/")
     ##############################
@@ -58,6 +68,11 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     save_graph(matcher.query_t_graph,name="topological",directory=directory+"03_filtered_built_topology/",tree=True)
     save_graphregions(matcher.query_t_graph,directory=directory+"03_filtered_built_topology/",slices=slices)
     save_graph(matcher.query_p_graph,name="photometric",directory=directory+"03_filtered_built_photometry/",tree=False)
+    skgti.io.plot_graph_histogram(matcher.query_t_graph,matcher.query_p_graph,True)#;plt.show()
+    plt.savefig(directory+"03_filtered_built_photometry/"+"histograms.svg",format="svg",bbox_inches='tight')
+    plt.savefig(directory+"03_filtered_built_photometry/"+"histograms.png",format="png",bbox_inches='tight')
+    plt.gcf().clear()
+
     save_graphregions(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/",slices=slices)
     save_intensities(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/")
     ##############################
@@ -114,11 +129,16 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     if matcher.relabelled_final_t_graph is not None:
         save_graph(matcher.relabelled_final_t_graph,name="topological",directory=directory+"06_final/",tree=True)
         save_graph(matcher.relabelled_final_p_graph,name="photometric",directory=directory+"06_final/",tree=True)
+        skgti.io.plot_graph_histogram(matcher.relabelled_final_t_graph,matcher.relabelled_final_p_graph,True)#;plt.show()
+        plt.savefig(directory+"06_final/"+"histograms.svg",format="svg",bbox_inches='tight')
+        plt.savefig(directory+"06_final/"+"histograms.png",format="png",bbox_inches='tight')
+        plt.gcf().clear()
         save_graphregions(matcher.relabelled_final_t_graph,directory=directory+"06_final/",slices=slices)
         save_intensities(matcher.relabelled_final_p_graph,directory=directory+"06_final/")
 ##############################
 # FUNCTION FOR DISPLAY
 ##############################
+
 def plot_graph_links(source_graph,target_graph,link_lists=[],colors=[]):
     """
     Plot graph using graphviz and matplotlib
