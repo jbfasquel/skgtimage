@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import skgtimage as skgti
 import helper
 
-truth_dir="Database/image01/truth/"
-save_dir="Database/image01/kmeans_3classes/"
+truth_dir="../../Database/image01/truth/"
+save_dir="../../Database/image01/kmeans_3classes/"
 
 t_desc="text<paper<file"
 p_desc="text<file<paper"
