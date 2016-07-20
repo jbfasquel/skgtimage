@@ -86,6 +86,115 @@ def best_common_subgraphisomorphism(query_t_graph,ref_t_graph,query_p_graph,ref_
 def matching_criterion_value(query_graph,ref_graph,iso):
     oi=oirelationships(iso)
     list_of_nodes=decreasing_ordered_nodes(ref_graph)
+    mean_intensities=[]
+    brothers_std_dev=[]
+    #negative_intensities=[]
+    for i in range(0,len(list_of_nodes)):
+        current_element=list_of_nodes[i]
+        #cost_brothers+=[0.0] #by default null penality
+        ################################################
+        #When brothers: one computes the mean intensity
+        ################################################
+        if len(current_element) > 1:
+            #Taking region size proportions into account
+            local_intensities=[]
+            brother_nodes=[list(oi[b])[0] for b in current_element]
+            #region=query_graph.get_region(brother_nodes[0]).astype(np.uint8)
+            #local_intensities+=[region_stat(query_graph.get_image(),region,fct=np.mean)]
+            for j in range(0,len(brother_nodes)):
+                local_intensities+=[query_graph.get_mean_residue_intensity(brother_nodes[j])]
+                #region+=query_graph.get_region(brother_nodes[j]).astype(np.uint8)
+
+            mean_intensity=np.mean(np.asarray(local_intensities))
+            stddev_intensity=np.std(np.asarray(local_intensities))
+            brothers_std_dev+=[stddev_intensity]
+            #local_intensities=sorted(local_intensities)
+            #local_intensities_diffs=[ np.abs(local_intensities[i]-local_intensities[i-1]) for i in range(0,len(local_intensities)-1)]
+            #negative_intensities+=local_intensities_diffs
+            #cost_brothers[i]=-(region_stat(query_graph.get_image(),region,fct=np.std))
+            #cost_brothers+=[(region_stat(query_graph.get_image(),region,fct=np.std))]
+        ################################################
+        #When simple node: one only retrieves the mean intensity
+        ################################################
+        else:
+            tmp=list(current_element)[0]
+            target=oi[tmp]
+            corresponding_node=list(target)[0]
+            mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
+        ################################################
+        #Keep intensity
+        ################################################
+        mean_intensities+=[mean_intensity]
+        #intensities+=[mean_intensity]
+
+    intensity_diffs=[ np.abs(mean_intensities[i]-mean_intensities[i-1]) for i in range(1,len(mean_intensities)-1)]
+    intensity_diffs_squared=np.asarray(intensity_diffs)**2
+    mean_intensity_diff=np.mean(intensity_diffs_squared)
+
+    eie=mean_intensity_diff
+    if len(brothers_std_dev) > 0:
+        brothers_std_dev_squared=np.asarray(brothers_std_dev)**2
+        eie=eie/np.mean(brothers_std_dev_squared)
+    '''
+    for n in negative_intensities:
+        eie-=n
+    '''
+    return eie
+
+
+'''
+def matching_criterion_value(query_graph,ref_graph,iso):
+    oi=oirelationships(iso)
+    list_of_nodes=decreasing_ordered_nodes(ref_graph)
+    intensities=[]
+    #cost_brothers=[]
+    negative_intensities=[]
+    for i in range(0,len(list_of_nodes)):
+        current_element=list_of_nodes[i]
+        #cost_brothers+=[0.0] #by default null penality
+        ################################################
+        #When brothers: one computes the mean intensity
+        ################################################
+        if len(current_element) > 1:
+            #Taking region size proportions into account
+            local_intensities=[]
+            brother_nodes=[list(oi[b])[0] for b in current_element]
+            region=query_graph.get_region(brother_nodes[0]).astype(np.uint8)
+            local_intensities+=[region_stat(query_graph.get_image(),region,fct=np.mean)]
+            for j in range(1,len(brother_nodes)):
+                local_intensities+=[query_graph.get_mean_residue_intensity(brother_nodes[j])]
+                region+=query_graph.get_region(brother_nodes[j]).astype(np.uint8)
+
+            mean_intensity=region_stat(query_graph.get_image(),region,fct=np.mean)
+            local_intensities=sorted(local_intensities)
+            local_intensities_diffs=[ np.abs(local_intensities[i]-local_intensities[i-1]) for i in range(0,len(local_intensities)-1)]
+            negative_intensities+=local_intensities_diffs
+            #cost_brothers[i]=-(region_stat(query_graph.get_image(),region,fct=np.std))
+            #cost_brothers+=[(region_stat(query_graph.get_image(),region,fct=np.std))]
+        ################################################
+        #When simple node: one only retrieves the mean intensity
+        ################################################
+        else:
+            tmp=list(current_element)[0]
+            target=oi[tmp]
+            corresponding_node=list(target)[0]
+            mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
+        ################################################
+        #Keep intensity
+        ################################################
+        intensities+=[mean_intensity]
+    intensity_diffs=[ np.abs(intensities[i]-intensities[i-1]) for i in range(0,len(intensities)-1)]
+    mean_intensity_diff=np.mean(np.asarray(intensity_diffs))
+
+    eie=mean_intensity_diff
+    for n in negative_intensities:
+        eie-=n
+    return eie
+'''
+'''
+def matching_criterion_value(query_graph,ref_graph,iso):
+    oi=oirelationships(iso)
+    list_of_nodes=decreasing_ordered_nodes(ref_graph)
     intensities=[]
     cost_brothers=[]
     for i in range(0,len(list_of_nodes)):
@@ -124,7 +233,7 @@ def matching_criterion_value(query_graph,ref_graph,iso):
         mean_cost_brothers=np.mean(np.asarray(cost_brothers))
         eie=float(mean_intensity_diff)/float(mean_cost_brothers)
     return eie
-
+'''
 
 def nb_automorphisms(graphs):
     auto=[]

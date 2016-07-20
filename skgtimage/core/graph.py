@@ -37,6 +37,9 @@ def rename_nodes(graphs,matching):
     resulting_graphs=[]
     for g in graphs:
         resulting_graphs+=[nx.relabel_nodes(g,matching)]
+    #Assign image
+    image=graphs[0].get_image()
+    for g in resulting_graphs: g.set_image(image)
     return tuple(resulting_graphs)
 
 def labelled_image2regions(labelled_image,roi=None):

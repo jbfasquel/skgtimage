@@ -15,7 +15,9 @@ image=sp.misc.imread(truth_dir+"image.png")
 roi=sp.misc.imread(truth_dir+"roi.png")
 
 # SEGMENTATION KMEANS
-label=skgti.utils.kmeans_refactorying(image,3,50,roi=roi,mc=False,verbose=True)
+label=skgti.utils.kmeans(image,3,50,roi=roi,mc=False,verbose=True)
+
+
 
 # RECOGNITION
 id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=0,verbose=True)
@@ -32,10 +34,10 @@ print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = 
 
 # EVALUATION VS RAWSEGMENTATION
 region2segmentintensities={'text':127,'paper':0,'file':255}
-classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation_refactorying(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,
+classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,
                                                                                          save_dir+"06_final/",truth_dir,save_dir+"07_eval_vs_raw_seg/")
 print("Raw segmentation vs truth: ",classif_rawsegmentation, "(proposed method GCR=",classif_result,")")
 
 
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
-helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)
+helper.influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir)

@@ -32,7 +32,7 @@ classif,region2sim=helper.compared_with_truth(image,t_desc,p_desc,truth_dir,save
 print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = " , region2sim)
 # EVALUATION VS RAWSEGMENTATION
 region2segmentintensities={'A':0,'B':63,'C':0,'H':255,'D':127,'E':191,'F':63,'G':0,'I':191}
-classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation_refactorying(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,save_dir+"06_final/",truth_dir,save_dir+"07_eval_vs_raw_seg/")
+classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,save_dir+"06_final/",truth_dir,save_dir+"07_eval_vs_raw_seg/")
 print("Raw segmentation vs truth: ",classif_rawsegmentation, "(proposed method GCR=",classif_result,")")
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
-helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)
+helper.influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir)

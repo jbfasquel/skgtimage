@@ -100,8 +100,9 @@ def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=
         #are computed)
         ###################
         ordered_merging_candidates,d2m=cost2merge(previous_t_graph,previous_p_graph,remaining_nodes,initial_matched_nodes)
-        #d2m example: {0.59999999999999998: [(4, 1),(x,y)], 0.90000000000000002: [(2, 3)], 0.38518518518518519: [(4, 0)]}
         #ordered_merging_candidates example: [(4, 0),(4, 1),(x,y),(2, 3)]
+        #d2m example: {0.59999999999999998: [(4, 1),(x,y)], 0.90000000000000002: [(2, 3)], 0.38518518518518519: [(4, 0)]}
+
 
         ###################
         #Step 2: We try to perform one merging starting with the first one (lowest cost)

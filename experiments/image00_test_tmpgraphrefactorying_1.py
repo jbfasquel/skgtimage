@@ -32,7 +32,7 @@ t_desc="B<A";t_graph=skgti.core.from_string(t_desc)
 p_desc="A<B";p_graph=skgti.core.from_string(p_desc)
 
 
-built_t_graph,built_p_graph=skgti.core.from_labelled_image_refactorying(image,label)
+built_t_graph,built_p_graph=skgti.core.from_labelled_image(image,label)
 #built_p_graph.update_intensities(image)
 #skgti.core.update_photometric_graph(built_p_graph)
 #skgti.io.plot_graph_with_regions_refactorying(built_t_graph);plt.show()

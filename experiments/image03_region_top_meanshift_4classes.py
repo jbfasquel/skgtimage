@@ -33,17 +33,9 @@ label=skgti.utils.mean_shift(image_chsv,0.12,roi,True,True) #0.1 OK
 ################
 # RECOGNITION
 ################
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=True,verbose=True)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=1,verbose=True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
-
-'''
-matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")
-eie_per_iso=[]
-for c_iso in matcher.common_isomorphisms:
-    eie_per_iso+=[skgti.core.costiso(matcher.query_p_graph,matcher.ref_p_graph,c_iso)]
-print(eie_per_iso)
-'''
 
 
 # EVALUATION VS TRUTH
@@ -53,9 +45,9 @@ print("Evaluation of all regions vs truth: GCR = ", classif, " ; Similarities = 
 
 # EVALUATION VS RAWSEGMENTATION
 region2segmentintensities={'A':170,'B':85,'D':0,'C':170,'G':85,'E':85,'F':255,'H':0}
-classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation_refactorying(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,save_dir+"06_final/",truth_dir,save_dir+"07_eval_vs_raw_seg/")
+classif_result,classif_rawsegmentation=helper.compared_with_rawsegmentation(save_dir+"00_context/labelled_image.png",t_desc,p_desc,image,region2segmentintensities,save_dir+"06_final/",truth_dir,save_dir+"07_eval_vs_raw_seg/")
 print("Raw segmentation vs truth: ",classif_rawsegmentation, "(proposed method GCR=",classif_result,")")
 
 
 # EVALUATION VS CHOICE OF THE INITIAL COMMON ISOMORPHISM
-helper.influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir)
+helper.influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir)

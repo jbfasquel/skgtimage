@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import skgtimage as skgti
 
 
-def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,save_dir,slices=None):
+def influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir,slices=None):
     result_dir=save_dir+"08_eie_influence/"
     if not os.path.exists(result_dir) : os.mkdir(result_dir)
 
@@ -66,6 +66,19 @@ def influence_of_commonisos_refactorying(matcher,image,t_desc,p_desc,truth_dir,s
         classif=skgti.utils.goodclassification_rate(l_result_image,l_truth_image)
         classif=np.round(classif,3)
         performances+=[classif]
+        #####
+        # COMPUTING THE SIMILARITY INDEX FOR EACH REGION
+        region2sim=skgti.utils.compute_sim_between_graph_regions(relabelled_final_t_graph,truth_t_graph)
+        nodepersim=[]
+        related_sims=[]
+        for n in sorted(region2sim):
+            sim=np.round(region2sim[n],3)
+            nodepersim+=[n]
+            related_sims+=[sim]
+        #####
+        # SAVING THE RESULT AS A .CSV FILE
+        skgti.utils.save_to_csv(tmp_dir,"result_cmpvs_truth",classif,related_sims,nodepersim)
+
 
     #####
     # SAVING TO CSV
@@ -97,7 +110,7 @@ def slice2png(image,slice):
     return image2D.astype(np.uint8)
 
 
-def compared_with_rawsegmentation_refactorying(segmentation_filename,t_desc,p_desc,image,region2segmentintensities,result_dir,truth_dir,comparison_dir):
+def compared_with_rawsegmentation(segmentation_filename,t_desc,p_desc,image,region2segmentintensities,result_dir,truth_dir,comparison_dir):
     #Preparing data
     segmentation=sp.misc.imread(segmentation_filename)
     truth_t_graph,truth_p_graph=skgti.io.from_dir(t_desc,p_desc,image,truth_dir)
@@ -136,9 +149,9 @@ def compared_with_rawsegmentation_refactorying(segmentation_filename,t_desc,p_de
             regions+=[intensities2regions[l]]
             true_region=np.where(related_truth==l,1,0)
             seg_region=np.where(segmentation==l,1,0)
-            sims_raw+=[skgti.utils.similarity_index(seg_region,true_region)]
+            sims_raw+=[np.round(skgti.utils.similarity_index(seg_region,true_region),3)]
             seg_result=np.where(related_result==l,1,0)
-            sims_result+=[skgti.utils.similarity_index(seg_result,true_region)]
+            sims_result+=[np.round(skgti.utils.similarity_index(seg_result,true_region),3)]
 
     #####
     # SAVING TO CSV
@@ -228,7 +241,7 @@ def compared_with_truth(image_gray,t_desc,p_desc,truth_dir,result_dir,comparison
     region2sim=skgti.utils.compute_sim_between_graph_regions(result_t_graph,truth_t_graph)
     nodepersim=[]
     related_sims=[]
-    for n in region2sim:
+    for n in sorted(region2sim):
         sim=np.round(region2sim[n],3)
         nodepersim+=[n]
         related_sims+=[sim]

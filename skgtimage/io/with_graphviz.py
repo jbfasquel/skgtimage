@@ -76,6 +76,63 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     save_graphregions(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/",slices=slices)
     save_intensities(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/")
     ##############################
+    #Saving process information: nb initial regions, nb region after graph building, nb region after filtering,
+    #Nb t_iso, nb p_iso, nb common_iso, cputime (step1, step2, total)...
+    ##############################
+    context_dir=directory+"06_procedure/"
+    if not os.path.exists(context_dir) : os.mkdir(context_dir)
+
+    names=[]
+    values=[]
+    #Nb initial regions
+    nb_initial_regions=len(skgti.core.labelled_image2regions(labelled_image,roi))
+    names+=["Nb initial regions"];values+=[nb_initial_regions]
+    #A priori nb nodes
+    nb_ref_nodes=len(matcher.ref_t_graph.nodes())
+    names+=["Nb a priori nodes"];values+=[nb_ref_nodes]
+    #A priori brothers
+    brother_grps=skgti.core.find_groups_of_brothers(matcher.ref_p_graph)
+    nb_sim=0
+    for g in brother_grps: nb_sim+=len(g)-1
+    names+=["nb_sim"];values+=[nb_sim]
+    nb_filtered_regions=len(matcher.query_t_graph.nodes())
+    nb_built_regions=len(matcher.built_t_graph.nodes())
+    names+=["nb built regions (bef filt"];values+=[str(nb_filtered_regions)+"("+str(nb_built_regions)+")"]
+    #Isomorphisms
+    nb_c_iso=0
+    if matcher.common_isomorphisms is not None: nb_c_iso=len(matcher.common_isomorphisms)
+    names+=["Nb common iso"];values+=[nb_c_iso]
+    nb_t_iso=0
+    if matcher.t_isomorphisms is not None: nb_t_iso=len(matcher.t_isomorphisms)
+    names+=["Nb topo iso"];values+=[nb_t_iso]
+    nb_p_iso=0
+    if matcher.t_isomorphisms is not None: nb_p_iso=len(matcher.p_isomorphisms)
+    names+=["Nb photo iso"];values+=[nb_p_iso]
+
+    fullfilename=os.path.join(context_dir,"procedure.csv")
+    csv_file=open(fullfilename, "w")
+    c_writer = csv.writer(csv_file,dialect='excel')
+    c_writer.writerow(names)
+    c_writer.writerow(values)
+    csv_file.close()
+
+
+    #Runtimes
+    names=[];values=[]
+    names+=["Recognition run (sec)"];values+=[np.round(matcher.matching_runtime,2)+np.round(matcher.merging_runtime,2)+np.round(matcher.build_runtime,2)]
+    names+=["build run (sec)"];values+=[np.round(matcher.build_runtime,2)]
+    names+=["Initial match run (sec)"];values+=[np.round(matcher.matching_runtime,2)]
+    names+=["Merging run (sec)"];values+=[np.round(matcher.merging_runtime,2)]
+
+    fullfilename=os.path.join(context_dir,"runtimes.csv")
+    csv_file=open(fullfilename, "w")
+    c_writer = csv.writer(csv_file,dialect='excel')
+    c_writer.writerow(names)
+    c_writer.writerow(values)
+    csv_file.close()
+
+
+    ##############################
     #Saving all isomorphisms (if save_all_iso == True)
     ##############################
     if save_all_iso:
@@ -254,7 +311,8 @@ def save_graphregions(graph,directory=None,slices=[]):
 
 def save_graph(graph,name,directory=None,tree=True,colored_nodes=[]):
     #To pygraphviz AGraph object
-    a=nx.to_agraph(graph)
+    #a=nx.to_agraph(graph)
+    a = nx.nx_agraph.to_agraph(graph)
     #Global layout
     if tree:
         a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
@@ -298,7 +356,8 @@ def save_graph_links(source_graph,target_graph,link_lists=[],colors=[],label_lis
     bi_graph.add_edges_from(source_graph.edges())
     bi_graph.add_nodes_from(target_graph)
     bi_graph.add_edges_from(target_graph.edges())
-    a=nx.to_agraph(bi_graph)
+    #a=nx.to_agraph(bi_graph)
+    a = nx.nx_agraph.to_agraph(bi_graph)
 
     #Global layout
     if tree:

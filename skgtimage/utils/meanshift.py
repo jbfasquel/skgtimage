@@ -16,6 +16,13 @@ def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True):
         roi_mask=np.dstack(tuple([roi for i in range(0,nb_components)]))
         roied_image=np.ma.masked_array(image,mask=np.logical_not(roi_mask))
         return mean_shift(roied_image,bandwidth,None,mc,verbose)
+    else:
+        if type(image) != np.ma.masked_array :
+            roi=np.ones(image.shape[0:spatial_dim])
+            roi_mask=np.dstack(tuple([roi for i in range(0,nb_components)]))
+            roied_image=np.ma.masked_array(image,mask=np.logical_not(roi_mask))
+            return mean_shift(roied_image,bandwidth,None,mc,verbose)
+
 
     if type(image) == np.ma.masked_array :
         reshaped_data=image.compressed().reshape(-1,nb_components)

@@ -1,10 +1,11 @@
 import os
 import numpy as np
-from skgtimage.core.factory import from_string
-from skgtimage.core.graph import IrDiGraph
+from skgtimage.core.factory import from_string,from_regions
+from skgtimage.core.graph import IrDiGraph,rename_nodes
 from skgtimage.core.topology import fill_region
 from skgtimage.core.search_base import find_head
 from skgtimage.utils.histogram import int_histogram
+from skgtimage.utils.color import rgb2gray
 import scipy as sp;from scipy import misc
 import matplotlib.pyplot as plt
 
@@ -29,6 +30,46 @@ def generate_single_image(t_graph,mapping=None):
             intensity=t_graph.get_mean_residue_intensity(n)
         result=np.ma.masked_array(result, mask=residue).filled(intensity)
     return result
+
+def from_dir2(directory,color=False):
+    image=None
+    region_names=[]
+    regions=[]
+    #####
+    #Discover regions
+    for f in os.listdir(directory):
+        if f[0]==".": continue #to skip .Dstore
+        (root_name,extension)=f.split(".")
+        if root_name == "image":
+            image=sp.misc.imread(os.path.join(directory,f))
+            if color:
+                image=rgb2gray(image)
+        else:
+
+            region_names+=[root_name[len("region_"):len(root_name)]]
+            regions+=[sp.misc.imread(os.path.join(directory,f))]
+    print(region_names)
+    #####
+    #Check
+    for i in range(0,len(regions)):
+        for j in range(0,len(regions)):
+            if i != j:
+                inter=np.logical_and(regions[i],regions[j])
+                if np.max(inter) != 0: raise Exception("Error: region not mutually excluded")
+                #print(region_names[i],region_names[j],np.max(inter))
+
+    #####
+    #Build graphs
+    t_graph,p_graph=from_regions(image,regions)
+
+    #####
+    #Rename nodes according to file names
+    remaping={}
+    for i in range(0,len(region_names)):
+        remaping[i]=region_names[i]
+    (t_graph,p_graph)=rename_nodes([t_graph,p_graph],remaping)
+    #t_graph.set_image(t_graph)
+    return t_graph,p_graph
 
 def from_dir(desc_t,desc_p,image,directory):
     t_graph=from_string(desc_t,IrDiGraph())

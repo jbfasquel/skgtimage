@@ -31,7 +31,7 @@ label=np.array([[0, 0, 0, 0, 0],
 ###############################
 class TestTopology(unittest.TestCase):
     def setUp(self):
-        self.built_t_graph,self.built_p_graph=skgti.core.from_labelled_image_refactorying(image,label)
+        self.built_t_graph,self.built_p_graph=skgti.core.from_labelled_image(image,label)
     def check(self,nodes,edges):
         self.assertEqual(len(set(nodes)-set(self.built_t_graph.nodes())),0)
         self.assertEqual(len( set(edges)-set(self.built_t_graph.edges()) ),0)

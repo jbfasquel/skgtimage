@@ -19,7 +19,7 @@ def remove_smallest_regions(t_graph,p_graph,number=1):
     for i in range(0,number):
         current_size=increasing_sizes[i]
         for e in node2size:
-            if node2size[e]==current_size: nodes_to_remove+=[e]
+            if (node2size[e]==current_size) and (e not in nodes_to_remove): nodes_to_remove+=[e]
     ###############################
     # Remove the "number" "smallest" regions (i.e. nodes), by merging them with their direct topological father
     ###############################

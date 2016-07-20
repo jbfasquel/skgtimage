@@ -141,7 +141,7 @@ def find_head(g):
                 head=set([n])
         #When n has brothers
         else:
-            group=brothers | set(n)
+            group=brothers | set([n])
             for e in group:
                 successors|=set(g.successors(e))
             effective_successors=successors-group

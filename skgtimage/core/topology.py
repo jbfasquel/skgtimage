@@ -38,6 +38,7 @@ def inclusions_from_residues(residues,filled_residues):
     adj_included=np.zeros((n,n),dtype=np.uint8) #why not 'adj_included=np.eye(n,dtype=np.uint8)'
     adj_intersection=np.zeros((n,n),dtype=np.uint8) #why not 'adj_intersection=np.eye(n,dtype=np.uint8)'
 
+    for i in range(0,n): residues[i]=residues[i]/np.max(residues[i])
     for i in range(0,n):
         for j in range(0,n):
             if i != j:
@@ -52,6 +53,7 @@ def inclusions_from_residues(residues,filled_residues):
     #Transitive reduction of the inclusion graph
     ###################
     adj_included=transitive_reduction_matrix(adj_included)
+    #adj_intersection=transitive_reduction_matrix(adj_intersection)
     ###################
     #Management of intersections without inclusion
     ###################

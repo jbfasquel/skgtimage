@@ -51,22 +51,22 @@ class TestFactoryFromLabelRegions(unittest.TestCase):
 
     #From labels
     def test01(self):
-        built_t_graph,built_p_graph=sgi.core.from_labelled_image_refactorying(image,label)
+        built_t_graph,built_p_graph=sgi.core.from_labelled_image(image,label)
         self.check(built_t_graph,built_p_graph)
-        built_t_graph,built_p_graph=sgi.core.from_labelled_image_refactorying(image,label,roi=np.ones(image.shape))
+        built_t_graph,built_p_graph=sgi.core.from_labelled_image(image,label,roi=np.ones(image.shape))
         self.check(built_t_graph,built_p_graph)
     #From regions (residues)
     def test02(self):
-        built_t_graph,built_p_graph=sgi.core.from_regions_refactorying(image,residues)
+        built_t_graph,built_p_graph=sgi.core.from_regions(image,residues)
         self.check(built_t_graph,built_p_graph)
 
     #With boundary artefact
     def test03(self):
-        built_t_graph,built_p_graph=sgi.core.from_labelled_image_refactorying(image,label_b,None,False)
+        built_t_graph,built_p_graph=sgi.core.from_labelled_image(image,label_b,None,False)
         self.assertEqual(set(built_t_graph.nodes()),set([0, 1, 2, 3]))
         self.assertEqual(set(built_p_graph.nodes()),set([0, 1, 2, 3]))
         #Correction
-        built_t_graph,built_p_graph=sgi.core.from_labelled_image_refactorying(image,label_b,None,True,1)
+        built_t_graph,built_p_graph=sgi.core.from_labelled_image(image,label_b,None,True,1)
         self.check(built_t_graph,built_p_graph)
 
 

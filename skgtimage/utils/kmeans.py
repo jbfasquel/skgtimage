@@ -8,7 +8,7 @@ from skgtimage.utils.color import hsv2chsv
 
 
 
-def kmeans_refactorying(image,nb_clusters,n_seedings=100,roi=None,mc=False,verbose=False):
+def kmeans(image,nb_clusters,n_seedings=100,roi=None,mc=False,verbose=False):
     """
     Kmeans
     """
@@ -21,7 +21,7 @@ def kmeans_refactorying(image,nb_clusters,n_seedings=100,roi=None,mc=False,verbo
     if roi is not None:
         roi_mask=np.dstack(tuple([roi for i in range(0,nb_components)]))
         roied_image=np.ma.masked_array(image,mask=np.logical_not(roi_mask))
-        return kmeans_refactorying(roied_image,nb_clusters,n_seedings,None,mc,verbose)
+        return kmeans(roied_image,nb_clusters,n_seedings,None,mc,verbose)
 
     if type(image) == np.ma.masked_array :
         reshaped_data=image.compressed()
@@ -253,7 +253,7 @@ class KMeansSeeder:
 
 
 
-def kmeans(image,nb_clusters,n_seedings=100,seeder=None,intervals=None,mc=False,tol=0.0001,fct=None,verbose=False):
+def kmeans_with_seeder(image,nb_clusters,n_seedings=100,seeder=None,intervals=None,mc=False,tol=0.0001,fct=None,verbose=False):
     """
     Performs n_seedings clusterings, keeping as result the one minimizing the moment of inertia
     If seeder is None, the default "random" seeding is considered (scikits learn default method)
