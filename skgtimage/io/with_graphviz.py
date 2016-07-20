@@ -357,6 +357,7 @@ def save_graph_links(source_graph,target_graph,link_lists=[],colors=[],label_lis
     bi_graph.add_nodes_from(target_graph)
     bi_graph.add_edges_from(target_graph.edges())
     #a=nx.to_agraph(bi_graph)
+
     a = nx.nx_agraph.to_agraph(bi_graph)
 
     #Global layout
