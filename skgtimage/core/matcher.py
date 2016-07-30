@@ -1,7 +1,7 @@
 from skgtimage.core.graph import rename_nodes
 from skgtimage.core.filtering import remove_smallest_regions
 from skgtimage.core.subisomorphism import best_common_subgraphisomorphism
-from skgtimage.core.propagation import propagate
+from skgtimage.core.propagation import propagate,merge_until_commonisomorphism
 from skgtimage.core.factory import from_string,from_labelled_image
 import time
 import copy
@@ -42,6 +42,10 @@ class IPMatcher:
         self.query_t_graph=copy.deepcopy(built_t_graph)
         self.query_p_graph=copy.deepcopy(built_p_graph)
 
+        #INITIAL REFINEMENT
+        self.refined_t_graph_intermediates=[]
+
+        # INITIAL FILTERING
         self.filtering=filtering
         if self.filtering != 0 :
             remove_smallest_regions(self.query_t_graph,self.query_p_graph,self.filtering)
@@ -56,8 +60,7 @@ class IPMatcher:
         self.matching=None
         #Merging
         self.ordered_merges=None
-        #self.t_graph_merges=None
-        #self.p_graph_merges=None
+
         #Graphs after merges
         self.final_t_graph=None
         self.final_p_graph=None
@@ -78,19 +81,26 @@ class IPMatcher:
                                                                                                        self.query_p_graph,
                                                                                                        self.ref_p_graph,verbose)
         t1=time.clock()
+        if self.common_isomorphisms is None:
+            print("Need to initially merge")
+            modification, self.refined_t_graph_intermediates= merge_until_commonisomorphism(self.query_t_graph, self.query_p_graph, self.ref_t_graph,self.ref_p_graph, True)
+            t0 = time.clock()
+            self.matching, self.common_isomorphisms, self.t_isomorphisms, self.p_isomorphisms, self.eie = best_common_subgraphisomorphism(
+                self.query_t_graph,
+                self.ref_t_graph,
+                self.query_p_graph,
+                self.ref_p_graph, verbose)
+            t1 = time.clock()
+
         self.matching_runtime=t1-t0
     def compute_merge(self):
         t0=time.clock()
         self.final_t_graph,self.final_p_graph,self.ordered_merges=propagate(self.query_t_graph,
                                                                           self.query_p_graph,
-                                                                          self.ref_t_graph,
-                                                                          self.ref_p_graph,self.matching)
+                                                                          self.ref_t_graph,self.ref_p_graph,self.matching)
         t1=time.clock()
         self.merging_runtime=t1-t0
 
-        #self.t_graph_merges=[i[0] for i in histo]
-        #self.p_graph_merges=[i[1] for i in histo]
-        #self.ordered_merges=[i[2] for i in histo]
 
     def update_final_graph(self):
         (self.relabelled_final_t_graph,self.relabelled_final_p_graph)=rename_nodes([self.final_t_graph,self.final_p_graph],self.matching)

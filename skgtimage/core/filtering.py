@@ -1,5 +1,6 @@
-from skgtimage.core.topology import merge_nodes_topology
+from skgtimage.core.topology import merge_nodes_topology,topological_merging_candidates
 from skgtimage.core.photometry import merge_nodes_photometry
+from skgtimage.core.propagation import cost2merge
 import numpy as np
 
 def remove_smallest_regions(t_graph,p_graph,number=1):
@@ -24,7 +25,16 @@ def remove_smallest_regions(t_graph,p_graph,number=1):
     # Remove the "number" "smallest" regions (i.e. nodes), by merging them with their direct topological father
     ###############################
     for n in nodes_to_remove:
-        if len(t_graph.successors(n)) != 1: raise Exception("error")
-        father=t_graph.successors(n)[0]
-        merge_nodes_topology(t_graph,n,father)
-        merge_nodes_photometry(p_graph,n,father)
+        if len(t_graph.successors(n)) == 1:
+            father=t_graph.successors(n)[0]
+            merge_nodes_topology(t_graph,n,father)
+            merge_nodes_photometry(p_graph,n,father)
+        elif len(t_graph.successors(n)) == 0: #cas where node to remove is head
+            c=topological_merging_candidates(t_graph,n)
+            orders,d2m=cost2merge(t_graph, p_graph, set([n]), c)
+            merge=orders[0]
+            print(c,"merge: ", merge)
+            merge_nodes_topology(t_graph,merge[0],merge[1])
+            merge_nodes_photometry(p_graph,merge[0],merge[1])
+        elif len(t_graph.successors(n)) > 1:
+            raise Exception("error")

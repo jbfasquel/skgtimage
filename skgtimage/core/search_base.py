@@ -149,6 +149,12 @@ def find_head(g):
                 head=group
     return head
 
+def search_head_nodes(graph):
+    result=set()
+    for n in graph.nodes():
+        if len(graph.successors(n)) == 0: result|=set([n])
+    return result
+
 
 def search_leaf_nodes(graph):
     result=set()

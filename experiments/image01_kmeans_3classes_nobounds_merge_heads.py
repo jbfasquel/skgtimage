@@ -6,10 +6,11 @@ import skgtimage as skgti
 import helper
 
 truth_dir="../../Database/image01/truth/"
-save_dir="../../Database/image01/kmeans_3classes/"
+save_dir="../../Database/image01/kmeans_3classes_nobounds/"
+if not os.path.exists(save_dir) : os.mkdir(save_dir)
 
-t_desc="text<paper<file"
-p_desc="text<file<paper"
+t_desc="text<paper<file";ref_t_graph = skgti.core.from_string(t_desc)
+p_desc="text<file<paper";ref_p_graph = skgti.core.from_string(p_desc)
 
 image=sp.misc.imread(truth_dir+"image.png")
 roi=sp.misc.imread(truth_dir+"roi.png")
@@ -18,7 +19,7 @@ roi=sp.misc.imread(truth_dir+"roi.png")
 label=skgti.utils.kmeans(image,3,50,roi=roi,mc=False,verbose=True)
 
 # RECOGNITION
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=0,verbose=True)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=False,thickness=2,filtering=0,verbose=True)
 
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")

@@ -7,8 +7,7 @@ import numpy as np
 import scipy as sp; from scipy import ndimage
 import networkx as nx
 from skgtimage.core.graph import IrDiGraph,transitive_reduction,mat2graph,graph2mat,transitive_reduction_matrix,labelled_image2regions
-from skgtimage.core.search_base import recursive_predecessors
-#from skgtimage.core.factory import
+from skgtimage.core.search_base import recursive_predecessors,search_head_nodes
 
 def fill_regions(regions):
     filled_regions=[fill_region(r) for r in regions]
@@ -24,6 +23,12 @@ def topological_graph_from_labels(labelled_image,roi=None):
     residues=labelled_image2regions(labelled_image,roi)
     return topological_graph_from_residues_refactorying(residues,copy=False)
 
+def is_included_in(a,b): #True if a included in b
+    filled_b=fill_region(b)
+    normed_a=a/np.max(a)
+    intersection = np.logical_and(normed_a, filled_b)
+    is_included=int(np.array_equal(intersection,normed_a.astype(np.bool)))
+    return is_included
 
 def inclusions_from_residues(residues,filled_residues):
     ########################
@@ -107,9 +112,10 @@ def topological_graph_from_residues_refactorying(residues,copy=True):
         g.set_region(nodes[i],working_residues[i])
 
     return g,working_residues
-
-def topological_merging_candidates(graph,source):
-    #Source must be child of target, or target child of source, or both must be brother (i.e. sharing common father)
+'''
+def topological_merging_candidates_v2(graph,source):
+    #Source must be child of target, or target child of source, or both must be brother (i.e. sharing common father),
+    #Note that a
     #TO DO: Pour image03_region_top_ok_meanshift_5classes_vs4classes_refactorying: permettra d'avoir les "trous" de "ville fleurie" correctement identified
     candidates=set(graph.predecessors(source))
     if len(graph.successors(source)) !=0:
@@ -118,6 +124,31 @@ def topological_merging_candidates(graph,source):
         candidates|=set(graph.predecessors(father)) #brothers
         #candidates|=set(recursive_predecessors(graph,father))
 
+    heads=search_head_nodes(graph)
+    if source in heads:
+        candidates|=heads
+
+    candidates -= set([source])
+
+    return candidates
+'''
+
+def topological_merging_candidates(graph,source):
+    #Source must be child of target, or target child of source, or both must be brother (i.e. sharing common father)
+    #Note that brothers include heads of a topological graph
+    #TO DO: Pour image03_region_top_ok_meanshift_5classes_vs4classes_refactorying: permettra d'avoir les "trous" de "ville fleurie" correctement identified
+    candidates=set(graph.predecessors(source))
+    if len(graph.successors(source)) !=0:
+        father=graph.successors(source)[0]
+        candidates|=set([father])
+        candidates|=set(graph.predecessors(father)) #brothers
+        #candidates|=set(recursive_predecessors(graph,father))
+
+    #If source is a head, we include other heads
+    heads=search_head_nodes(graph)
+    if source in heads:
+        candidates|=heads
+
     candidates-=set([source])
     return candidates
 
@@ -125,13 +156,6 @@ def merge_nodes_topology(graph,source,target):
     ##############
     #Check that merge is relevant
     #Source must be child of target, or target child of source, or both must be brother (i.e. sharing common father)
-    '''
-    condition=False
-    condition=(target in graph.successors(source)) \
-              or (target in graph.predecessors(source)) \
-              or ( len(set(graph.successors(source)) & set(set(graph.successors(target))) ))
-    if not(condition): raise Exception("Impossible merge")
-    '''
     condition=(target in topological_merging_candidates(graph,source))
     if not(condition): raise Exception("Impossible merge")
     ##############
@@ -162,3 +186,17 @@ def merge_nodes_topology(graph,source,target):
         graph.remove_edge(e[0],e[1])
     #Remove node
     graph.remove_node(source)
+
+    ##############
+    # Manage particular case of heads that, after merge, depict on inclusion relationship
+    # For each head of the topological graph, we test if this head (i.e. the related region) is included
+    # within another head (i.e. the related region): in such a case, we add the appropriate inclusion relationship (i.e. graph edge)
+    heads=search_head_nodes(graph)
+    l_heads=list(heads)
+    for i in range(0,len(l_heads)):
+        for j in range(0,len(l_heads)):
+            if i != j:
+                r_i=graph.get_region(l_heads[i])
+                r_j=graph.get_region(l_heads[j])
+                if is_included_in(r_i,r_j):
+                    graph.add_edge(l_heads[i],l_heads[j])

@@ -33,6 +33,35 @@ def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,curre
         validity= (ref_matching in common_isomorphisms)
 
     return validity
+'''
+def cost2merge_v2(t_graph,p_graph,nodes,possible_targets):
+    #d2m: distance to merge (link) hash table
+    d2m={}
+    ###############################
+    #For each nodes e, targets candidates verifies following constraintes:
+    # 1) they are "possible targets" (i.e. already matched nodes)
+    # 2) they are topologically acceptable targets (versus node e): either direct predecessor or successor or brother
+    #For each target, we compute the intensity difference versus the current node e
+    ###############################
+    for e in nodes:
+        target_candidates=topological_merging_candidates_v2(t_graph,e) & set(possible_targets)
+        intensity_of_e=p_graph.get_mean_residue_intensity(e)
+        for t in target_candidates:
+            intensity_of_t=p_graph.get_mean_residue_intensity(t)
+            distance=abs(intensity_of_e-intensity_of_t)
+            if distance in d2m:
+                d2m[distance]+=[(e,t)]
+            else:
+                d2m[distance]=[(e,t)]
+    ###############################
+    #Candidates are possible merges (link) sorted in the increasing order of the related intensity difference
+    ###############################
+    candidates=[]
+    for d in sorted(d2m):
+        candidates+=d2m[d]
+
+    return candidates,d2m
+'''
 
 def cost2merge(t_graph,p_graph,nodes,possible_targets):
     #d2m: distance to merge (link) hash table
@@ -159,4 +188,25 @@ def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=
     ###################
     return previous_t_graph,previous_p_graph,modification_historisation
 
+
+def merge_until_commonisomorphism(t_graph,p_graph,ref_t_graph,ref_p_graph,debug=False):
+    common_isomorphisms, isomorphisms_per_graph = common_subgraphisomorphisms([t_graph, p_graph],[ref_t_graph, ref_p_graph])
+    modification_historisation=[]
+    t_graph_historisation = []
+    while len(common_isomorphisms) == 0:
+        #All nodes are candidates for merging: one selects the merging minizing mean intensity difference (and topologically compliant)
+        remaining_nodes = t_graph.nodes()
+        ordered_merging_candidates, d2m = cost2merge(t_graph, p_graph, remaining_nodes, remaining_nodes)
+        merge = ordered_merging_candidates[0]
+        #Apply merging
+        merge_nodes_photometry(p_graph, merge[0], merge[1])
+        merge_nodes_topology(t_graph, merge[0], merge[1])
+        #If debug mode, one stores intermediate modifications
+        if debug:
+            modification_historisation += [merge]
+            t_graph_historisation+=[t_graph.copy()]
+        #After merge, one (re)searces if there are common isomorphisms (at least one)
+        common_isomorphisms, isomorphisms_per_graph = common_subgraphisomorphisms([t_graph, p_graph],[ref_t_graph, ref_p_graph])
+
+    return modification_historisation,t_graph_historisation
 

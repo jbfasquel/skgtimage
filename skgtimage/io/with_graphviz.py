@@ -72,9 +72,18 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     plt.savefig(directory+"03_filtered_built_photometry/"+"histograms.svg",format="svg",bbox_inches='tight')
     plt.savefig(directory+"03_filtered_built_photometry/"+"histograms.png",format="png",bbox_inches='tight')
     plt.gcf().clear()
-
     save_graphregions(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/",slices=slices)
     save_intensities(matcher.query_p_graph,directory=directory+"03_filtered_built_photometry/")
+    ##############################
+    #Saving intermediate graphs when preliminary merging is performed
+    ##############################
+    if len(matcher.refined_t_graph_intermediates) != 0:
+        merged_dir=directory+"03_merged_built_topology/"
+        if not os.path.exists(merged_dir) : os.mkdir(merged_dir)
+        for i in range(0,len(matcher.refined_t_graph_intermediates)):
+            save_graph(matcher.refined_t_graph_intermediates[i], name="topological", directory=merged_dir + "step_"+str(i)+"/",tree=True)
+            save_graphregions(matcher.refined_t_graph_intermediates[i], directory=merged_dir + "step_"+str(i)+"/", slices=slices)
+
     ##############################
     #Saving process information: nb initial regions, nb region after graph building, nb region after filtering,
     #Nb t_iso, nb p_iso, nb common_iso, cputime (step1, step2, total)...
