@@ -5,11 +5,33 @@ import matplotlib.pyplot as plt
 import skgtimage as skgti
 
 ######################################
+#NEW CROP
+######################################
+input="../../Database/image02/rawdata_nocrop/"
+output="../../Database/image02/truth/"
+
+ref_roi=np.load(os.path.join(input,"region_liver.npy"))
+ref_roi=sp.ndimage.morphology.binary_dilation(ref_roi,iterations=5).astype(np.uint8)
+image=np.load(os.path.join(input,"image_filtered.npy"))
+image=skgti.utils.extract_subarray(image,ref_roi)
+np.save(os.path.join(output,"image_filtered.npy"),image)
+image=np.load(os.path.join(input,"image.npy"))
+image=skgti.utils.extract_subarray(image,ref_roi)
+np.save(os.path.join(output,"image.npy"),image)
+
+for i in ['liver','vessel','tumor']:
+    image=np.load(os.path.join(input,"region_"+i+".npy"))
+    image=skgti.utils.extract_subarray(image,ref_roi)
+    np.save(os.path.join(output,"region_"+i+".npy"),image)
+
+
+
+######################################
 #CROP
 ######################################
 '''
-input="Database/image02/rawdata_nocrop/"
-output="Database/image02/truth/"
+input="../../Database/image02/rawdata_nocrop/"
+output="../../Database/image02/truth/"
 
 ref_roi=np.load(os.path.join(input,"region_liver.npy"))
 image=np.load(os.path.join(input,"image_filtered.npy"))

@@ -291,6 +291,7 @@ def __save_image3d__(image,directory,slices=[],do_rescale=True):
     #Save
     for s in slices:
         current_slice=tmp_image[:,:,s]
+        current_slice=np.rot90(current_slice)
         filename=os.path.join(directory,"slice_"+str(s)+".png");
         __save_image2d__(current_slice,filename,False)
 
