@@ -2,19 +2,19 @@ from skgtimage.core.graph import rename_nodes
 from skgtimage.core.filtering import remove_smallest_regions
 from skgtimage.core.subisomorphism import best_common_subgraphisomorphism
 from skgtimage.core.propagation import propagate,merge_until_commonisomorphism
-from skgtimage.core.factory import from_string,from_labelled_image,from_labelled_image_v2
+from skgtimage.core.factory import from_string,from_labelled_image
 import time
 import copy
 import numpy as np
 
-def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=False):
+def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=1,filtering=False,verbose=False):
     #A priori graphs
     t_graph=from_string(t_desc)
     p_graph=from_string(p_desc)
     #Built graphs
     t0=time.clock()
     #built_t_graph,built_p_graph=from_labelled_image(image,labelled_image,roi,manage_bounds)
-    built_t_graph, built_p_graph =from_labelled_image_v2(image, labelled_image, roi, manage_bounds)
+    built_t_graph, built_p_graph =from_labelled_image(image, labelled_image, roi, manage_bounds,thickness)
 
     t1=time.clock()
     #Perform recognition by inexact-graph matching
@@ -40,7 +40,7 @@ def matcher_factory(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=Fa
     #Built graphs
     t0=time.clock()
     #built_t_graph,built_p_graph=from_labelled_image(image,labelled_image,roi,manage_bounds)
-    built_t_graph, built_p_graph = from_labelled_image_v2(image, labelled_image, roi, manage_bounds)
+    built_t_graph, built_p_graph = from_labelled_image(image, labelled_image, roi, manage_bounds)
     t1=time.clock()
     #Prepare matcher
     matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering,t1-t0)

@@ -7,8 +7,8 @@ import skgtimage as skgti
 #########
 # MISC INFORMATIONS
 #########
-truth_dir="Database/image03/truth_top/"
-save_dir="Database/image03/top_meanshift_5classes/"
+truth_dir="../../Database/image03/truth_top/"
+save_dir="../../Database/image03/top_meanshift_5classes/"
 
 #########
 # A PRIORI KNOWLEDGE
@@ -28,8 +28,8 @@ image_chsv=skgti.utils.rgb2chsv(image_rgb)
 label=skgti.utils.mean_shift(image_chsv,0.1,roi,True,True) #0.1 OK
 
 
-# RECOGNITION (with filtering==1 -> pb on eie -> the initial matching criteria lead to worst result than other ones)
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,manage_bounds=True,thickness=2,filtering=4,verbose=True)
+# RECOGNITION
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=4,verbose=True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 

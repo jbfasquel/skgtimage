@@ -41,19 +41,6 @@ def from_string(desc,g=None):
     #Return
     return g
 
-def from_labelled_image(image,labelled_image,roi=None,manage_bounds=False,thickness=2):
-    #To remove noise at labelled_image boundaries
-    if manage_bounds:
-        if type(labelled_image) == np.ma.masked_array :
-            roi=np.logical_not(labelled_image.mask)
-        new_labelled_image=manage_boundaries(labelled_image,roi,thickness)
-        return from_labelled_image(image,new_labelled_image,roi,False)
-    #Regions (residues) from labels
-    regions=labelled_image2regions(labelled_image,roi)
-    #Built graphs from regions
-    return from_regions(image,regions)
-
-
 
 def from_regions(image,regions):
     built_t_graph,new_residues=topological_graph_from_residues_refactorying(regions)
@@ -61,33 +48,20 @@ def from_regions(image,regions):
     built_t_graph.set_image(image);built_p_graph.set_image(image)
     return built_t_graph,built_p_graph
 
-def manage_boundaries(image,roi=None,thickness=2):
-    if roi is None: roi=np.ones(image.shape)
-    eroded_roi=sp.ndimage.morphology.binary_erosion(roi,iterations=thickness).astype(np.uint8)
-    inner_boundary=roi/np.max(roi)-eroded_roi
-    inner_boundary_values=np.ma.MaskedArray(image,mask=np.logical_not(inner_boundary)).compressed()
-    bins=np.arange(np.min(inner_boundary_values),np.max(inner_boundary_values)+2)
-    h,b=np.histogram(inner_boundary_values,bins)
-    dominant_value=b[np.argmax(h)]
-    modified_image=np.ma.MaskedArray(image,mask=inner_boundary).filled(dominant_value)
-    if type(image)==np.ma.MaskedArray:
-        modified_image=np.ma.MaskedArray(modified_image,mask=np.logical_not(roi))
-    return modified_image
 
-
-def from_labelled_image_v2(image,labelled_image,roi=None,manage_bounds=False,thickness=2):
+def from_labelled_image(image, labelled_image, roi=None, manage_bounds=False, thickness=1):
     #To remove noise at labelled_image boundaries
     if manage_bounds:
         if type(labelled_image) == np.ma.masked_array :
             roi=np.logical_not(labelled_image.mask)
-        new_labelled_image,new_roi=manage_boundaries_v2(labelled_image,roi,thickness)
-        return from_labelled_image_v2(image,new_labelled_image,new_roi,False)
+        new_labelled_image,new_roi=manage_boundaries(labelled_image, roi, thickness)
+        return from_labelled_image(image, new_labelled_image, new_roi, False)
     #Regions (residues) from labels
     regions=labelled_image2regions(labelled_image,roi)
     #Built graphs from regions
     return from_regions(image,regions)
 
-def manage_boundaries_v2(image,roi=None,thickness=2):
+def manage_boundaries(image, roi=None, thickness=1):
     ############
     # FIND THE ROI INNER BOUNDARY DOMINANT VALUE
     if roi is None: roi=np.ones(image.shape)
