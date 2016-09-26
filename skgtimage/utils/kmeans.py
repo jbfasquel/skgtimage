@@ -3,6 +3,7 @@
 #Licence: BSD 3 clause
 
 import numpy as np
+import time
 from sklearn import cluster
 from skgtimage.utils.color import hsv2chsv
 
@@ -31,7 +32,10 @@ def kmeans(image,nb_clusters,n_seedings=100,roi=None,mc=False,verbose=False):
         reshaped_data=data.reshape(len(data),nb_components).astype(np.float)
 
     k=cluster.KMeans(n_clusters=nb_clusters,init="random",n_init=n_seedings)
+    t0 = time.clock()
     k.fit(reshaped_data)
+    t1 = time.clock()
+    print("Cpu time: ",t1-t0)
     labels=k.labels_
 
     #### Writing labels to appropriate pixels: Version 1

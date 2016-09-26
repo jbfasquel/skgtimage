@@ -105,7 +105,7 @@ def plot_graph_histogram(t_graph,p_graph,fullhisto=False):
     image=t_graph.get_image()
     n=list(find_head(t_graph))[0]
     roi=fill_region(t_graph.get_region(n))
-    h,b=int_histogram(image,roi)
+    h,b=int_histogram(image.astype(np.int),roi)
     maximum=max(h)
     if fullhisto : plt.plot(b,h,'k.')
 
@@ -116,7 +116,7 @@ def plot_graph_histogram(t_graph,p_graph,fullhisto=False):
         intensity=p_graph.get_mean_residue_intensity(n)
         c=colors[i]
         plt.plot([intensity,intensity],[0,maximum],c+'-',linewidth=2.0)
-        h,b=int_histogram(image,region)
+        h,b=int_histogram(image.astype(np.int),region)
         plt.plot(b,h,c+'-')
         plt.annotate(str(n),xy=(intensity,maximum))
 

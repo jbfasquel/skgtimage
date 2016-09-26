@@ -13,12 +13,92 @@ def find_subgraph_isomorphims(query_graph,ref_graph):
     sub_isomorphisms=[i for i in matcher.subgraph_isomorphisms_iter()]
     return sub_isomorphisms
 
+def is_isomorphism_valid(query_graph, ref_graph, isomorphism):
+    matcher = nx.isomorphism.DiGraphMatcher(query_graph, ref_graph)
+    # check if iso_candidate is an valid subgraph iso between query and ref
+    validity=True
+    for query_node in isomorphism:
+        ref_node = isomorphism[query_node]
+        is_ok = matcher.syntactic_feasibility(query_node, ref_node)
+        if is_ok == False: validity=False
+
+    return validity
+
 def __find_common_isomorphims__(isomorphisms_1,isomorphisms_2):
     matchings=[]
     for t in isomorphisms_1:
         for p_iso in isomorphisms_2:
             if (t == p_iso) and (t is not None) and (p_iso is not None): matchings+=[t]
     return matchings
+
+def common_subgraphisomorphisms_optimized(query_graphs,ref_graphs):
+    """
+    :param query_graphs: [t_graph,p_graph] from segmented image
+    :param ref_graphs: [t_graph,p_graph] from model
+    :return:
+    """
+    ###########################################################################################
+    #Preparing possible "permutations" within ref_graphs: managing 'brother' nodes
+    ###########################################################################################
+    all_ref_graphs=[]
+    for rg in ref_graphs:
+        nb_brothers=find_groups_of_brothers(rg)
+        if len(nb_brothers) > 0:
+            all_ref_graphs+=[compute_possible_graphs(rg)] #we add a list of n elements (all possible graphs)
+        else:
+            all_ref_graphs+=[[rg]] #we add a list of one element
+    ###########################################################################################
+    #Loop over query (built) graphs to be matched with a priori knowledge (ref_graphs)
+    ###########################################################################################
+    isomorphisms_candidates=[]
+    #Versus first reference graph only (including its unwrapped versions, resulting from similarities)
+    related_ref_graphs = all_ref_graphs[0]
+    query = transitive_closure(query_graphs[0])
+    related_isomorphisms = []
+    counter = 1
+    for ref in related_ref_graphs:
+        #print(counter, "/", len(related_ref_graphs))
+        counter += 1
+        ref = transitive_closure(ref)
+        isomorphisms = find_subgraph_isomorphims(query, ref)
+        related_isomorphisms += isomorphisms
+    isomorphisms_candidates += related_isomorphisms
+    # Versus next: only check whether candidates is subiso
+    valid_isomorphisms=isomorphisms_candidates
+    current_valid_isomorphism=[]
+    nb_graphs=len(query_graphs)
+    for i in range(1,nb_graphs):
+        query = transitive_closure(query_graphs[i])
+        related_ref_graphs=all_ref_graphs[i]
+
+        #Loop over the possible "permutations" (i.e. versus brothers/incertain relationships) of reference graphs: union of matchings
+        related_isomorphisms=[]
+
+        #print(valid_isomorphisms)
+        for iso_candidate in valid_isomorphisms:
+            #Remove nodes from query that are not related to the isomorphism
+            nodes_to_remove=set(query.nodes())-set(iso_candidate.keys())
+            #print(nodes_to_remove)
+            subquery=query.copy()
+            for n in nodes_to_remove: subquery.remove_node(n)
+
+            #Loop over unwrapped ref graphs: if iso candidate is valid at least for one of the unwrapped version -> the isomorphism candidate is valid
+            counter = 1
+            is_valid_candidate = False
+            for ref in related_ref_graphs:
+                #print(counter,"/",len(related_ref_graphs));counter+=1
+                ref=transitive_closure(ref)
+
+                validity=is_isomorphism_valid(subquery, ref, iso_candidate)
+                #print(ref," --> ", validity)
+                if validity: is_valid_candidate=True
+
+            if is_valid_candidate:
+                current_valid_isomorphism+=[iso_candidate]
+        valid_isomorphisms=current_valid_isomorphism
+
+    return valid_isomorphisms
+
 
 def common_subgraphisomorphisms(query_graphs,ref_graphs):
     ###########################################################################################
@@ -57,7 +137,7 @@ def common_subgraphisomorphisms(query_graphs,ref_graphs):
 
     return common_isomorphisms,isomorphisms_per_graph
 
-
+'''
 def best_common_subgraphisomorphism(query_t_graph,ref_t_graph,query_p_graph,ref_p_graph,return_details=False):
     ###########################################################################################
     #1) Find common matchings
@@ -82,6 +162,22 @@ def best_common_subgraphisomorphism(query_t_graph,ref_t_graph,query_p_graph,ref_
     matching=common_isomorphisms[index_of_max]
 
     return matching,common_isomorphisms,isomorphisms_per_graph[0],isomorphisms_per_graph[1],eie_per_iso
+'''
+def best_common_subgraphisomorphism(common_isomorphisms,query_p_graph,ref_p_graph,return_details=False):
+    #Computing energies
+
+    eie_per_iso=[]
+    for c_iso in common_isomorphisms:
+        eie_per_iso+=[matching_criterion_value(query_p_graph,ref_p_graph,c_iso)]
+
+    #Taking the best common isomorphisms as result
+    matching=None
+    max_eie=max(eie_per_iso)
+    index_of_max=eie_per_iso.index(max_eie)
+    matching=common_isomorphisms[index_of_max]
+
+    return matching,eie_per_iso
+
 
 def matching_criterion_value(query_graph,ref_graph,iso):
     oi=oirelationships(iso)

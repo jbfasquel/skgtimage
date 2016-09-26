@@ -1,5 +1,5 @@
 import networkx as nx
-from skgtimage.core.subisomorphism import common_subgraphisomorphisms,find_subgraph_isomorphims
+from skgtimage.core.subisomorphism import common_subgraphisomorphisms,find_subgraph_isomorphims,common_subgraphisomorphisms_optimized
 from skgtimage.core.topology import topological_merging_candidates,merge_nodes_topology
 from skgtimage.core.photometry import merge_nodes_photometry
 from skgtimage.core.graph import transitive_closure,extract_subgraph
@@ -18,7 +18,8 @@ def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,curre
     ######################
     subgraph=extract_subgraph(previous_p_graph,ref_matching.keys()) #reference ref_p_graph considered in matching, i.e. without "brothers"
     simplified_ref_p_graph=nx.relabel_nodes(subgraph,ref_matching)
-    common_isomorphisms,_=common_subgraphisomorphisms([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
+    #common_isomorphisms,_=common_subgraphisomorphisms([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
+    common_isomorphisms=common_subgraphisomorphisms_optimized([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
     validity= (ref_matching in common_isomorphisms)
 
     ######################
@@ -29,7 +30,8 @@ def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,curre
     ######################
     if validity == False:
         print("Testing merging consistency with all brothers")
-        common_isomorphisms,_=common_subgraphisomorphisms([current_t_graph,current_p_graph],[ref_t_graph,ref_p_graph])
+        #common_isomorphisms,_=common_subgraphisomorphisms([current_t_graph,current_p_graph],[ref_t_graph,ref_p_graph])
+        common_isomorphisms= common_subgraphisomorphisms_optimized([current_t_graph, current_p_graph],[ref_t_graph, ref_p_graph])
         validity= (ref_matching in common_isomorphisms)
 
     return validity

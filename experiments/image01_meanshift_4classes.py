@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import skgtimage as skgti
 
 truth_dir="../../Database/image01/truth/"
-save_dir="../../Database/image01/meanshift_4classes/"
+save_dir="../../Database/image01/meanshift_4classes_bf/"
 
 
 t_desc="text<paper<file"
@@ -18,7 +18,8 @@ roi=sp.misc.imread(truth_dir+"roi.png")
 
 label=skgti.utils.mean_shift(image,10,roi,False,True)
 # RECOGNITION
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,verbose=True)
+#id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,verbose=True)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,verbose=True,bf=True)
 
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")

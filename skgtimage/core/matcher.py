@@ -1,13 +1,13 @@
 from skgtimage.core.graph import rename_nodes
 from skgtimage.core.filtering import remove_smallest_regions
-from skgtimage.core.subisomorphism import best_common_subgraphisomorphism
+from skgtimage.core.subisomorphism import best_common_subgraphisomorphism,common_subgraphisomorphisms,common_subgraphisomorphisms_optimized
 from skgtimage.core.propagation import propagate,merge_until_commonisomorphism
 from skgtimage.core.factory import from_string,from_labelled_image
 import time
 import copy
 import numpy as np
 
-def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=1,filtering=False,verbose=False):
+def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=False,thickness=1,filtering=False,verbose=False,bf=False):
     #A priori graphs
     t_graph=from_string(t_desc)
     p_graph=from_string(p_desc)
@@ -18,7 +18,7 @@ def recognize_regions(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=
 
     t1=time.clock()
     #Perform recognition by inexact-graph matching
-    matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering,t1-t0)
+    matcher=IPMatcher(built_t_graph,built_p_graph,t_graph,p_graph,filtering,t1-t0,bf=bf)
     matcher.compute_maching(verbose)
     matcher.compute_merge()
     matcher.update_final_graph()
@@ -47,7 +47,7 @@ def matcher_factory(image,labelled_image,t_desc,p_desc,roi=None,manage_bounds=Fa
     return matcher
 
 class IPMatcher:
-    def __init__(self,built_t_graph,built_p_graph,ref_t_graph,ref_p_graph,filtering=0,build_runtime=0):
+    def __init__(self,built_t_graph,built_p_graph,ref_t_graph,ref_p_graph,filtering=0,build_runtime=0,bf=False):
         self.built_t_graph=built_t_graph
         self.built_p_graph=built_p_graph
         self.query_t_graph=copy.deepcopy(built_t_graph)
@@ -55,6 +55,9 @@ class IPMatcher:
 
         #INITIAL REFINEMENT
         self.refined_t_graph_intermediates=[]
+
+        #COMMON ISOMORPHISMS SEARCH: BRUTE FORCE (bf==True) or optimized
+        self.bf=bf
 
         # INITIAL FILTERING
         self.filtering=filtering
@@ -64,10 +67,10 @@ class IPMatcher:
         self.ref_t_graph=ref_t_graph
         self.ref_p_graph=ref_p_graph
         #Initial matching and related isomorphisms
-        self.t_isomorphisms=None
-        self.p_isomorphisms=None
-        self.common_isomorphisms=None
-        self.eie=None
+        self.t_isomorphisms=[]
+        self.p_isomorphisms=[]
+        self.common_isomorphisms=[]
+        self.eie=[]
         self.matching=None
         #Merging
         self.ordered_merges=None
@@ -87,23 +90,24 @@ class IPMatcher:
 
     def compute_maching(self,verbose=False):
         t0=time.clock()
-        self.matching,self.common_isomorphisms,self.t_isomorphisms,self.p_isomorphisms,self.eie=best_common_subgraphisomorphism(self.query_t_graph,
-                                                                                                       self.ref_t_graph,
-                                                                                                       self.query_p_graph,
-                                                                                                       self.ref_p_graph,verbose)
+
+        if self.bf:
+            self.common_isomorphisms, isomorphisms_per_graph = common_subgraphisomorphisms([self.query_t_graph, self.query_p_graph],[self.ref_t_graph, self.ref_p_graph])
+            self.t_isomorphisms,self.p_isomorphisms=isomorphisms_per_graph[0],isomorphisms_per_graph[1]
+        else:
+            self.common_isomorphisms = common_subgraphisomorphisms_optimized([self.query_t_graph, self.query_p_graph], [self.ref_t_graph, self.ref_p_graph])
         t1=time.clock()
-        if self.common_isomorphisms is None:
+
+
+        if len(self.common_isomorphisms) == 0 :
             print("Need to initially merge")
             modification, self.refined_t_graph_intermediates= merge_until_commonisomorphism(self.query_t_graph, self.query_p_graph, self.ref_t_graph,self.ref_p_graph, True)
-            t0 = time.clock()
-            self.matching, self.common_isomorphisms, self.t_isomorphisms, self.p_isomorphisms, self.eie = best_common_subgraphisomorphism(
-                self.query_t_graph,
-                self.ref_t_graph,
-                self.query_p_graph,
-                self.ref_p_graph, verbose)
-            t1 = time.clock()
+            self.compute_maching(verbose)
 
         self.matching_runtime=t1-t0
+
+        self.matching, self.eie = best_common_subgraphisomorphism(self.common_isomorphisms, self.query_p_graph,self.ref_p_graph, verbose)
+
     def compute_merge(self):
         t0=time.clock()
         self.final_t_graph,self.final_p_graph,self.ordered_merges=propagate(self.query_t_graph,
