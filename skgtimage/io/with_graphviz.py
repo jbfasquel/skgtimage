@@ -460,7 +460,13 @@ def save_graph_v2(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
     """
     #To pygraphviz AGraph object
     #a=nx.to_agraph(graph)
-    a = nx.nx_agraph.to_agraph(graph)
+    try:
+        a = nx.nx_agraph.to_agraph(graph)
+    except Exception as m:
+        print("No pygraphviz installed")
+        print(m)
+        return
+
     #Global layout
     if tree:
         a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
@@ -506,7 +512,12 @@ def save_graph_v2(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
 def save_graph(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
     #To pygraphviz AGraph object
     #a=nx.to_agraph(graph)
-    a = nx.nx_agraph.to_agraph(graph)
+    try:
+        a = nx.nx_agraph.to_agraph(graph)
+    except Exception as m:
+        print("No pygraphviz installed")
+        print(m)
+        return
     #Global layout
     if tree:
         a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
@@ -550,8 +561,12 @@ def save_graph_links_v2(source_graph,target_graph,link_lists=[],colors=[],label_
     bi_graph.add_nodes_from(target_graph)
     bi_graph.add_edges_from(target_graph.edges())
     #a=nx.to_agraph(bi_graph)
-
-    a = nx.nx_agraph.to_agraph(bi_graph)
+    try:
+        a = nx.nx_agraph.to_agraph(bi_graph)
+    except Exception as m:
+        print("No pygraphviz installed")
+        print(m)
+        return
 
     #Global layout
     if tree:
@@ -631,8 +646,13 @@ def save_graph_links(source_graph,target_graph,link_lists=[],colors=[],label_lis
     bi_graph.add_nodes_from(target_graph)
     bi_graph.add_edges_from(target_graph.edges())
     #a=nx.to_agraph(bi_graph)
+    try:
+        a = nx.nx_agraph.to_agraph(bi_graph)
+    except Exception as m:
+        print("No pygraphviz installed")
+        print(m)
+        return
 
-    a = nx.nx_agraph.to_agraph(bi_graph)
 
     #Global layout
     if tree:
