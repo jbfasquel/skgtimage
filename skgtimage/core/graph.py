@@ -190,6 +190,23 @@ class IrDiGraph(nx.DiGraph):
     def get_mean_residue_intensity(self,n):
         return self.node[n]['mean_residue']
 
+    def get_ordered_nodes(self):
+        """
+        :return: nodes in increasing order of related region mean intensity
+        """
+        i2n={}
+        for n in self.nodes():
+            i=self.get_mean_residue_intensity(n)
+            if i in i2n: i2n[i]+=[n]
+            else: i2n[i]=[n]
+            #i2n[self.get_mean_residue_intensity(n)]=n
+        ordered=[]
+        for i in sorted(i2n):
+            ordered+=i2n[i]
+
+        #ordered=[ i2n[i] for i in sorted(i2n)]
+        return ordered
+
     def add_nodes_from(self, n, **attr):
         nx.DiGraph.add_nodes_from(self, n, **attr)
         for i in n: self.node[i]['region']=None
@@ -215,6 +232,15 @@ class IrDiGraph(nx.DiGraph):
         for n in self.nodes():
             if self.get_region(n) is not None: s = s | set([n])
         return s
+
+    def get_labelled(self):
+        labelled=np.zeros(self.get_image().shape,dtype=np.int)
+        fill_value=1
+        for n in self.nodes():
+            region=self.get_region(n)
+            labelled=np.ma.masked_array(labelled,mask=region).filled(fill_value)
+            fill_value+=1
+        return labelled
 
     def __str__(self):
         chaine=""

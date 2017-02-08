@@ -1,12 +1,25 @@
 import numpy as np
 import sklearn
+import skimage
+from skgtimage.utils.color import rgb2chsv
 from sklearn.cluster import MeanShift #, estimate_bandwidth
 import time
 
-def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True):
+def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True,sigma=None,rgb_convert=False):
     """
     Mean shift
     """
+    #Image preparation
+    if mc: #color
+        if sigma is not None:
+            tmp=skimage.filters.gaussian(image, sigma=sigma, multichannel=True)
+            return mean_shift(tmp,bandwidth=bandwidth,roi=roi,mc=mc,verbose=verbose,sigma=None,rgb_convert=rgb_convert)
+        #Conversion
+        if rgb_convert:
+            tmp=rgb2chsv(image)
+            return mean_shift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, verbose=verbose, sigma=sigma,rgb_convert=False)
+
+
     nb_components,spatial_dim=1,len(image.shape)
     if mc:
         nb_components=image.shape[-1]
@@ -33,6 +46,7 @@ def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True):
     ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
     ms.fit(reshaped_data)
     t1=time.clock()
+    runtime = t1 - t0
     if verbose==True:
         print("Cpu time (sec): " , t1-t0)
         print("nb clusters : " , len(np.unique(ms.labels_)))

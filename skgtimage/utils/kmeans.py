@@ -36,6 +36,7 @@ def kmeans(image,nb_clusters,n_seedings=100,roi=None,mc=False,verbose=False):
     k.fit(reshaped_data)
     t1 = time.clock()
     print("Cpu time: ",t1-t0)
+    runtime=t1-t0
     labels=k.labels_
 
     #### Writing labels to appropriate pixels: Version 1
@@ -51,7 +52,6 @@ def kmeans(image,nb_clusters,n_seedings=100,roi=None,mc=False,verbose=False):
 
     result[roi] = labels
     result=np.ma.masked_array(result, mask=np.logical_not(roi))
-
     return result
 
 

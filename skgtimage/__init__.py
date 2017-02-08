@@ -15,5 +15,5 @@ __licence__     = "BSD 3 clause"
 __version__     = "0.1"
 
 from . import core
-from . import utils
 from . import io
+from . import utils

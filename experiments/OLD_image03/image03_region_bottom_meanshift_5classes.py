@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 truth_dir="../../Database/image03/truth_bottom/"
-save_dir="../../Database/image03/bottom_meanshift_5classes_bf/"
+save_dir="../../Database/image03/bottom_meanshift_5classes_tmp/"
 
 # KNOWLEDGE
 t_desc="E<D;G<F;D,F,H,I<C<B<A"
@@ -16,13 +16,20 @@ image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
 roi=sp.misc.imread(os.path.join(truth_dir,"roi.png"))
 image=skgti.utils.rgb2gray(image_rgb)
 
+'''
+l_image_rgb=skgti.utils.fill_outroi_rgb(image_rgb,roi)
+l_image_rgb=skgti.utils.extract_subarray_rgb(l_image_rgb,roi=roi)
+sp.misc.imsave(save_dir+"_image_rgb_cropped.png",l_image_rgb)
+'''
+
+
 # SEGMENTATION
 image_chsv=skgti.utils.rgb2chsv(image_rgb)
 label=skgti.utils.mean_shift(image_chsv,0.1,roi,True,True) #0.1 OK
 
 # RECOGNITION
-#id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True)
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True,bf=True)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True)
+#id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True,bf=True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 matcher=skgti.io.unpickle_matcher(save_dir+"matcher.pkl")

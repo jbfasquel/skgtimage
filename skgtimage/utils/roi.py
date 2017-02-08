@@ -11,6 +11,12 @@ def bounding_box(roi):
 
     return bb
 
+def fill_outroi_rgb(array,roi,value=0):
+    roi_mask = np.dstack(tuple([roi for i in range(0, 3)]))
+    returned = np.ma.array(array, mask=np.logical_not(roi_mask)).filled(value)
+    return returned
+
+
 def extract_subarray_rgb(array,roi=None,bb=None,margin=0):
     """
     array: 2D RGB, roi: 2D Scalar

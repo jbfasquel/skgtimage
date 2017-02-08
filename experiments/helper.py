@@ -1,12 +1,61 @@
-import os,csv,pickle
+import os,csv,pickle,time
 import numpy as np
 import scipy as sp;from scipy import misc
 import matplotlib.pyplot as plt
 import skgtimage as skgti
+from skgtimage.utils import grey_levels
+from skgtimage.core.graph import rename_nodes,transitive_closure
+from skgtimage.core.filtering import remove_smallest_regions,size_filtering,merge_filtering,rag_merge_until_commonisomorphism,merge_photometry_gray
+from skgtimage.core.subisomorphism import find_subgraph_isomorphims,best_common_subgraphisomorphism,common_subgraphisomorphisms,common_subgraphisomorphisms_optimized,common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.factory import from_labelled_image
 
 
-def influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir,slices=None):
-    result_dir=save_dir+"08_eie_influence/"
+
+def save_context(save_dir,image,label,t_desc,p_desc,t,p):
+    if not os.path.exists(save_dir): os.mkdir(save_dir)
+    skgti.io.save_graphregions(t, save_dir)
+    skgti.io.save_graph(t, directory=save_dir)
+    ref_t = skgti.core.from_string(t_desc)
+    skgti.io.save_graph(ref_t, "graph_ref", directory=save_dir)
+    skgti.io.with_graphviz.__save_image2d__(label.astype(np.uint8),save_dir + "label.png", True)
+
+def concatenate(root_save_dir,filename,all_tests=None):
+    ###################
+    # IF ALL TESTS IS NONE
+    ###################
+    if all_tests is None:
+        all_tests=[]
+        for f in os.listdir(root_save_dir):
+            if os.path.isdir(root_save_dir+f): all_tests+=[f+"/"]
+    ###################
+    #Prepare final csv
+    ###################
+    csv_file=open(root_save_dir+filename, "w")
+    c_writer = csv.writer(csv_file,dialect='excel')
+    #First file
+    test=all_tests[0]
+    tmp_csv_file=open(root_save_dir+test+filename, 'r')
+    tmp_c_reader = csv.reader(tmp_csv_file, dialect='excel')
+    c_writer.writerow(next(tmp_c_reader))
+    c_writer.writerow(next(tmp_c_reader))
+    tmp_csv_file.close()
+    for i in range(1,len(all_tests)):
+        test = all_tests[i]
+        if not os.path.exists(root_save_dir + test + filename):
+            c_writer.writerow([test,"Err"])
+            continue
+
+        tmp_csv_file = open(root_save_dir + test + filename, 'r')
+        tmp_c_reader = csv.reader(tmp_csv_file, dialect='excel')
+        next(tmp_c_reader)
+        c_writer.writerow(next(tmp_c_reader))
+    #
+    csv_file.close()
+
+def influence_of_commonisos(matcher,t_desc,p_desc,truth_dir,save_dir,slices=None):
+    image=matcher.image
+
+    result_dir=save_dir+"commoniso_influence/"
     if not os.path.exists(result_dir) : os.mkdir(result_dir)
 
     truth_t_graph,truth_p_graph=skgti.io.from_dir(t_desc,p_desc,image,truth_dir)
@@ -26,20 +75,17 @@ def influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir,slice
 
     performances=[]
     for i in range(0,len(matcher.common_isomorphisms)):
+        print("Testing iso number ",i,"/",len(matcher.common_isomorphisms))
         current_matching=matcher.common_isomorphisms[i]
         #tmp_directory
         tmp_dir=result_dir+"iso_"+str(i)+"/" #;if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
         matching_links=skgti.io.matching2links(current_matching)
-        skgti.io.save_graph_links(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
-        skgti.io.save_graph_links(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links(matcher.t_graph,matcher.ref_t_graph,[matching_links],['red'],name="common_iso_t",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links(matcher.p_graph,matcher.ref_p_graph,[matching_links],['red'],name="common_iso_p",directory=tmp_dir,tree=True)
 
-        final_t_graph,final_p_graph,ordered_merges=skgti.core.propagate(matcher.query_t_graph,
-                                                                      matcher.query_p_graph,
-                                                                      matcher.ref_t_graph,
-                                                                      matcher.ref_p_graph,current_matching)
-        #ordered_merges=[i[2] for i in histo]
-        skgti.io.save_graph_links(matcher.query_t_graph,matcher.ref_t_graph,[matching_links,ordered_merges],['red','green'],label_lists=[[],range(0,len(ordered_merges)+1)],name="common_iso_merge_t",directory=tmp_dir,tree=True)
-        skgti.io.save_graph_links(matcher.query_p_graph,matcher.ref_p_graph,[matching_links,ordered_merges],['red','green'],label_lists=[[],range(0,len(ordered_merges)+1)],name="common_iso_merge_p",directory=tmp_dir,tree=True)
+        final_t_graph,final_p_graph,ordered_merges=skgti.core.propagate(matcher.t_graph,matcher.p_graph,matcher.ref_t_graph,matcher.ref_p_graph,current_matching,verbose=True)
+        skgti.io.save_graph_links(matcher.t_graph,matcher.ref_t_graph,[matching_links,ordered_merges],['red','green'],label_lists=[[],range(0,len(ordered_merges)+1)],name="common_iso_merge_t",directory=tmp_dir,tree=True)
+        skgti.io.save_graph_links(matcher.p_graph,matcher.ref_p_graph,[matching_links,ordered_merges],['red','green'],label_lists=[[],range(0,len(ordered_merges)+1)],name="common_iso_merge_p",directory=tmp_dir,tree=True)
 
 
         (relabelled_final_t_graph,relabelled_final_p_graph)=skgti.core.rename_nodes([final_t_graph,final_p_graph],current_matching)
@@ -53,7 +99,14 @@ def influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir,slice
             sp.misc.imsave(tmp_dir+"_image.png",image.astype(np.uint8))
             sp.misc.imsave(tmp_dir+"_truth.png",truth_image.astype(np.uint8))
             sp.misc.imsave(tmp_dir+"_result.png",result_image.astype(np.uint8))
+            skgti.io.with_graphviz.__save_image2d__(result_image.astype(np.uint8),tmp_dir + "_result_rescaled.png", True)
             sp.misc.imsave(tmp_dir+"_diff.png",generate_absdiff_inunint8(result_image,truth_image))
+            #Crop
+            result_image_cropped = skgti.utils.extract_subarray(result_image, roi=roi)
+            skgti.io.with_graphviz.__save_image2d__(result_image_cropped.astype(np.uint8), tmp_dir + "_result_rescaled_crop.png",True)
+            diffe = generate_absdiff_inunint8(result_image,truth_image)
+            diffe_cropped = skgti.utils.extract_subarray(diffe, roi=roi)
+            skgti.io.with_graphviz.__save_image2d__(diffe_cropped.astype(np.uint8),tmp_dir + "_diff_crop.png", True)
 
         if len(result_image.shape)==3:
             for s in slices:
@@ -82,18 +135,33 @@ def influence_of_commonisos(matcher,image,t_desc,p_desc,truth_dir,save_dir,slice
 
     #####
     # SAVING TO CSV
+    is_ref_best=True
+    for p in performances:
+        if p > ref_classif: is_ref_best=False
+
+    nb_worst=0
+    for p in performances:
+       if p != ref_classif:  nb_worst+=1
+    percentage_of_good = 100*(len(performances)-nb_worst)/len(performances)
+
+    best_gcr=max(performances)
+    worst_gcr = min(performances)
+
     import csv
-    fullfilename=os.path.join(result_dir,"08_classif_vs_commoniso.csv")
+    fullfilename=os.path.join(result_dir,"Classif_vs_commoniso.csv")
     csv_file=open(fullfilename, "w")
     c_writer = csv.writer(csv_file,dialect='excel')
-    c_writer.writerow(["Reference result (min/max eie): "]+[ref_classif])
+    if is_ref_best is True:
+        c_writer.writerow(["Reference result (min/max eie): "]+[ref_classif]+["Best one"])
+    else:
+        c_writer.writerow(["Reference result (min/max eie): "] + [ref_classif] + ["NOT the best one"])
+    c_writer.writerow(["Percentage of good result"]+[np.round(percentage_of_good,1)])
     c_writer.writerow(["Result for each commoniso"])
-    c_writer.writerow(['Eie']+[i for i in matcher.eie])
-    c_writer.writerow(['GCR']+[i for i in performances])
+    c_writer.writerow(['Eie']+[np.round(i,2) for i in matcher.eies])
+    c_writer.writerow(['GCR']+[np.round(i,3) for i in performances])
     csv_file.close()
 
-    print("Eies: ",matcher.eie)
-    print("performances: ",performances)
+    return is_ref_best,np.round(percentage_of_good,1),len(performances),best_gcr,worst_gcr
 
 def generate_absdiff_inunint8(result,ref):
     diff_result=np.abs(result.astype(np.float)-ref.astype(np.float))
@@ -187,13 +255,210 @@ def compared_with_rawsegmentation(segmentation_filename,t_desc,p_desc,image,regi
 
     return classif_result,classif_rawsegmentation
 
+def save_stats(recognizer,result,save_dir,name,runtime):
+    csv_file = open(save_dir+"stats.csv", "w")
+    c_writer = csv.writer(csv_file, dialect='excel')
+    #### DIRECTORY
+    row_title=["Directory"]
+    row_values=[name]
+    #### NAME ANALYSIS
+    import re
+    split_name=re.split("_",name)
+    row_title+=["Image"];
+    row_values+=[split_name[0]]
+    row_title+= ["ROI"];row_values += [split_name[2]]
+    row_title+= ["Seg."];row_values += [split_name[3]]
+    seg_param = split_name[4].replace("/", "")
+    ###################################
+    ##### #Label, #Nodes, #Isos...
+    #nb_init_labels = len(grey_levels(recognizer.label, roi=recognizer.roi))
+    nb_init_labels = len(grey_levels(recognizer.intermediate_labels[0], roi=recognizer.roi))
+    row_title += ["#Labels"];row_values += [nb_init_labels]
+    nb_nodes=len(recognizer.t_graph.nodes())
+    row_title += ["#Nodes"];row_values += [nb_nodes]
+    t_isomorphisms_candidates = find_subgraph_isomorphims(transitive_closure(recognizer.t_graph),transitive_closure(recognizer.ref_t_graph))
+    nb_t_isos = len(t_isomorphisms_candidates)
+    row_title += ["#I-isos"];
+    row_values += [nb_t_isos]
+    nb_c_isos=len(recognizer.common_isomorphisms)
+    row_title += ["#C-isos"];
+    row_values += [nb_c_isos]
 
-def compared_with_truth(image_gray,t_desc,p_desc,truth_dir,result_dir,comparison_dir,slices=None):
+    ###################################
+    #### GCR, SIMILARITIES
+    if "GCR" in result:
+        #GCR
+        row_title += ["GCR"];row_values+=[result["GCR"]]
+        #Similarities
+        region2sim = result["Similarities"]
+        ids_sim = [n for n in sorted(region2sim)]
+        val_sims = [round(region2sim[n], 2) for n in sorted(region2sim)]
+        string_val_ids=""
+        for i in val_sims: string_val_ids+=str(i)+","
+        string_val_ids=string_val_ids[0:-1] #remove last ','
+        string_val_ids+='\n('
+        for i in ids_sim: string_val_ids += i+","
+        string_val_ids = string_val_ids[0:-1]  # remove last ','
+        string_val_ids+=")"
+        row_title += ["Similarities"];row_values += [string_val_ids]
+        #Min/Max similarities
+        row_title += ["Similarities (max,min)"]
+        maxi=max(val_sims)
+        maxi_ids=[]
+        for m in range(0,len(val_sims)):
+            if maxi == val_sims[m]: maxi_ids+=[ids_sim[m]]
+        string_min_max=str(maxi)+" ("
+        for id in maxi_ids:
+            string_min_max+=(id+",")
+        string_min_max=string_min_max[0:-1]
+        string_min_max+=") "
+        #
+        mini=min(val_sims)
+        mini_ids=[]
+        for m in range(0,len(val_sims)):
+            if mini == val_sims[m]: mini_ids+=[ids_sim[m]]
+        string_min_max+=str(mini)+" ("
+        for id in mini_ids:
+            string_min_max+=(id+",")
+        string_min_max=string_min_max[0:-1]
+        string_min_max+=")"
+
+        row_values+=[string_min_max]
+    ###################################
+    #### ISO INFLUENCE
+    if "Is best iso" in result: #"Worst GCR"
+        is_best=result["Is best iso"]
+        if is_best:
+            row_title += ["Best iso ?"];
+            row_values += ["Y ("+str(result["Best GCR"])+"-"+str(result["Worst GCR"])+")"]
+            row_title += ["Percentage"];
+            row_values += [result["Percentage of good iso"]]
+        else:
+            row_values += ["N ("+str(result["Best GCR"])+"-"+str(result["Worst GCR"])+")"]
+            row_title += ["Percentage"];
+            row_values += ["-"]
+
+    ###################################
+    ##### MISC
+    #rag_merging=(recognizer.t_graph_before_rag is not None)
+    #prefil= (recognizer.label_pre_rag is not None) or (recognizer.label_pre_photomerge is not None)
+    prefil=""
+    for i in recognizer.intermediate_operations:
+        prefil+=i+" - "
+    filtered_size=recognizer.size_min
+    bg_removal=recognizer.remove_background
+    row_title+=["Seg param","Prefilt", "min size ?", "rm bg ?"]
+    row_values+=[seg_param,prefil,filtered_size,bg_removal]
+
+    ###################################
+    ##### WRITE ROW
+    c_writer.writerow(row_title)
+    c_writer.writerow(row_values)
+    csv_file.close()
+
+def save_stats_runtime(recognizer,result,save_dir,name,seg_runtime):
+    ###################
+    #Runtimes
+    ###################
+    #Hack: rerunning graph building after preprocessing steps
+    image,labelled,roi=recognizer.image,recognizer.t_graph.get_labelled(),recognizer.roi
+    t0=time.clock()
+    t,p=from_labelled_image(image,labelled,roi)
+    t1 = time.clock()
+    #CVS file
+    csv_file = open(save_dir + "stats_runtime.csv", "w")
+    c_writer = csv.writer(csv_file, dialect='excel')
+    title_row=[]
+    value_row=[]
+    #### DIRECTORY
+    title_row=["Directory"]
+    value_row=[name]
+    #### NAME ANALYSIS
+    import re
+    split_name=re.split("_",name)
+    title_row+=["Image"];
+    value_row+=[split_name[0]]
+    title_row+= ["ROI"];value_row += [split_name[2]]
+    title_row+= ["Seg."];value_row += [split_name[3]]
+    seg_param = split_name[4].replace("/", "")
+
+    if seg_runtime is not None:
+        title_row += ["Seg"]
+        value_row += [np.round(seg_runtime,2)]
+    title_row+=["Build"]
+    value_row+=[np.round(t1-t0,2)]
+    for r in sorted(recognizer.action2runtime):
+        title_row+=[r]
+        runtime=recognizer.action2runtime[r]
+        value_row+=[np.round(runtime,2)]
+    c_writer.writerow(title_row)
+    c_writer.writerow(value_row)
+    csv_file.close()
+
+
+
+
+def analyze(matcher,save_dir,name="",runtime=None,truth_dir=None,iso_influence=False,slices=[],full=False):
+    if not os.path.exists(save_dir): os.mkdir(save_dir)
+    #skgti.utils.save_recognizer_report(matcher,save_dir,name,runtime)
+    skgti.utils.save_recognizer_details(matcher,save_dir,full,slices)
+    result=None
+    if truth_dir is not None:
+        result = evaluate(truth_dir, save_dir + "Evaluation/", iso_influence=iso_influence, matcher=matcher,result_dir=save_dir,slices=slices)
+        '''
+        #Write to cvs file
+        csv_file = open(os.path.join(save_dir, "stats_performances.csv"), "w")
+        c_writer = csv.writer(csv_file, dialect='excel')
+        region2sim=result["Similarities"]
+        ids_sim=[n for n in sorted(region2sim)]
+        val_sims=[round(region2sim[n], 2) for n in sorted(region2sim)]
+        if iso_influence:
+            c_writer.writerow(["Context"]+["GCR"]+ids_sim+["Is best iso ?"]+["Percentage good iso"]+["Nb iso"]+["Best GCR"]+["Worst GCR"])
+            c_writer.writerow([name]+[result["GCR"]]+val_sims+[result["Is best iso"],result["Percentage of good iso"],result["Number of isos"],result["Best GCR"],result["Worst GCR"]])
+        else:
+            c_writer.writerow(["Context"]+["GCR"]+ids_sim)
+            c_writer.writerow([name]+[result["GCR"]]+val_sims)
+
+        csv_file.close()
+        #New: save all in a single file
+        '''
+    save_stats(matcher,result,save_dir,name,runtime)
+    save_stats_runtime(matcher,result,save_dir,name,runtime)
+
+
+    return result
+
+
+def evaluate(truth_dir,comparison_dir,iso_influence=False,matcher=None,result_dir=None,image=None,mc=False,t_desc=None,p_desc=None,slices=[]):
+    """
+    Examples of invokations:
+    result = helper.evaluate(truth_dir, save_dir+"Evaluation/",iso_influence = True, matcher = recognizer, result_dir=save_dir, image = image, mc = False, t_desc = t_desc, p_desc = p_desc, slices = [])
+    result = helper.evaluate(truth_dir, save_dir + "Evaluation/", iso_influence=True, matcher=recognizer,result_dir=save_dir)
+    :param truth_dir:
+    :param comparison_dir:
+    :param iso_influence:
+    :param matcher:
+    :param result_dir:
+    :param image:
+    :param mc:
+    :param t_desc:
+    :param p_desc:
+    :param slices:
+    :return:
+    """
     if not os.path.exists(comparison_dir) : os.mkdir(comparison_dir)
+    skgti.utils.clear_dir_content(comparison_dir)
+    if (matcher is not None) and (image is None):
+        return evaluate(truth_dir, comparison_dir, iso_influence, matcher, result_dir, image=matcher.image, mc = False, t_desc = matcher.t_desc, p_desc = matcher.p_desc , slices = slices)
+    if (image is not None) and (mc==True):
+        tmp=0.2125*image[:,:,0]+ 0.7154*image[:,:,1]+0.0721*image[:,:,2]
+        return evaluate(truth_dir, comparison_dir, iso_influence, matcher, result_dir, image=tmp, mc = False, t_desc = t_desc, p_desc = p_desc , slices = slices)
+        #return evaluate(tmp,t_desc,p_desc,truth_dir,result_dir,comparison_dir,slices,mc=False,iso_influence=iso_influence,matcher=matcher)
+
     #####
     # LOADING TRUTH AND OBTAINED GRAPHS
-    truth_t_graph,truth_p_graph=skgti.io.from_dir(t_desc,p_desc,image_gray,truth_dir)
-    result_t_graph,result_p_graph=skgti.io.from_dir(t_desc,p_desc,image_gray,result_dir)
+    truth_t_graph,truth_p_graph=skgti.io.from_dir(t_desc,p_desc,image,truth_dir)
+    result_t_graph,result_p_graph=skgti.io.from_dir(t_desc,p_desc,image,result_dir)
 
     #####
     # GENERATING IMAGES COMBINING REGIONS RESIDUES WITH SPECIFICS INTENSITIES
@@ -201,19 +466,16 @@ def compared_with_truth(image_gray,t_desc,p_desc,truth_dir,result_dir,comparison
     truth_image=skgti.io.generate_single_image(truth_t_graph,res2int)
     result_image=skgti.io.generate_single_image(result_t_graph,res2int)
 
-    if len(image_gray.shape)==2:
-        sp.misc.imsave(comparison_dir+"_image.png",image_gray.astype(np.uint8))
-        sp.misc.imsave(comparison_dir+"_truth.png",truth_image.astype(np.uint8))
-        sp.misc.imsave(comparison_dir+"_result.png",result_image.astype(np.uint8))
-    if len(image_gray.shape)==3:
+    if len(image.shape)==2:
+        sp.misc.imsave(comparison_dir+"full_truth.png",truth_image.astype(np.uint8))
+        sp.misc.imsave(comparison_dir+"full_result.png",result_image.astype(np.uint8))
+        skgti.io.with_graphviz.__save_image2d__(result_image.astype(np.uint8),comparison_dir+"full_result_rescaled.png",True)
+        sp.misc.imsave(comparison_dir + "full_diff.png",generate_absdiff_inunint8(result_image, truth_image))
+    if len(image.shape)==3:
         for s in slices:
-            sp.misc.imsave(comparison_dir+"_image_"+str(s)+".png",slice2png(image_gray,s))
-            sp.misc.imsave(comparison_dir+"_truth_"+str(s)+".png",slice2png(truth_image,s))
-            sp.misc.imsave(comparison_dir+"_result_"+str(s)+".png",slice2png(result_image,s))
-
-
-
-
+            sp.misc.imsave(comparison_dir+"full_truth_"+str(s)+".png",slice2png(truth_image,s))
+            sp.misc.imsave(comparison_dir+"full_result_"+str(s)+".png",slice2png(result_image,s))
+            sp.misc.imsave(comparison_dir+"full_diff.png",generate_absdiff_inunint8(slice2png(result_image,s), slice2png(truth_image,s)))
 
     #####
     # GENERATING MASKED IMAGES
@@ -222,15 +484,12 @@ def compared_with_truth(image_gray,t_desc,p_desc,truth_dir,result_dir,comparison
     l_truth_image=np.ma.array(truth_image, mask=np.logical_not(roi))
     l_result_image=np.ma.array(result_image, mask=np.logical_not(roi))
 
-    if len(image_gray.shape)==2:
-        c_image=skgti.utils.extract_subarray(image_gray,roi)
-        sp.misc.imsave(comparison_dir+"_image_crop.png",c_image.astype(np.uint8))
+    if len(image.shape)==2:
         c_truth_image=skgti.utils.extract_subarray(truth_image,roi)
-        sp.misc.imsave(comparison_dir+"_truth_crop.png",c_truth_image.astype(np.uint8))
+        sp.misc.imsave(comparison_dir+"crop_truth.png",c_truth_image.astype(np.uint8))
         c_result_image=skgti.utils.extract_subarray(result_image,roi)
-        sp.misc.imsave(comparison_dir+"_result_crop.png",c_result_image.astype(np.uint8))
-
-        sp.misc.imsave(comparison_dir+"diff_obtained_result_vs_truth.png",generate_absdiff_inunint8(c_result_image,c_truth_image))
+        sp.misc.imsave(comparison_dir+"crop_result.png",c_result_image.astype(np.uint8))
+        sp.misc.imsave(comparison_dir+"crop_diff.png",generate_absdiff_inunint8(c_result_image,c_truth_image))
     #####
     # COMPUTING THE CLASSIFICATION RATE
     classif=skgti.utils.goodclassification_rate(l_result_image,l_truth_image)
@@ -248,11 +507,20 @@ def compared_with_truth(image_gray,t_desc,p_desc,truth_dir,result_dir,comparison
 
     #####
     # SAVING THE RESULT AS A .CSV FILE
-    skgti.utils.save_to_csv(comparison_dir,"result_cmpvs_truth",classif,related_sims,nodepersim)
+    skgti.utils.save_to_csv(comparison_dir,"gcr_similarities",classif,related_sims,nodepersim)
 
     #####
-    # RETURN
-    return classif,region2sim
+    # RETURN RESULTS
+    result={"GCR":classif,"Similarities":region2sim}
+    if iso_influence and (matcher is not None):
+        is_ref_best, percentage_of_good, nb_isos,best_gcr,worst_gcr = influence_of_commonisos(matcher, t_desc, p_desc, truth_dir,comparison_dir, slices=slices)
+        result["Is best iso"] = is_ref_best
+        result["Percentage of good iso"] = percentage_of_good
+        result["Number of isos"] = nb_isos
+        result["Best GCR"] = best_gcr
+        result["Worst GCR"] = worst_gcr
+
+    return result
 
 
 def pickle_isos(save_dir,prefixe,matching,common_isomorphisms,t_isomorphisms,p_isomorphisms,eie_sim,eie_dist):
@@ -285,9 +553,6 @@ def save_refinement_historization(save_dir,historization,ref_t_graph,ref_p_graph
         current_matching=context[2]
         save_matching_details(save_dir,"04_t_refinement_step_"+str(i),current_t_graph,ref_t_graph,matching=matching)
         save_matching_details(save_dir,"04_p_refinement_step_"+str(i),current_p_graph,ref_p_graph,matching=matching)
-        print("Merge:",current_matching)
-
-
 
 def save_built_graphs(save_dir,prefixe,t_graph,p_graph,residues=None,slices=None):
     if not os.path.exists(save_dir) : os.mkdir(save_dir)

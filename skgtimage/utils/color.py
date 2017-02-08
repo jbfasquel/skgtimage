@@ -1,5 +1,6 @@
 import numpy as np
-
+from skgtimage.utils.evaluation import grey_levels
+from skgtimage.core.parameters import region_stat
 
 def rgb2chsv(image):
     return hsv2chsv(rgb2hsv(image))
@@ -44,3 +45,88 @@ def hsv2chsv(data):
         if type(data) == np.ma.MaskedArray :
             result=np.ma.masked_array(result,mask=data.mask)
         return result
+
+
+def merge_photometry_color(image,label,roi,times,verbose=False):
+    """
+    Merge regions of similar photometry, even if there are not adjacent
+    :param chsv_image:
+    :param label:
+    :param roi:
+    :param times:
+    :param verbose:
+    :return:
+    """
+    ################
+    #Precomputing properties
+    chsv_image = rgb2chsv(image)
+    levels=grey_levels(label,roi)
+    nb_levels=len(levels)
+    mean_for_each_level=[]
+    size_for_each_level=[]
+    for i in range(0,nb_levels):
+        if roi is not None:
+            roi_i = np.logical_and(np.where(label == levels[i], 1, 0),roi)
+        else:
+            roi_i = np.where(label == levels[i], 1, 0)
+        #plt.imshow(roi_i,"gray");plt.show()
+        ri = region_stat(chsv_image, roi_i, np.mean, mc=True)
+        mean_for_each_level+=[ri]
+        size_for_each_level+=[np.sum(roi_i)]
+
+    ################
+    #Computing adjacency matrix
+    adj_matrix=np.ones((nb_levels,nb_levels)) #1 assumes to be higher than any distance
+    for i in range(0,nb_levels):
+        for j in range(0, nb_levels):
+            if i < j:
+                ri=mean_for_each_level[i]
+                rj=mean_for_each_level[j]
+                dist=np.sqrt((rj[0]-ri[0])**2+(rj[1]-ri[1])**2+(rj[2]-ri[2])**2)
+                adj_matrix[i,j]=dist
+                adj_matrix[j,i]=dist
+
+    new_label=np.copy(label)
+    for it in range(0,times):
+        if verbose:
+            print("Merge_photometry_color, remaining iterations:", times-it)
+        #plt.imshow(new_label);plt.show()
+        ################
+        #Search minimal distance
+        mini=np.min(adj_matrix)
+        min_is,min_js=np.where(adj_matrix==mini)
+        min_i=min_is[0]
+        min_j=min_js[0]
+        ################
+        #Merging j+i -> i ; on vire j
+        #Modification of label, adjency matrix, etc
+        ################
+        merging = (levels[min_i], levels[min_j])
+        #Label j takes the label i
+        roi_to_change=np.where(new_label==merging[1],1,0)
+        new_label=np.ma.array(new_label, mask=roi_to_change).filled(merging[0])
+        #Update
+        #levels.pop(min_j)
+        levels=np.delete(levels, min_j, 0)
+        #nb_levels=len(levels)
+        tmp_mean_i=mean_for_each_level[min_i]
+        tmp_mean_j=mean_for_each_level[min_j]
+        mean_for_each_level[min_i]=(size_for_each_level[min_i]*mean_for_each_level[min_i]+size_for_each_level[min_j]*mean_for_each_level[min_j])/(size_for_each_level[min_i]+size_for_each_level[min_j])
+        mean_for_each_level.pop(min_j)
+        size_for_each_level[min_i]=size_for_each_level[min_i]+size_for_each_level[min_j]
+        size_for_each_level.pop(min_j)
+        adj_matrix=np.delete(adj_matrix, min_j, 0)
+        adj_matrix=np.delete(adj_matrix, min_j, 1)
+        if min_i < min_j:
+            new_index_min_i=min_i
+        else:
+            new_index_min_i=min_i-1
+        r_min_i=mean_for_each_level[new_index_min_i]
+        for n in range(0,len(levels)):
+            if n != new_index_min_i:
+                rn = mean_for_each_level[n]
+                dist = np.sqrt((rn[0] - r_min_i[0]) ** 2 + (rn[1] - r_min_i[1]) ** 2 + (rn[2] - r_min_i[2]) ** 2)
+                adj_matrix[new_index_min_i, n] = dist
+                adj_matrix[n, new_index_min_i] = dist
+
+    return new_label

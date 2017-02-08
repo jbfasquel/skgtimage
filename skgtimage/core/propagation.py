@@ -1,5 +1,5 @@
 import networkx as nx
-from skgtimage.core.subisomorphism import common_subgraphisomorphisms,find_subgraph_isomorphims,common_subgraphisomorphisms_optimized
+from skgtimage.core.subisomorphism import common_subgraphisomorphisms,find_subgraph_isomorphims,common_subgraphisomorphisms_optimized,common_subgraphisomorphisms_optimized_v2
 from skgtimage.core.topology import topological_merging_candidates,merge_nodes_topology
 from skgtimage.core.photometry import merge_nodes_photometry
 from skgtimage.core.graph import transitive_closure,extract_subgraph
@@ -19,7 +19,7 @@ def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,curre
     subgraph=extract_subgraph(previous_p_graph,ref_matching.keys()) #reference ref_p_graph considered in matching, i.e. without "brothers"
     simplified_ref_p_graph=nx.relabel_nodes(subgraph,ref_matching)
     #common_isomorphisms,_=common_subgraphisomorphisms([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
-    common_isomorphisms=common_subgraphisomorphisms_optimized([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
+    common_isomorphisms=common_subgraphisomorphisms_optimized_v2([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
     validity= (ref_matching in common_isomorphisms)
 
     ######################
@@ -29,9 +29,7 @@ def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,curre
     #In such a case, ref_matching can be modified (e.g. valid photometric inversion)
     ######################
     if validity == False:
-        print("Testing merging consistency with all brothers")
-        #common_isomorphisms,_=common_subgraphisomorphisms([current_t_graph,current_p_graph],[ref_t_graph,ref_p_graph])
-        common_isomorphisms= common_subgraphisomorphisms_optimized([current_t_graph, current_p_graph],[ref_t_graph, ref_p_graph])
+        common_isomorphisms= common_subgraphisomorphisms_optimized_v2([current_t_graph, current_p_graph],[ref_t_graph, ref_p_graph])
         validity= (ref_matching in common_isomorphisms)
 
     return validity
@@ -93,7 +91,7 @@ def cost2merge(t_graph,p_graph,nodes,possible_targets):
 
     return candidates,d2m
 
-def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=False):
+def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=False,verbose=False):
     """
     While remaining unknown nodes:
         1) For each r in remaining unknown nodes: find topological neighbors that are known, and compute photometric distances
@@ -173,17 +171,26 @@ def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=
             #Use validity to decide whether the next merge should be tested (within the "ordered_merging_candidates" list)
             ###########################
             if validity:
-                print(ordered_merging_candidates, " Merge: ", merge, " -> OK")
+                if verbose: print(ordered_merging_candidates, " Merge: ", merge, " -> OK")
                 previous_t_graph=current_t_graph
                 previous_p_graph=current_p_graph
                 modification_historisation+=[merge]
                 remaining_nodes=set(current_t_graph.nodes())-initial_matched_nodes
                 stop_condition=True
             else:
-                print(ordered_merging_candidates, " Merge: ", merge, " -> NOK")
+                if verbose: print(ordered_merging_candidates, " Merge: ", merge, " -> NOK")
                 stop_condition=False
                 current_candidate_index+=1
-                if current_candidate_index == len(ordered_merging_candidates): raise Exception("Impossible to merge")
+                if current_candidate_index == len(ordered_merging_candidates):
+                    #print("Here",current_candidate_index)
+                    #One removes the region from candidates
+                    concerned_merge=ordered_merging_candidates[current_candidate_index-1]
+                    region_to_remove=concerned_merge[0]
+                    previous_t_graph.remove_node(region_to_remove)
+                    previous_p_graph.remove_node(region_to_remove)
+                    #modification_historisation+=[concerned_merge]
+                    return previous_t_graph,previous_p_graph,modification_historisation
+                    #raise Exception("Impossible to merge")
 
     ###################
     #Return
@@ -192,12 +199,18 @@ def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=
 
 
 def merge_until_commonisomorphism(t_graph,p_graph,ref_t_graph,ref_p_graph,debug=False):
-    common_isomorphisms, isomorphisms_per_graph = common_subgraphisomorphisms([t_graph, p_graph],[ref_t_graph, ref_p_graph])
+    #common_isomorphisms, isomorphisms_per_graph = common_subgraphisomorphisms([t_graph, p_graph],[ref_t_graph, ref_p_graph])
+    #common_isomorphisms = common_subgraphisomorphisms_optimized([t_graph, p_graph],[ref_t_graph, ref_p_graph])
+    common_isomorphisms = common_subgraphisomorphisms_optimized_v2([t_graph, p_graph],[ref_t_graph, ref_p_graph])
+
+
+
     modification_historisation=[]
     t_graph_historisation = []
     while len(common_isomorphisms) == 0:
         #All nodes are candidates for merging: one selects the merging minizing mean intensity difference (and topologically compliant)
         remaining_nodes = t_graph.nodes()
+        print("Merging - Remaining nodes",len(remaining_nodes))
         ordered_merging_candidates, d2m = cost2merge(t_graph, p_graph, remaining_nodes, remaining_nodes)
         merge = ordered_merging_candidates[0]
         #Apply merging
@@ -205,10 +218,14 @@ def merge_until_commonisomorphism(t_graph,p_graph,ref_t_graph,ref_p_graph,debug=
         merge_nodes_topology(t_graph, merge[0], merge[1])
         #If debug mode, one stores intermediate modifications
         if debug:
+            print("Merging:", merge[0], "->",merge[1])
             modification_historisation += [merge]
             t_graph_historisation+=[t_graph.copy()]
         #After merge, one (re)searces if there are common isomorphisms (at least one)
-        common_isomorphisms, isomorphisms_per_graph = common_subgraphisomorphisms([t_graph, p_graph],[ref_t_graph, ref_p_graph])
-
+        #common_isomorphisms, isomorphisms_per_graph = common_subgraphisomorphisms([t_graph, p_graph],[ref_t_graph, ref_p_graph])
+        common_isomorphisms = common_subgraphisomorphisms_optimized_v2([t_graph, p_graph],
+                                                                                      [ref_t_graph, ref_p_graph])
+        if len(t_graph.nodes()) == 1:
+            raise Exception("Impossible to further merge")
     return modification_historisation,t_graph_historisation
 

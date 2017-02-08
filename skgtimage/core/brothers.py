@@ -1,6 +1,26 @@
 import networkx as nx
 import itertools
-from skgtimage.core.search_base import recursive_brothers
+from skgtimage.core.search_base import recursive_brothers,find_head
+
+def increasing_ordered_list(p_graph):
+    currents = find_head(p_graph)
+    my_list = []
+    # a_head=list(heads)[0]
+    while len(currents) != 0:
+        my_list += [currents]
+        pred = set()
+        for e in currents:
+            pred |= (set(nx.DiGraph.predecessors(p_graph, e)) - set(recursive_brothers(p_graph, e)))
+        brothers_to_add = set()
+        for p in pred:
+            brothers_to_add |= set(recursive_brothers(p_graph, p))
+        pred |= brothers_to_add
+        pred -= currents
+        currents = pred
+    #print("predecessors:", pred)
+    # my_list+=[pred]
+    my_list.reverse()
+    return my_list
 
 def find_groups_of_brothers(g):
     groups_of_brothers=[]
@@ -90,6 +110,7 @@ def compute_possible_graphs(g):
 
     all_graphs=[]
     for i in range(0,len(all_orderings)):
+        print("In compute_possible_graphs",i, " / ",len(all_orderings))
         reordered_graph=clean_graph.copy()
         current_ordering=all_orderings[i]
         generate_connection(reordered_graph,current_ordering,groups_of_brothers,predecessors,successors)

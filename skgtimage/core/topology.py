@@ -30,6 +30,43 @@ def is_included_in(a,b): #True if a included in b
     is_included=int(np.array_equal(intersection,normed_a.astype(np.bool)))
     return is_included
 
+def inclusions_from_residues_fast(residues,filled_residues):
+    ########################
+    #Discovering inclusions and intersections relationships (adj matrices) between residues and filled residues
+    # M[i,j]=1 <-> ri included in rj <-> edge i->j
+    #     r_0 r_1 r_2
+    # r_0  0   x   x
+    # r_1  x   0   x
+    # r_2  x   x   0
+    ###################
+    n=len(filled_residues)
+    adj_included=np.zeros((n,n),dtype=np.uint8) #why not 'adj_included=np.eye(n,dtype=np.uint8)'
+    adj_intersection=np.zeros((n,n),dtype=np.uint8) #why not 'adj_intersection=np.eye(n,dtype=np.uint8)'
+
+    for i in range(0,n): residues[i]=residues[i]/np.max(residues[i])
+    for i in range(0,n):
+        for j in range(0,n):
+            if i != j:
+                #Intersection
+                intersection=np.logical_and(residues[i],filled_residues[j])
+                does_intersect=int((np.sum(intersection) != 0))
+                adj_intersection[i,j]=does_intersect
+                #Inclusion
+                is_included=int(np.array_equal(intersection,residues[i].astype(np.bool)))
+                adj_included[i,j]=is_included
+    ###################
+    #Transitive reduction of the inclusion graph
+    ###################
+    #adj_included=transitive_reduction_matrix(adj_included)
+    #adj_intersection=transitive_reduction_matrix(adj_intersection)
+    ###################
+    #Management of intersections without inclusion
+    ###################
+    print(adj_included)
+    print(adj_intersection)
+    split_matrix=adj_intersection-adj_included
+    return split_matrix
+
 def inclusions_from_residues(residues,filled_residues):
     ########################
     #Discovering inclusions and intersections relationships (adj matrices) between residues and filled residues

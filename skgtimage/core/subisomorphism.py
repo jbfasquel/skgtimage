@@ -5,8 +5,28 @@ import numpy as np
 import networkx as nx
 from skgtimage.core.photometry import region_stat
 from skgtimage.core.graph import transitive_closure
-from skgtimage.core.brothers import find_groups_of_brothers,compute_possible_graphs
+from skgtimage.core.brothers import find_groups_of_brothers,compute_possible_graphs,increasing_ordered_list
 from skgtimage.core.search_base import decreasing_ordered_nodes
+
+
+def photometric_iso_validity(iso,image_ordering,model_ordering):
+    model_ordering_from_iso = []
+    for i in image_ordering:
+        if i in iso:
+            model_ordering_from_iso += [iso[i]]
+    ###################
+    model_copy=model_ordering.copy()
+    image_copy=model_ordering_from_iso.copy()
+    valid=True
+    for m in model_copy:
+        nb_similar_element=len(m)
+        related_elements=set(image_copy[0:nb_similar_element])
+        if m != related_elements: valid=False
+        image_copy=image_copy[nb_similar_element:]
+
+    #return model_ordering_from_iso
+    return valid
+
 
 def find_subgraph_isomorphims(query_graph,ref_graph):
     matcher=nx.isomorphism.DiGraphMatcher(query_graph,ref_graph)
@@ -30,6 +50,57 @@ def __find_common_isomorphims__(isomorphisms_1,isomorphisms_2):
         for p_iso in isomorphisms_2:
             if (t == p_iso) and (t is not None) and (p_iso is not None): matchings+=[t]
     return matchings
+
+def check_iso_eligibility(iso,ordered_nodes,groups_of_brothers):
+    """
+    :param iso: input to output bijection
+    :param ordered_nodes: from real image (photometric graph)
+    :param groups_of_brothers: from model (photometric graph)
+    :return:
+    """
+    validity=True
+    oi=oirelationships_iso(iso)
+    #print("reverse iso",oi)
+    for group in groups_of_brothers:
+        group_inputs=[]
+        indices_of_interest=[]
+        for e in group:
+            related_input=oi[e]
+            group_inputs+=[related_input]
+            indices_of_interest+=[ordered_nodes.index(related_input)]
+        #sub_ordered_nodes=ordered_nodes[min(indices_of_interest):max(indices_of_interest)+1]
+        for i in range(min(indices_of_interest),max(indices_of_interest)+1):
+            input_node=ordered_nodes[i]
+            if (input_node not in group_inputs) and (input_node in iso.keys()): validity=False
+            #print("Concerned input:",ordered_nodes[i])
+
+        #print("Subordered:",sub_ordered_nodes)
+
+        #print("Group",group)
+    return validity
+
+def common_subgraphisomorphisms_optimized_v2(query_graphs,ref_graphs,verbose=False):
+    t_query,t_ref=query_graphs[0],ref_graphs[0]
+
+    #############################
+    # t_isomorphisms
+    #############################
+    t_isomorphisms_candidates=find_subgraph_isomorphims(transitive_closure(t_query), transitive_closure(t_ref))
+
+    if verbose: print("Number of found isomorphisms (inclusion):",len(t_isomorphisms_candidates))
+    #############################
+    # p_isomorphisms
+    #############################
+    p_query,p_model=query_graphs[1],ref_graphs[1]
+    image_ordering=p_query.get_ordered_nodes()
+    model_ordering=increasing_ordered_list(p_model)
+    common_iso=[]
+    for iso in t_isomorphisms_candidates:
+        if photometric_iso_validity(iso,image_ordering,model_ordering): common_iso+=[iso]
+    if verbose: print("Number of found common isomorphisms (inclusion+photometry):", len(common_iso))
+
+    return common_iso
+
 
 def common_subgraphisomorphisms_optimized(query_graphs,ref_graphs):
     """
@@ -63,8 +134,34 @@ def common_subgraphisomorphisms_optimized(query_graphs,ref_graphs):
         isomorphisms = find_subgraph_isomorphims(query, ref)
         related_isomorphisms += isomorphisms
     isomorphisms_candidates += related_isomorphisms
+    print("Nb valid t_iso v1:", isomorphisms_candidates)
+
     # Versus next: only check whether candidates is subiso
+    ############################
+    # CHECK VALIDITY VS BROTHERS
+    ############################
+    valid_isomorphisms=[]
+    p_query_graph=query_graphs[1]
+    p_ref_graph=ref_graphs[1]
+    ordered_nodes = p_query_graph.get_ordered_nodes()
+    groups_of_brothers = find_groups_of_brothers(p_ref_graph)
+    nb_valid = 0
+    print("Nb t iso v1:",len(isomorphisms_candidates))
+
+    for iso in isomorphisms_candidates:
+        validity = check_iso_eligibility(iso, ordered_nodes, groups_of_brothers)
+        #print("Validity ISO1:",validity)
+        if validity:
+            nb_valid += 1
+            valid_isomorphisms+=[iso]
+    '''
+    #OLD (without prefiltering)
     valid_isomorphisms=isomorphisms_candidates
+    '''
+    ############################
+    #
+    ############################
+
     current_valid_isomorphism=[]
     nb_graphs=len(query_graphs)
     for i in range(1,nb_graphs):
@@ -75,7 +172,9 @@ def common_subgraphisomorphisms_optimized(query_graphs,ref_graphs):
         related_isomorphisms=[]
 
         #print(valid_isomorphisms)
+        iso_i=0
         for iso_candidate in valid_isomorphisms:
+            iso_i+=1
             #Remove nodes from query that are not related to the isomorphism
             nodes_to_remove=set(query.nodes())-set(iso_candidate.keys())
             #print(nodes_to_remove)
@@ -85,18 +184,32 @@ def common_subgraphisomorphisms_optimized(query_graphs,ref_graphs):
             #Loop over unwrapped ref graphs: if iso candidate is valid at least for one of the unwrapped version -> the isomorphism candidate is valid
             counter = 1
             is_valid_candidate = False
+            i=0
+            while (is_valid_candidate == False) and (i<len(related_ref_graphs)):
+                #print("ISO ", iso_i,"/",len(valid_isomorphisms),":", counter,"/",len(related_ref_graphs));counter+=1
+                ref=related_ref_graphs[i]
+                ref=transitive_closure(ref)
+                validity = is_isomorphism_valid(subquery, ref, iso_candidate)
+                # print(ref," --> ", validity)
+                if validity:
+                    is_valid_candidate = True
+                i+=1
+
+            '''
             for ref in related_ref_graphs:
-                #print(counter,"/",len(related_ref_graphs));counter+=1
+                print("ISO ", iso_i,"/",len(valid_isomorphisms),":", counter,"/",len(related_ref_graphs));counter+=1
                 ref=transitive_closure(ref)
 
                 validity=is_isomorphism_valid(subquery, ref, iso_candidate)
                 #print(ref," --> ", validity)
-                if validity: is_valid_candidate=True
-
+                if validity:
+                    is_valid_candidate=True
+                    break
+            '''
             if is_valid_candidate:
                 current_valid_isomorphism+=[iso_candidate]
         valid_isomorphisms=current_valid_isomorphism
-
+    print("Nb t+p iso v1:", len(valid_isomorphisms))
     return valid_isomorphisms
 
 
@@ -169,6 +282,9 @@ def best_common_subgraphisomorphism(common_isomorphisms,query_p_graph,ref_p_grap
     eie_per_iso=[]
     for c_iso in common_isomorphisms:
         eie_per_iso+=[matching_criterion_value(query_p_graph,ref_p_graph,c_iso)]
+    eie2iso={}
+    for i in range(0,len(common_isomorphisms)):
+        eie2iso[eie_per_iso[i]]=common_isomorphisms[i]
 
     #Taking the best common isomorphisms as result
     matching=None
@@ -176,10 +292,84 @@ def best_common_subgraphisomorphism(common_isomorphisms,query_p_graph,ref_p_grap
     index_of_max=eie_per_iso.index(max_eie)
     matching=common_isomorphisms[index_of_max]
 
-    return matching,eie_per_iso
+    #Isos in decreasing order of energy
+    best_isos=[]
+    my_list=sorted(eie2iso)
+    my_list.reverse()
+    for e in my_list:
+        best_isos+=[eie2iso[e]]
 
+    return matching,eie_per_iso,best_isos
 
 def matching_criterion_value(query_graph,ref_graph,iso):
+    oi=oirelationships(iso)
+    list_of_nodes=decreasing_ordered_nodes(ref_graph)
+    mean_intensities=[]
+    brothers_std_dev_for_each=[]
+    #new_brothers_std_dev_for_each = []
+    for i in range(0,len(list_of_nodes)):
+        current_element=list_of_nodes[i]
+        ################################################
+        #When brothers: one computes the mean intensity and std of similar nodes
+        ################################################
+        if len(current_element) > 1:
+            local_intensities=[]
+            brother_nodes=[list(oi[b])[0] for b in current_element]
+            for j in range(0,len(brother_nodes)):
+                local_intensities+=[query_graph.get_mean_residue_intensity(brother_nodes[j])]
+
+            mean_intensity=np.mean(np.asarray(local_intensities))
+            stddev_intensity=np.std(np.asarray(local_intensities))
+            brothers_std_dev_for_each+=[stddev_intensity]
+            #new_brothers_std_dev_for_each+=[stddev_intensity]
+        ################################################
+        #When simple node: one only retrieves the mean intensity
+        ################################################
+        else:
+            tmp=list(current_element)[0]
+            target=oi[tmp]
+            corresponding_node=list(target)[0]
+            mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
+            #new_brothers_std_dev_for_each += [0.0]
+        ################################################
+        #Keep intensity
+        ################################################
+        mean_intensities+=[mean_intensity]
+
+    intensity_diffs=[ np.abs(mean_intensities[i]-mean_intensities[i-1]) for i in range(1,len(mean_intensities))]
+    mean_intensity_diff=np.mean(intensity_diffs)
+    mean_intensity_dev=np.std(intensity_diffs)
+    ##############
+    #Variance management
+    ##############
+    if mean_intensity_dev == 0 : mean_intensity_dev=1
+    if len(brothers_std_dev_for_each) == 0 : brothers_std_dev=1
+    else:
+        brothers_std_dev=np.mean(np.asarray(brothers_std_dev_for_each))
+        #new_brothers_std_dev = np.mean(np.asarray(new_brothers_std_dev_for_each))
+
+
+    ##############
+    #Energy: case without similarities
+    ##############
+    if len(brothers_std_dev_for_each) == 0 :
+        eie = mean_intensity_diff / mean_intensity_dev #celui de l'article
+        '''
+        #new eie: ne marche pas pour liver et k-means
+        max_diff=np.abs(mean_intensities[0]-mean_intensities[-1])
+        #eie = max_diff / mean_intensity_diff
+        eie = max_diff * mean_intensity_diff / mean_intensity_dev
+        '''
+    ##############
+    # Energy: case with similarities
+    ##############
+    else:
+        eie = mean_intensity_diff / brothers_std_dev
+
+    return eie
+
+
+def matching_criterion_value_old(query_graph,ref_graph,iso):
     oi=oirelationships(iso)
     list_of_nodes=decreasing_ordered_nodes(ref_graph)
     mean_intensities=[]
@@ -223,113 +413,38 @@ def matching_criterion_value(query_graph,ref_graph,iso):
         mean_intensities+=[mean_intensity]
         #intensities+=[mean_intensity]
 
-    intensity_diffs=[ np.abs(mean_intensities[i]-mean_intensities[i-1]) for i in range(1,len(mean_intensities)-1)]
+    intensity_diffs=[ np.abs(mean_intensities[i]-mean_intensities[i-1]) for i in range(1,len(mean_intensities))]
     intensity_diffs_squared=np.asarray(intensity_diffs)**2
     mean_intensity_diff=np.mean(intensity_diffs_squared)
+    mean_intensity_dev=np.std(intensity_diffs_squared)
+    diff_max = (np.abs(mean_intensities[0] - mean_intensities[len(mean_intensities) - 1])) ** 2
 
     eie=mean_intensity_diff
     if len(brothers_std_dev) > 0:
         brothers_std_dev_squared=np.asarray(brothers_std_dev)**2
         eie=eie/np.mean(brothers_std_dev_squared)
+    #New:
+    else:
+        if mean_intensity_dev != 0:
+            eie = diff_max*mean_intensity_diff / (mean_intensity_dev**2)
+        else:
+            eie = diff_max * mean_intensity_diff
+            #eie = diff_max / (mean_intensity_dev ** 2)
+
+    '''
+    else:
+        if mean_intensity_dev != 0:
+            eie = mean_intensity_diff / (mean_intensity_dev**2)
+    '''
+    '''
+    else:
+        eie=eie/np.std(intensity_diffs_squared)
+    '''
     '''
     for n in negative_intensities:
         eie-=n
     '''
     return eie
-
-
-'''
-def matching_criterion_value(query_graph,ref_graph,iso):
-    oi=oirelationships(iso)
-    list_of_nodes=decreasing_ordered_nodes(ref_graph)
-    intensities=[]
-    #cost_brothers=[]
-    negative_intensities=[]
-    for i in range(0,len(list_of_nodes)):
-        current_element=list_of_nodes[i]
-        #cost_brothers+=[0.0] #by default null penality
-        ################################################
-        #When brothers: one computes the mean intensity
-        ################################################
-        if len(current_element) > 1:
-            #Taking region size proportions into account
-            local_intensities=[]
-            brother_nodes=[list(oi[b])[0] for b in current_element]
-            region=query_graph.get_region(brother_nodes[0]).astype(np.uint8)
-            local_intensities+=[region_stat(query_graph.get_image(),region,fct=np.mean)]
-            for j in range(1,len(brother_nodes)):
-                local_intensities+=[query_graph.get_mean_residue_intensity(brother_nodes[j])]
-                region+=query_graph.get_region(brother_nodes[j]).astype(np.uint8)
-
-            mean_intensity=region_stat(query_graph.get_image(),region,fct=np.mean)
-            local_intensities=sorted(local_intensities)
-            local_intensities_diffs=[ np.abs(local_intensities[i]-local_intensities[i-1]) for i in range(0,len(local_intensities)-1)]
-            negative_intensities+=local_intensities_diffs
-            #cost_brothers[i]=-(region_stat(query_graph.get_image(),region,fct=np.std))
-            #cost_brothers+=[(region_stat(query_graph.get_image(),region,fct=np.std))]
-        ################################################
-        #When simple node: one only retrieves the mean intensity
-        ################################################
-        else:
-            tmp=list(current_element)[0]
-            target=oi[tmp]
-            corresponding_node=list(target)[0]
-            mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
-        ################################################
-        #Keep intensity
-        ################################################
-        intensities+=[mean_intensity]
-    intensity_diffs=[ np.abs(intensities[i]-intensities[i-1]) for i in range(0,len(intensities)-1)]
-    mean_intensity_diff=np.mean(np.asarray(intensity_diffs))
-
-    eie=mean_intensity_diff
-    for n in negative_intensities:
-        eie-=n
-    return eie
-'''
-'''
-def matching_criterion_value(query_graph,ref_graph,iso):
-    oi=oirelationships(iso)
-    list_of_nodes=decreasing_ordered_nodes(ref_graph)
-    intensities=[]
-    cost_brothers=[]
-    for i in range(0,len(list_of_nodes)):
-        current_element=list_of_nodes[i]
-        #cost_brothers+=[0.0] #by default null penality
-        ################################################
-        #When brothers: one computes the mean intensity
-        ################################################
-        if len(current_element) > 1:
-            #Taking region size proportions into account
-            #local_intensities=[]
-            brother_nodes=[list(oi[b])[0] for b in current_element]
-            region=query_graph.get_region(brother_nodes[0]).astype(np.uint8)
-            for j in range(1,len(brother_nodes)):
-                region+=query_graph.get_region(brother_nodes[j]).astype(np.uint8)
-            mean_intensity=region_stat(query_graph.get_image(),region,fct=np.mean)
-            #cost_brothers[i]=-(region_stat(query_graph.get_image(),region,fct=np.std))
-            cost_brothers+=[(region_stat(query_graph.get_image(),region,fct=np.std))]
-        ################################################
-        #When simple node: one only retrieves the mean intensity
-        ################################################
-        else:
-            tmp=list(current_element)[0]
-            target=oi[tmp]
-            corresponding_node=list(target)[0]
-            mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
-        ################################################
-        #Keep intensity
-        ################################################
-        intensities+=[mean_intensity]
-    intensity_diffs=[ np.abs(intensities[i]-intensities[i-1]) for i in range(0,len(intensities)-1)]
-    mean_intensity_diff=np.mean(np.asarray(intensity_diffs))
-
-    eie=mean_intensity_diff
-    if len(cost_brothers) != 0:
-        mean_cost_brothers=np.mean(np.asarray(cost_brothers))
-        eie=float(mean_intensity_diff)/float(mean_cost_brothers)
-    return eie
-'''
 
 def nb_automorphisms(graphs):
     auto=[]
@@ -338,6 +453,19 @@ def nb_automorphisms(graphs):
         automorphisms=find_subgraph_isomorphims(closed_g,closed_g)
         auto+=[len(automorphisms)]
     return auto
+
+def oirelationships_iso(io):
+    """
+    case bijection
+    :param io:
+    :return:
+    """
+    oi={}
+    for i in io:
+        my_val=io[i]
+        oi[io[i]]=i
+    return oi
+
 
 def oirelationships(io):
     oi={}

@@ -15,7 +15,63 @@ def matching2links(matching):
 ##############################
 # TOP FUNCTION FOR SAVING ALL "MATCHER" CONTENT
 ##############################
-def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directory=None,save_all_iso=False,slices=[]):
+def save_matcher_result(matcher,image=None,labelled_image=None,roi=None,directory=None,slices=[],mc=False):
+    if (mc==True) and (image is not None):
+        tmp=0.2125*image[:,:,0]+ 0.7154*image[:,:,1]+0.0721*image[:,:,2]
+        return save_matcher_result(matcher, tmp, labelled_image, roi, directory, slices, mc=False)
+    ##############################
+    #Image and labelled_image
+    ##############################
+    context_dir=directory+"00_context/"
+    if not os.path.exists(context_dir) : os.mkdir(context_dir)
+    if image is not None:
+        l_image=image
+        if roi is not None:
+            l_image=np.ma.array(image.astype(np.float), mask=np.logical_not(roi)).filled(np.min(image)-1)
+        if len(image.shape) == 2:
+            __save_image2d__(image,os.path.join(context_dir,"image.png"))
+            __save_image2d__(l_image,os.path.join(context_dir,"image_roi.png"))
+            if roi is not None:
+                tmp_image_cropped=skgti.utils.extract_subarray(l_image,roi=roi)
+                __save_image2d__(tmp_image_cropped, os.path.join(context_dir, "image_crop.png"))
+
+        elif len(image.shape) == 3:
+            __save_image3d__(image,context_dir+"image/",slices,True)
+            __save_image3d__(l_image,context_dir+"image_roi/",slices,True)
+    if labelled_image is not None:
+        tmp_labelled_image=labelled_image
+        if roi is not None:
+            tmp_labelled_image = np.ma.array(labelled_image.astype(np.float), mask=np.logical_not(roi)).filled(np.min(labelled_image) - 1)
+        if len(labelled_image.shape) == 2:
+            __save_image2d__(tmp_labelled_image, os.path.join(context_dir, "labelled_image.png"))
+            if roi is not None:
+                tmp_labelled_image_cropped=skgti.utils.extract_subarray(tmp_labelled_image,roi=roi)
+                __save_image2d__(tmp_labelled_image_cropped, os.path.join(context_dir, "labelled_image_crop.png"))
+        elif len(labelled_image.shape) == 3:
+            __save_image3d__(tmp_labelled_image,context_dir+"labelled_image/",slices,True)
+
+    ##############################
+    #Image and labelled_image
+    ##############################
+    if matcher.relabelled_final_t_graph is not None:
+        save_graph(matcher.relabelled_final_t_graph, name="topological", directory=directory + "06_final/", tree=True)
+        save_graph(matcher.relabelled_final_p_graph, name="photometric", directory=directory + "06_final/", tree=True)
+        skgti.io.plot_graph_histogram(matcher.relabelled_final_t_graph, matcher.relabelled_final_p_graph,
+                                      True)  # ;plt.show()
+        plt.savefig(directory + "06_final/" + "histograms.svg", format="svg", bbox_inches='tight')
+        plt.savefig(directory + "06_final/" + "histograms.png", format="png", bbox_inches='tight')
+        plt.gcf().clear()
+        save_graphregions(matcher.relabelled_final_t_graph, directory=directory + "06_final/", slices=slices)
+        save_intensities(matcher.relabelled_final_p_graph, directory=directory + "06_final/")
+
+
+def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directory=None,save_all_iso=False,slices=[],mc=False):
+    if (mc==True) and (image is not None):
+        tmp=0.2125*image[:,:,0]+ 0.7154*image[:,:,1]+0.0721*image[:,:,2]
+        return save_matcher_details(matcher, tmp, labelled_image, roi, directory, save_all_iso,slices, mc=False)
+
+
+
     if not os.path.exists(directory) : os.mkdir(directory)
 
     ##############################
@@ -30,14 +86,24 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
         if len(image.shape) == 2:
             __save_image2d__(image,os.path.join(context_dir,"image.png"))
             __save_image2d__(l_image,os.path.join(context_dir,"image_roi.png"))
+            if roi is not None:
+                tmp_image_cropped=skgti.utils.extract_subarray(l_image,roi=roi)
+                __save_image2d__(tmp_image_cropped, os.path.join(context_dir, "image_crop.png"))
+
         elif len(image.shape) == 3:
             __save_image3d__(image,context_dir+"image/",slices,True)
             __save_image3d__(l_image,context_dir+"image_roi/",slices,True)
     if labelled_image is not None:
+        tmp_labelled_image=labelled_image
+        if roi is not None:
+            tmp_labelled_image = np.ma.array(labelled_image.astype(np.float), mask=np.logical_not(roi)).filled(np.min(labelled_image) - 1)
         if len(labelled_image.shape) == 2:
-            __save_image2d__(labelled_image,os.path.join(context_dir,"labelled_image.png"))
+            __save_image2d__(tmp_labelled_image, os.path.join(context_dir, "labelled_image.png"))
+            if roi is not None:
+                tmp_labelled_image_cropped=skgti.utils.extract_subarray(tmp_labelled_image,roi=roi)
+                __save_image2d__(tmp_labelled_image_cropped, os.path.join(context_dir, "labelled_image_crop.png"))
         elif len(labelled_image.shape) == 3:
-            __save_image3d__(labelled_image,context_dir+"labelled_image/",slices,True)
+            __save_image3d__(tmp_labelled_image,context_dir+"labelled_image/",slices,True)
 
     ##############################
     #Saving a priori knowledge
@@ -45,7 +111,7 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     save_graph(matcher.ref_t_graph,name="ref_topological",directory=directory+"01_apiori/",tree=True)
     save_graph(matcher.ref_p_graph,name="ref_photometric",directory=directory+"01_apiori/",tree=False)
     nb_brothers=skgti.core.find_groups_of_brothers(matcher.ref_p_graph)
-    if len(nb_brothers) > 0:
+    if (len(nb_brothers) > 0) and (save_all_iso):
         all_ref_graphs=skgti.core.compute_possible_graphs(matcher.ref_p_graph) #we add a list of n elements (all possible graphs)
         for i in range(0,len(all_ref_graphs)):
             save_graph(all_ref_graphs[i],name="ref_photometric_unwrapped_"+str(i),directory=directory+"01_apiori/",tree=False)
@@ -158,13 +224,17 @@ def save_matcher_details(matcher,image=None,labelled_image=None,roi=None,directo
     #Saving common isomorphisms and related energies
     ##############################
     if matcher.common_isomorphisms is not None:
+        tmp_dir=directory+"04_matching/"
+        if not os.path.exists(tmp_dir): os.mkdir(tmp_dir)
+
         #Common isomorphisms
-        for i in range(0,len(matcher.common_isomorphisms)):
-            matching_links=matching2links(matcher.common_isomorphisms[i])
-            save_graph_links(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="2_common_iso_t_"+str(i),directory=directory+"04_matching/",tree=True)
-            save_graph_links(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="2_common_iso_p_"+str(i),directory=directory+"04_matching/",tree=True)
+        if len(matcher.common_isomorphisms) < 50:
+            for i in range(0,len(matcher.common_isomorphisms)):
+                matching_links=matching2links(matcher.common_isomorphisms[i])
+                save_graph_links(matcher.query_t_graph,matcher.ref_t_graph,[matching_links],['red'],name="2_common_iso_t_"+str(i),directory=tmp_dir,tree=True)
+                save_graph_links(matcher.query_p_graph,matcher.ref_p_graph,[matching_links],['red'],name="2_common_iso_p_"+str(i),directory=tmp_dir,tree=True)
         #Energies
-        fullfilename=os.path.join(directory+"04_matching/","2_all_energies.csv")
+        fullfilename=os.path.join(tmp_dir,"2_all_energies.csv")
         csv_file=open(fullfilename, "w")
         c_writer = csv.writer(csv_file,dialect='excel')
         c_writer.writerow(["Common iso"]+[i for i in range(0,len(matcher.common_isomorphisms))])
@@ -262,6 +332,55 @@ def plot_graph_with_regions(graph,nb_rows=1,slice=None):
 ##############################
 # FUNCTION FOR SAVING
 ##############################
+import skimage; from skimage import segmentation;from skimage.future import graph
+from skgtimage.utils.evaluation import grey_levels
+def save_image2d_boundaries(image,labelled,directory=None,filename="img_bound"):
+    if not os.path.exists(directory): os.mkdir(directory)
+
+    nb = len(grey_levels(labelled))
+    if np.max(labelled) != np.min(labelled):
+        tmp_labelled=(labelled.astype(np.float)-np.min(labelled))*(255.0)/(np.max(labelled)-np.min(labelled)).astype(np.uint8)
+    else:
+        tmp_labelled=labelled.astype(np.uint8)
+    sp.misc.imsave(directory + filename + "_" + str(nb) + "_labels.png", tmp_labelled)
+    if len(image.shape) == 2:
+        tmp = np.dstack(tuple([image for i in range(0,3)]))
+        tmp = skimage.segmentation.mark_boundaries(tmp, labelled)
+    else:
+        tmp = skimage.segmentation.mark_boundaries(image, labelled)
+    sp.misc.imsave(directory + filename + "_" + str(nb) + "_labels_bounds.png", tmp)
+
+def save_image3d_boundaries(image,labelled,directory=None,slices=[]):
+    #Directory
+    if not os.path.exists(directory) : os.mkdir(directory)
+    #Rescale
+    '''
+    mini,maxi=np.min(image),np.max(image)
+    if (maxi-mini != 0) and do_rescale:
+        tmp_image=(image.astype(np.float)-mini)*(255.0)/(maxi-mini)
+    else:
+        tmp_image=image
+    '''
+    tmp_image=image
+    #Save
+    for s in slices:
+        current_labelled=labelled[:,:,s]
+        current_slice=tmp_image[:,:,s]
+        mini, maxi = np.min(current_slice), np.max(current_slice)
+        if mini != maxi:
+            current_slice = (current_slice.astype(np.float) - mini) * (255.0) / (maxi - mini)
+        current_slice = current_slice.astype(np.uint8)
+        if type(current_slice) == np.ma.MaskedArray:
+            current_slice=current_slice.filled(0)
+        if type(current_labelled) == np.ma.MaskedArray:
+            current_labelled=current_labelled.filled(0)
+
+        current_slice=np.rot90(current_slice)
+        current_labelled = np.rot90(current_labelled)
+        #filename=os.path.join(directory,"slice_"+str(s)+".png");
+        save_image2d_boundaries(current_slice,current_labelled,directory,"slice_"+str(s))
+
+
 def save_intensities(graph,directory=None,filename="intensities"):
     if not os.path.exists(directory) : os.mkdir(directory)
     csv_file=open(os.path.join(directory,filename+".csv"), "w")
@@ -283,14 +402,24 @@ def __save_image3d__(image,directory,slices=[],do_rescale=True):
     #Directory
     if not os.path.exists(directory) : os.mkdir(directory)
     #Rescale
+    '''
     mini,maxi=np.min(image),np.max(image)
     if (maxi-mini != 0) and do_rescale:
         tmp_image=(image.astype(np.float)-mini)*(255.0)/(maxi-mini)
     else:
         tmp_image=image
+    '''
+    tmp_image=image
     #Save
     for s in slices:
         current_slice=tmp_image[:,:,s]
+        mini, maxi = np.min(current_slice), np.max(current_slice)
+        if mini != maxi:
+            current_slice = (current_slice.astype(np.float) - mini) * (255.0) / (maxi - mini)
+        else:
+            current_slice = current_slice.astype(np.uint8)
+        if type(current_slice) == np.ma.MaskedArray:
+            current_slice=current_slice.filled(0)
         current_slice=np.rot90(current_slice)
         filename=os.path.join(directory,"slice_"+str(s)+".png");
         __save_image2d__(current_slice,filename,False)
@@ -319,7 +448,62 @@ def save_graphregions(graph,directory=None,slices=[]):
 
             else: raise Exception("Not a 2D nor a 3D image")
 
-def save_graph(graph,name,directory=None,tree=True,colored_nodes=[]):
+def save_graph_v2(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
+    """
+    Without labels on graph nodes
+    :param graph:
+    :param name:
+    :param directory:
+    :param tree:
+    :param colored_nodes:
+    :return:
+    """
+    #To pygraphviz AGraph object
+    #a=nx.to_agraph(graph)
+    a = nx.nx_agraph.to_agraph(graph)
+    #Global layout
+    if tree:
+        a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
+        a.graph_attr.update(ranksep=1) #edge length
+        a.layout(prog='dot')
+    else:
+        #a.layout(prog='neato')
+        #a.layout(prog='circo')
+        a.layout(prog='twopi')
+    for n in graph.nodes():
+        #a.get_node(n).attr['label']=""
+        a.get_node(n).attr['shape'] ='point'
+        a.get_node(n).attr['width'] = 0.5
+        a.get_node(n).attr['height'] = 0.5
+        #a.get_node(n).attr['area'] = 0.1
+        #a.get_node(n).attr['margin'] = 0
+        #a.get_node(n).attr['cellborder'] = 0.1
+        a.get_node(n).attr['fixedsize']=True
+
+    for e in graph.edges():
+        tmp=a.get_edge(e[0], e[1])
+        tmp.attr['penwidth']=6
+        #a.get_edge(e[0],e[1]).attr['length']=1
+
+
+    #Marking nodes corresponding to, e.g., already segmented regions
+    for n in colored_nodes:
+        #a.get_node(n).attr['shape']='box' #Shape
+        #a.get_node(n).attr['color']='red' #Border
+        a.get_node(n).attr['style']='filled';a.get_node(n).attr['fillcolor']='red';
+
+    #Hack for plottin with matplotlib -> png -> numpy array -> imshow
+    if directory is None:
+        a.draw(name+".png") #;a.draw("tmp.svg")
+        a.draw(name+".svg") #;a.draw("tmp.svg")
+    else:
+        if not os.path.exists(directory) : os.mkdir(directory)
+        filename=os.path.join(directory,name)
+        a.draw(filename+".png") #;a.draw("tmp.svg")
+        a.draw(filename+".svg") #;a.draw("tmp.svg")
+
+
+def save_graph(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
     #To pygraphviz AGraph object
     #a=nx.to_agraph(graph)
     a = nx.nx_agraph.to_agraph(graph)
@@ -336,6 +520,86 @@ def save_graph(graph,name,directory=None,tree=True,colored_nodes=[]):
         #a.get_node(n).attr['shape']='box' #Shape
         #a.get_node(n).attr['color']='red' #Border
         a.get_node(n).attr['style']='filled';a.get_node(n).attr['fillcolor']='red';
+
+    #Hack for plottin with matplotlib -> png -> numpy array -> imshow
+    if directory is None:
+        a.draw(name+".png") #;a.draw("tmp.svg")
+        a.draw(name+".svg") #;a.draw("tmp.svg")
+    else:
+        if not os.path.exists(directory) : os.mkdir(directory)
+        filename=os.path.join(directory,name)
+        a.draw(filename+".png") #;a.draw("tmp.svg")
+        a.draw(filename+".svg") #;a.draw("tmp.svg")
+
+def save_graph_links_v2(source_graph,target_graph,link_lists=[],colors=[],label_lists=[],name="matching",directory=None,tree=True):
+    """
+    typically invokation (g1,g2,link_lists=[ [(a,b),(c,d)] , [(k,l),(u,v)] ],colors=["red","green"], name=...)
+    :param source_graph:
+    :param target_graph:
+    :param links: new edges (e.g. modeling matching between graph nodes)
+    :param colors:
+    :param name:
+    :param directory:
+    :param tree:
+    :return:
+    """
+    #bi_graph=nx.DiGraph()
+    bi_graph=nx.MultiDiGraph() #To support multiedges: e.g. link (==edge) corresponding to an existing edge
+    bi_graph.add_nodes_from(source_graph)
+    bi_graph.add_edges_from(source_graph.edges())
+    bi_graph.add_nodes_from(target_graph)
+    bi_graph.add_edges_from(target_graph.edges())
+    #a=nx.to_agraph(bi_graph)
+
+    a = nx.nx_agraph.to_agraph(bi_graph)
+
+    #Global layout
+    if tree:
+        a.graph_attr.update(rankdir='BT') #Bottom to top (default is top to bottom)
+        a.graph_attr.update(ranksep=1)  # edge length
+        a.graph_attr['splines']='spline'
+        a.layout(prog='dot')
+    else:
+        #a.layout(prog='neato')
+        #a.layout(prog='circo')
+        a.layout(prog='twopi')
+
+    for n in bi_graph.nodes():
+        #a.get_node(n).attr['label']=""
+        a.get_node(n).attr['shape'] ='point'
+        a.get_node(n).attr['width'] = 0.5
+        a.get_node(n).attr['height'] = 0.5
+        #a.get_node(n).attr['area'] = 0.1
+        #a.get_node(n).attr['margin'] = 0
+        #a.get_node(n).attr['cellborder'] = 0.1
+        a.get_node(n).attr['fixedsize']=True
+
+
+    for e in bi_graph.edges():
+        tmp=a.get_edge(e[0], e[1])
+        tmp.attr['penwidth']=6
+    for n in target_graph.nodes():
+        a.get_node(n).attr['color']='blue'
+
+    for e in target_graph.edges():
+        tmp=a.get_edge(e[0], e[1])
+        tmp.attr['color']='blue'
+
+    #Marking nodes corresponding to, e.g., already segmented regions
+    for i in range(0,len(link_lists)):
+        color=colors[i]
+        links=link_lists[i]
+        labels=None
+        if i < len(label_lists): labels=label_lists[i]
+        for j in range(0,len(links)):
+            a.add_edge(links[j][0],links[j][1]) #after the layout has been set
+            a.get_edge(links[j][0],links[j][1]).attr['color']=color
+            a.get_edge(links[j][0],links[j][1]).attr['splines']='curved'
+            a.get_edge(links[j][0], links[j][1]).attr['penwidth'] = 3
+            if (labels is not None) and (j < len(labels)):
+                e=a.get_edge(links[j][0],links[j][1])
+                #e.attr['label']=str(labels[j])
+                e.attr['penwidth'] = 3
 
     #Hack for plottin with matplotlib -> png -> numpy array -> imshow
     if directory is None:
@@ -390,7 +654,8 @@ def save_graph_links(source_graph,target_graph,link_lists=[],colors=[],label_lis
             a.get_edge(links[j][0],links[j][1]).attr['color']=color
             a.get_edge(links[j][0],links[j][1]).attr['splines']='curved'
             if (labels is not None) and (j < len(labels)):
-                a.get_edge(links[j][0],links[j][1]).attr['label']=str(labels[j])
+                #a.get_edge(links[j][0],links[j][1]).attr['label']=str(labels[j])
+                pass
 
     #Hack for plottin with matplotlib -> png -> numpy array -> imshow
     if directory is None:

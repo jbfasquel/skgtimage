@@ -9,7 +9,7 @@ import skgtimage as skgti
 # MISC INFORMATIONS
 #########
 truth_dir="../../Database/image03/truth_top/"
-save_dir="../../Database/image03/top_meanshift_4classes_bf/"
+save_dir="../../Database/image03/top_meanshift_4classes_tmp/"
 
 #########
 # A PRIORI KNOWLEDGE
@@ -24,6 +24,13 @@ p_desc="G=B<E=F<H=D<A=C"
 image_rgb=sp.misc.imread(os.path.join(truth_dir,"image.png"))
 #ROI
 roi=sp.misc.imread(os.path.join(truth_dir,"roi.png"))
+
+'''
+l_image_rgb=skgti.utils.fill_outroi_rgb(image_rgb,roi)
+l_image_rgb=skgti.utils.extract_subarray_rgb(l_image_rgb,roi=roi)
+sp.misc.imsave(save_dir+"_image_rgb_cropped.png",l_image_rgb)
+'''
+
 #GRAYSCALE IMAGE
 image=skgti.utils.rgb2gray(image_rgb)
 
@@ -33,8 +40,8 @@ label=skgti.utils.mean_shift(image_chsv,0.12,roi,True,True) #0.1 OK
 ################
 # RECOGNITION
 ################
-#id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True)
-id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True,bf=True)
+id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True)
+#id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=roi,filtering=1,verbose=True,bf=True)
 skgti.io.save_matcher_details(matcher,image,label,roi,save_dir,False)
 skgti.io.pickle_matcher(matcher,save_dir+"matcher.pkl")
 

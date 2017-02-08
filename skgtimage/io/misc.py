@@ -19,15 +19,16 @@ def compute_intensitymap(t_graph,do_round=False):
         mapping[n]=intensity
     return mapping
 
-def generate_single_image(t_graph,mapping=None):
-    result=np.zeros(t_graph.get_image().shape)
-    for n in t_graph.nodes():
-        #residue=t_graph.get_residue(n)
-        residue=t_graph.get_region(n)
+def generate_single_image(p_graph,mapping=None):
+    result=np.zeros(p_graph.get_image().shape)
+    #for n in p_graph.nodes():
+    for n in mapping:
+        #residue=p_graph.get_residue(n)
+        residue=p_graph.get_region(n)
         if mapping is not None:
             intensity=mapping[n]
         else:
-            intensity=t_graph.get_mean_residue_intensity(n)
+            intensity=p_graph.get_mean_residue_intensity(n)
         result=np.ma.masked_array(result, mask=residue).filled(intensity)
     return result
 
@@ -101,7 +102,7 @@ def from_dir(desc_t,desc_p,image,directory):
 
 
 def plot_graph_histogram(t_graph,p_graph,fullhisto=False):
-    colors="bgrcmykbgrcmykbgrcmykbgrcmyk"
+    colors=10*"bgrcmykbgrcmykbgrcmykbgrcmyk" #10* to be large enough
     image=t_graph.get_image()
     n=list(find_head(t_graph))[0]
     roi=fill_region(t_graph.get_region(n))

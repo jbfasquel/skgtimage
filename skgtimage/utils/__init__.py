@@ -8,8 +8,12 @@ from .color import *
 from .factory import *
 from .histogram import *
 from .meanshift import *
+from .quickshift import *
+from .levelset import *
 from .roi import *
 from .evaluation import *
+from .recognition import *
+from .rag_merging import *
 
 try:
     import sklearn

@@ -36,6 +36,8 @@ from .subisomorphism import *
 ##### MATCHER
 from .matcher import *
 
+##### BACKGROUND
+from .background import *
 
 ##### RECOGNITION
 from .propagation import *
