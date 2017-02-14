@@ -7,7 +7,16 @@ import time
 
 def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True,sigma=None,rgb_convert=False):
     """
-    Mean shift
+    Apply meanshif to input image (within region of interest)
+
+    :param image: input image
+    :param bandwidth: bandwidth parameter considered in scikit-learn  MeanShift
+    :param roi: region of interest
+    :param mc: whether image is multi-component or not (color in our case)
+    :param verbose:
+    :param sigma: preliminary gaussian filtering (parameter of scikit-image filters.gaussian)
+    :param rgb_convert: if True and mc True, RGB image is converted HSV space
+    :return: labelled image (numpy array), where each label corresponds to a specific value
     """
     #Image preparation
     if mc: #color

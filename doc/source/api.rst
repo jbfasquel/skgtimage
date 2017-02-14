@@ -3,32 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Documentation - API
-===================
+Documentation
+=============
 
-.. automodule:: skgtimage.core
-.. currentmodule:: skgtimage.core
-
-Overview
---------
-
-text
-    .. comment comment comment (need tab)
-
-
-Autosummary doesn't display: bug in sphinx 1.3.1 ???
-
-.. autosummary::
-    IrDiGraph
-    IrDiGraph.add_node
-
-
-
-IrDiGraph
----------
-.. autoclass:: IrDiGraph
-   :members: __init__, add_node, add_region, region
-
-
-.. autoclass:: TPModel
-   :members: __init__, target
+.. automodule:: skgtimage.utils
+    :members: recognize,save_recognizer_details,mean_shift

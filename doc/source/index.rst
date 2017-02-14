@@ -13,11 +13,10 @@ Scikit-gtimage
    :maxdepth: 1
 
    overview
+   quick-start
    api
-   examples
 
-
-..  .. include:: ../../README.rst
+.. .. include:: ../../README.rst
 
 Indices and tables
 ==================

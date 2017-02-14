@@ -23,6 +23,24 @@ class RecognitionException(Exception):
         self.message=message
 
 def recognize(image,label, t_desc, p_desc,mc=False,roi=None,size_min=None,bg=False,bound_thickness=0,prerag=None,premnoragmerging=None,verbose=False):
+    """
+        Compute and return identified regions, specified in qualitative descriptions (t_desc, p_desc), from the provided over-segmentation (label) of the image (image)
+
+        :param image: input image (numpy array), can be 2D, 3D, grayscale, color
+        :param label: input oversegmentation (numpy array)
+        :param t_desc: description of inclusion relationships (string)
+        :param p_desc: description of photometric relationships (string)
+        :param mc: specifies if image is multi-component (True - color in our case) or not (False - grayscale).
+        :param roi: region of interest (numpy array), corresponding to non zeros.
+        :param size_min: minimum size (in pixels) of considered regions. Regions smaller than size_min are removed.
+        :param bg: specifies whether background must be removed
+        :param bound_thickness: thickness of the enveloppe surrounding the roi (if roi is not none)
+        :param prerag: if not None, a preliminary merging of photometrically similar neighboring regions is performed. The parameter specifies the similarity threshold (threshold the in merge_hierarchical function of scikit-image)
+        :param premnoragmerging: if not None, a preliminary merging of photometrically similar regions is performed (not necessarily neighboring regions). The parameter specifies the number of finally expected regions.
+        :param verbose: if True, details of the procedure are printed
+        :return: a mapping "id - regions" (python mapping type - dictionnary) and the object in charge of managing the entire procedure. "id" are names specified in the description (t_desc, p_desc), regions are "binary images" (numpy array). The object embedded many intermediate informations (e.g. graphs, isomorphisms,...)
+
+    """
     #Create recognizer instance and trigger recognition
     recognizer = Recognizer(image, label, t_desc, p_desc, mc, roi,size_min,bg,bound_thickness,prerag,premnoragmerging,verbose)
     recognizer.process()
@@ -35,7 +53,6 @@ def recognize(image,label, t_desc, p_desc,mc=False,roi=None,size_min=None,bg=Fal
 
 
 class Recognizer:
-#    def __init__(self,built_t_graph,built_p_graph,ref_t_graph,ref_p_graph,filtering=0,build_runtime=0,bf=False,filter_size=0,filter_merge=0):
     def __init__(self, image,label, t_desc, p_desc,mc=False,roi=None,size_min=None,bg=False,bound_thickness=0,prerag=None,premnoragmerging=None,verbose=False):
         """
 
@@ -321,6 +338,15 @@ def save_recognizer_report(recognizer,save_dir,algo_info="",seg_runtime=None):
 '''
 
 def save_recognizer_details(recognizer,save_dir,full=False,slices=[]):
+    """
+    Save details of the recognition procedure: regions, graphs and statistics (mean intensities) related to each step
+
+    :param recognizer: object embedding all details, and returned by recognize
+    :param save_dir: directory within which all details are saved
+    :param full: if True, all regions, and mean intensities, related to initial graphs are saved (time consuming if many nodes)
+    :param slices: list of slice indices to be exported in .png image files, in case of 3D images
+    :return: None
+    """
     if not os.path.exists(save_dir): os.mkdir(save_dir)
     #####################################
     # Save final result
@@ -367,101 +393,6 @@ def save_recognizer_details(recognizer,save_dir,full=False,slices=[]):
                 # Simplified
                 save_graph_v2(t_graph, name="g_topological_simple_" + str(nb_nodes), directory=tmp_dir, tree=True)
                 save_graph_v2(p_graph, name="g_photometric_simple_" + str(nb_nodes), directory=tmp_dir, tree=True)
-    '''
-    #####################################
-    #Save label simplification steps
-    #####################################
-    tmp_dir=details_save_dir+"00_context_before0_rag/"
-    if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
-    clear_dir_content(tmp_dir)
-    if recognizer.label_pre_rag is not None:
-        save_image_context(recognizer.raw_image,recognizer.label_pre_rag,tmp_dir,recognizer.roi,slices=slices,mc=recognizer.mc)
-        #if len(grey_levels(recognizer.label_pre_rag,recognizer.roi)) < 50:
-        #    tmp_t_graph
-    tmp_dir=details_save_dir+"00_context_before1_phot/"
-    if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
-    clear_dir_content(tmp_dir)
-    if recognizer.pre_photmerging is not None:
-        save_image_context(recognizer.raw_image,recognizer.label_pre_photomerge,tmp_dir,recognizer.roi,slices=slices,mc=recognizer.mc)
-
-
-    #####################################
-    #Save initial image and labelling
-    #####################################
-    context_dir=details_save_dir+"00_context_before2_ciso/"
-    if not os.path.exists(context_dir) : os.mkdir(context_dir)
-    clear_dir_content(context_dir)
-    save_image_context(recognizer.raw_image,recognizer.label,context_dir,recognizer.roi,slices=slices,mc=recognizer.mc)
-
-    #####################################
-    # Save preliminary graphs:raw graphs before rag
-    #####################################
-    tmp_dir = details_save_dir + "01_before_rag/";clear_dir_content(tmp_dir)
-    if recognizer.t_graph_before_rag is not None:
-        nb_nodes=len(recognizer.t_graph_before_rag.nodes())
-        save_graph(recognizer.t_graph_before_rag, name="g_topological_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        save_graph(recognizer.p_graph_before_rag, name="g_photometric_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        #Simplified
-        save_graph_v2(recognizer.t_graph_before_rag, name="g_topological_simple_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        tmp_labelled=recognizer.t_graph_before_rag.get_labelled()
-        save_image_context(recognizer.raw_image, tmp_labelled, tmp_dir, recognizer.roi, slices=slices,mc=recognizer.mc)
-        if full:
-            save_intensities(recognizer.p_graph_before_rag, directory=tmp_dir)
-            save_graphregions(recognizer.t_graph_before_rag, directory=tmp_dir, slices=slices)
-
-    #####################################
-    # Save preliminary graphs:raw graphs after rag and before filtering
-    #####################################
-    tmp_dir = details_save_dir + "02_before_filtering_after_rag/";clear_dir_content(tmp_dir)
-    if recognizer.t_graph_before_filtering is not None:
-        nb_nodes=len(recognizer.t_graph_before_filtering.nodes())
-        save_graph(recognizer.t_graph_before_filtering, name="g_topological_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        save_graph(recognizer.p_graph_before_filtering, name="g_photometric_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        #Simplified
-        save_graph_v2(recognizer.t_graph_before_filtering, name="g_topological_simple_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        tmp_labelled=recognizer.t_graph_before_filtering.get_labelled()
-        save_image_context(recognizer.raw_image, tmp_labelled, tmp_dir, recognizer.roi, slices=slices,mc=recognizer.mc)
-        if full:
-            save_intensities(recognizer.p_graph_before_filtering, directory=tmp_dir)
-            save_graphregions(recognizer.t_graph_before_filtering, directory=tmp_dir, slices=slices)
-
-    #####################################
-    # Save preliminary graphs: after bg
-    #####################################
-    tmp_dir = details_save_dir + "03_before_bg_after_filtering/";
-    clear_dir_content(tmp_dir)
-    if recognizer.t_graph_before_background is not None:
-        nb_nodes = len(recognizer.t_graph_before_background.nodes())
-        save_graph(recognizer.t_graph_before_background, name="g_topological_" + str(nb_nodes), directory=tmp_dir, tree=True)
-        save_graph(recognizer.p_graph_before_background, name="g_photometric_" + str(nb_nodes), directory=tmp_dir, tree=True)
-        #Simplified
-        save_graph_v2(recognizer.t_graph_before_background, name="g_topological_simple_" + str(nb_nodes), directory=tmp_dir, tree=True)
-        tmp_labelled = recognizer.t_graph_before_background.get_labelled()
-        save_image_context(recognizer.raw_image, tmp_labelled, tmp_dir, recognizer.roi, slices=slices,
-                           mc=recognizer.mc)
-        if full:
-            save_intensities(recognizer.p_graph_before_background, directory=tmp_dir)
-            save_graphregions(recognizer.t_graph_before_background, directory=tmp_dir, slices=slices)
-
-    '''
-    #####################################
-    # Save initial graphs
-    #####################################
-    '''
-    step_index=len(recognizer.intermediate_operations)
-    tmp_dir = details_save_dir + str(step_index)+"_initial_graphs/";clear_dir_content(tmp_dir)
-    if recognizer.t_graph is not None:
-        nb_nodes=len(recognizer.t_graph.nodes())
-        save_graph(recognizer.t_graph, name="g_topological_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        save_graph(recognizer.p_graph, name="g_photometric_"+str(nb_nodes), directory=tmp_dir, tree=True)
-        #Simplified
-        save_graph_v2(recognizer.t_graph, name="g_topological_simple_" + str(nb_nodes), directory=tmp_dir, tree=True)
-        tmp_labelled = recognizer.t_graph.get_labelled()
-        save_image_context(recognizer.raw_image, tmp_labelled, tmp_dir, recognizer.roi, slices=slices,mc=recognizer.mc)
-        if full:
-            save_intensities(recognizer.p_graph, directory=tmp_dir)
-            save_graphregions(recognizer.t_graph, directory=tmp_dir, slices=slices)
-    '''
 
     #####################################
     # Save common iso and matching

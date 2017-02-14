@@ -1,23 +1,26 @@
-#import os,sys; sys.path.append(os.path.abspath(os.path.pardir))
-import os,sys; sys.path.append(os.path.abspath(os.path.curdir))
+import os,sys; sys.path.append(os.path.abspath("../")) #for executation without having installed the package
 import scipy as sp;from scipy.misc import imread,imsave
 import skgtimage as skgti;from skgtimage.utils import mean_shift,recognize
 from skimage.segmentation import mark_boundaries
 
 #A PRIORI KNOWLEDGE
-inclusion="text<paper<file"
-photometry="text<file<paper"
+inclusion="text<paper<file" #text is included within paper, itself included into file
+photometry="text<file<paper" #text is darker than file, itself darker than paper
 
-#IMAGE INITIALE
+#INITIAL IMAGE
 image=imread("image.png")
 
 #MEANSHIFT-BASED SEGMENTATION
+print("Start segmentation...")
 segmentation=mean_shift(image,10)
+print("Segmentation finished")
 
 #INTERPRETATION (PROPOSED METHOD)
+print("Start recognition...")
 id2region,r = recognize(image, segmentation, inclusion, photometry,bg=True)
+print("Recognition finished")
 
-skgti.utils.save_recognizer_details(r,"save/")
+#skgti.utils.save_recognizer_details(r,"save/")
 
 #DISPLAY
 import matplotlib.pyplot as plt
