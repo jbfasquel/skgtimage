@@ -43,9 +43,13 @@ Note that pygraphviz requires graphviz.
 Testing
 *******
 
-Simply unzip the archive and run the provided example (from the root directory of the unzipped archive) : python example.py
+Simply unzip the archive and run provided examples (from the root directory of the unzipped archive) :
 
-Note: depending on your system, you may run: python3 example.py
+python example1.py
+
+python example2.py
+
+Note: depending on your system, you may run: python3 example1.py , python3 example2.py
 
 Using
 *****

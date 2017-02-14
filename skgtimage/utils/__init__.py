@@ -9,7 +9,6 @@ from .factory import *
 from .histogram import *
 from .meanshift import *
 from .quickshift import *
-from .levelset import *
 from .roi import *
 from .evaluation import *
 from .recognition import *
