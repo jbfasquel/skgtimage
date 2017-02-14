@@ -7,4 +7,4 @@ Documentation
 =============
 
 .. automodule:: skgtimage.utils
-    :members: recognize,save_recognizer_details,mean_shift
+    :members: recognize,save_recognizer_details,mean_shift,quickshift

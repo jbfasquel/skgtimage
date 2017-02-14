@@ -3,14 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Quick start : an example
-========================
+Quick start : example 1
+=======================
 
-Code example:
-*************
+Code (mean shift segmentation):
+*******************************
 
-
-.. literalinclude:: ../../examples/example.py
+.. literalinclude:: ../../examples/example1.py
    :language: python
    :lines: 2-
    :linenos:
@@ -25,15 +24,46 @@ Output (using matplotlib):
 Inexact graph matching (inclusion - requires pygraphviz):
 *********************************************************
 
-.. image:: _static/matching_t.png
+.. image:: _static/matching_t_1.png
    :scale: 100 %
    :alt: Produced result
 
 Inexact graph matching (photometry - requires pygraphviz):
 **********************************************************
 
-.. image:: _static/matching_p.png
+.. image:: _static/matching_p_1.png
    :scale: 50 %
    :alt: Produced result
 
 
+Quick start : example 2
+=======================
+
+Code (quick shift segmentation):
+********************************
+
+.. literalinclude:: ../../examples/example2.py
+   :language: python
+   :lines: 2-
+   :linenos:
+
+Output (using matplotlib):
+**************************
+
+.. image:: _static/figure_2.png
+   :scale: 90 %
+   :alt: Produced result
+
+Inexact graph matching (inclusion - requires pygraphviz):
+*********************************************************
+
+.. image:: _static/matching_t_2.png
+   :scale: 100 %
+   :alt: Produced result
+
+Inexact graph matching (photometry - requires pygraphviz):
+**********************************************************
+
+.. image:: _static/matching_p_2.png
+   :scale: 50 %
+   :alt: Produced result
