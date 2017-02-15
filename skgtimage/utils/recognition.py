@@ -1,10 +1,10 @@
 from skgtimage.core.graph import rename_nodes,transitive_closure
-from skgtimage.core.filtering import remove_smallest_regions,size_filtering,merge_filtering,rag_merge_until_commonisomorphism,merge_photometry_gray
-from skgtimage.core.subisomorphism import find_subgraph_isomorphims,best_common_subgraphisomorphism,common_subgraphisomorphisms,common_subgraphisomorphisms_optimized,common_subgraphisomorphisms_optimized_v2
-from skgtimage.core.propagation import propagate,merge_until_commonisomorphism
+from skgtimage.core.filtering import size_filtering,rag_merge_until_commonisomorphism,merge_photometry_gray
+from skgtimage.core.subisomorphism import find_subgraph_isomorphims,best_common_subgraphisomorphism,common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.propagation import propagate
 from skgtimage.core.factory import from_string,from_labelled_image
 from skgtimage.core.background import background_removal_by_iso
-from skgtimage.utils import extract_subarray,grey_levels,extract_subarray_rgb
+from skgtimage.utils import grey_levels,extract_subarray_rgb,extract_subarray
 from skgtimage.utils.rag_merging import rag_merge
 from skgtimage.utils.color import merge_photometry_color
 from skgtimage.io.with_graphviz import __save_image2d__, __save_image3d__, save_image2d_boundaries, \
@@ -282,7 +282,6 @@ def save_image_context(image,label,context_dir,roi=None,slices=[],mc=False):
             __save_image2d__(tmp_image_crop, os.path.join(context_dir, "image_crop.png"))
             __save_image2d__(label_crop, os.path.join(context_dir, "label_crop.png"))
 
-
     #Case 3D grayscale (with slices)
     elif (len(image.shape) == 3) and (mc is False):
         __save_image3d__(image,context_dir+"image/",slices,True)
@@ -290,52 +289,7 @@ def save_image_context(image,label,context_dir,roi=None,slices=[],mc=False):
             l_image=np.ma.array(image.astype(np.float), mask=np.logical_not(roi))
         __save_image3d__(l_image,context_dir+"image_roi/",slices,True)
         save_image3d_boundaries(l_image, label, directory=context_dir+"image_"+str(nb)+"_label/", slices=slices)
-'''
-def save_recognizer_report(recognizer,save_dir,algo_info="",seg_runtime=None):
-    if not os.path.exists(save_dir): os.mkdir(save_dir)
-    #Nb initial labels
-    nb_init_labels=len(grey_levels(recognizer.label,roi=recognizer.roi))
-    #Nb nodes
-    nb_nodes=len(recognizer.t_graph.nodes())
-    #Nb iso
-    t_isomorphisms_candidates = find_subgraph_isomorphims(transitive_closure(recognizer.t_graph),transitive_closure(recognizer.ref_t_graph))
-    nb_t_isos = len(t_isomorphisms_candidates)
-    nb_c_isos=len(recognizer.common_isomorphisms)
-    #Preliminary
-    rag_merging=(recognizer.t_graph_before_rag is not None)
-    filtered_size=recognizer.size_min
-    bg_removal=recognizer.remove_background
-    csv_file = open(save_dir+"stats_procedure.csv", "w")
-    c_writer = csv.writer(csv_file, dialect='excel')
-    c_writer.writerow(["Context","#Label","#Nodes","#I-isos","#C-isos","RAG ?","Min size ?","Background removal ?"])
-    c_writer.writerow([algo_info,str(nb_init_labels),str(nb_nodes),str(nb_t_isos),str(nb_c_isos),str(rag_merging),str(filtered_size),str(bg_removal)])
-    csv_file.close()
-    ###################
-    #Runtimes
-    ###################
-    #Hack: rerunning graph building after preprocessing steps
-    image,labelled,roi=recognizer.image,recognizer.t_graph.get_labelled(),recognizer.roi
-    t0=time.clock()
-    t,p=from_labelled_image(image,labelled,roi)
-    t1 = time.clock()
-    #CVS file
-    csv_file = open(save_dir + "stats_runtime_old.csv", "w")
-    c_writer = csv.writer(csv_file, dialect='excel')
-    title_row=[]
-    value_row=[]
-    if seg_runtime is not None:
-        title_row += ["Context","Seg"]
-        value_row += [algo_info,np.round(seg_runtime,2)]
-    title_row+=["Build"]
-    value_row+=[np.round(t1-t0,2)]
-    for r in sorted(recognizer.action2runtime):
-        title_row+=[r]
-        runtime=recognizer.action2runtime[r]
-        value_row+=[np.round(runtime,2)]
-    c_writer.writerow(title_row)
-    c_writer.writerow(value_row)
-    csv_file.close()
-'''
+
 
 def save_recognizer_details(recognizer,save_dir,full=False,slices=[]):
     """

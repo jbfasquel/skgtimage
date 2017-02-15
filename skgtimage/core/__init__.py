@@ -19,7 +19,7 @@ from .filtering import *
 from .brothers import *
 
 ##### ROI, RESIDUE AND CLASSES
-from .parameters import *
+#from .parameters import *
 
 ##### BUILD GRAPH FROM REGIONS
 from .topology import *
