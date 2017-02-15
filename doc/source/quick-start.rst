@@ -67,3 +67,48 @@ Inexact graph matching (photometry - requires pygraphviz):
 .. image:: _static/matching_p_2.png
    :scale: 50 %
    :alt: Produced result
+
+
+Quick start : example 3
+=======================
+
+Code (quick shift segmentation):
+********************************
+
+.. literalinclude:: ../../examples/example3.py
+   :language: python
+   :lines: 2-
+   :linenos:
+
+Output (using matplotlib):
+**************************
+
+.. image:: _static/figure_3.png
+   :scale: 80 %
+   :alt: Produced result
+
+Inexact graph matching (inclusion - requires pygraphviz):
+*********************************************************
+
+.. image:: _static/matching_t_3.png
+   :scale: 100 %
+   :alt: Produced result
+
+
+Quick start : example 4
+=======================
+
+Code (quick shift segmentation):
+********************************
+
+.. literalinclude:: ../../examples/example4.py
+   :language: python
+   :lines: 2-
+   :linenos:
+
+Output (using matplotlib):
+**************************
+
+.. image:: _static/figure_4.png
+   :scale: 90 %
+   :alt: Produced result

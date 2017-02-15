@@ -2,10 +2,10 @@ import numpy as np
 import sklearn
 import skimage
 from skgtimage.utils.color import rgb2chsv
-from sklearn.cluster import MeanShift #, estimate_bandwidth
+from sklearn.cluster import MeanShift
 import time
 
-def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True,sigma=None,rgb_convert=False):
+def meanshift(image, bandwidth, roi=None, mc=False, sigma=None, rgb_convert=False,verbose=False):
     """
     Apply meanshif to input image (within region of interest)
 
@@ -22,11 +22,11 @@ def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True,sigma=None,rgb_con
     if mc: #color
         if sigma is not None:
             tmp=skimage.filters.gaussian(image, sigma=sigma, multichannel=True)
-            return mean_shift(tmp,bandwidth=bandwidth,roi=roi,mc=mc,verbose=verbose,sigma=None,rgb_convert=rgb_convert)
+            return meanshift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, verbose=verbose, sigma=None, rgb_convert=rgb_convert)
         #Conversion
         if rgb_convert:
             tmp=rgb2chsv(image)
-            return mean_shift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, verbose=verbose, sigma=sigma,rgb_convert=False)
+            return meanshift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, verbose=verbose, sigma=sigma, rgb_convert=False)
 
 
     nb_components,spatial_dim=1,len(image.shape)
@@ -37,13 +37,13 @@ def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True,sigma=None,rgb_con
     if roi is not None:
         roi_mask=np.dstack(tuple([roi for i in range(0,nb_components)]))
         roied_image=np.ma.masked_array(image,mask=np.logical_not(roi_mask))
-        return mean_shift(roied_image,bandwidth,None,mc,verbose)
+        return meanshift(roied_image, bandwidth, None, mc, verbose)
     else:
         if type(image) != np.ma.masked_array :
             roi=np.ones(image.shape[0:spatial_dim])
             roi_mask=np.dstack(tuple([roi for i in range(0,nb_components)]))
             roied_image=np.ma.masked_array(image,mask=np.logical_not(roi_mask))
-            return mean_shift(roied_image,bandwidth,None,mc,verbose)
+            return meanshift(roied_image, bandwidth, None, mc, verbose)
 
 
     if type(image) == np.ma.masked_array :
@@ -55,7 +55,6 @@ def mean_shift(image,bandwidth,roi=None,mc=False,verbose=True,sigma=None,rgb_con
     ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
     ms.fit(reshaped_data)
     t1=time.clock()
-    runtime = t1 - t0
     if verbose==True:
         print("Cpu time (sec): " , t1-t0)
         print("nb clusters : " , len(np.unique(ms.labels_)))

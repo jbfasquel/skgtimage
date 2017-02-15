@@ -22,7 +22,7 @@ class RecognitionException(Exception):
         self.recognizer=recognizer
         self.message=message
 
-def recognize(image,label, t_desc, p_desc,mc=False,roi=None,size_min=None,bg=False,bound_thickness=0,prerag=None,premnoragmerging=None,verbose=False):
+def recognize(image, label, t_desc, p_desc, mc=False, roi=None, min_size=None, bg=False, bound_thickness=0, rag=None, merge=None, verbose=False):
     """
         Compute and return identified regions, specified in qualitative descriptions (t_desc, p_desc), from the provided over-segmentation (label) of the image (image)
 
@@ -32,17 +32,17 @@ def recognize(image,label, t_desc, p_desc,mc=False,roi=None,size_min=None,bg=Fal
         :param p_desc: description of photometric relationships (string)
         :param mc: specifies if image is multi-component (True - color in our case) or not (False - grayscale).
         :param roi: region of interest (numpy array), corresponding to non zeros.
-        :param size_min: minimum size (in pixels) of considered regions. Regions smaller than size_min are removed.
+        :param min_size: minimum size (in pixels) of considered regions. Regions smaller than min_size are removed.
         :param bg: specifies whether background must be removed
         :param bound_thickness: thickness of the enveloppe surrounding the roi (if roi is not none)
-        :param prerag: if not None, a preliminary merging of photometrically similar neighboring regions is performed. The parameter specifies the similarity threshold (threshold the in merge_hierarchical function of scikit-image)
-        :param premnoragmerging: if not None, a preliminary merging of photometrically similar regions is performed (not necessarily neighboring regions). The parameter specifies the number of finally expected regions.
+        :param rag: if not None, a preliminary merging of photometrically similar neighboring regions is performed. The parameter specifies the similarity threshold (threshold the in merge_hierarchical function of scikit-image)
+        :param merge: if not None, a preliminary merging of photometrically similar regions is performed (not necessarily neighboring regions). The parameter specifies the number of finally expected regions.
         :param verbose: if True, details of the procedure are printed
         :return: a mapping "id - regions" (python mapping type - dictionnary) and the object in charge of managing the entire procedure. "id" are names specified in the description (t_desc, p_desc), regions are "binary images" (numpy array). The object embedded many intermediate informations (e.g. graphs, isomorphisms,...)
 
     """
     #Create recognizer instance and trigger recognition
-    recognizer = Recognizer(image, label, t_desc, p_desc, mc, roi,size_min,bg,bound_thickness,prerag,premnoragmerging,verbose)
+    recognizer = Recognizer(image, label, t_desc, p_desc, mc, roi, min_size, bg, bound_thickness, rag, merge, verbose)
     recognizer.process()
     #Retrieve regions and return them for external use not requiring 'recognizer'
     id2regions = {}

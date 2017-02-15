@@ -1,6 +1,6 @@
 import os,sys; sys.path.append(os.path.abspath("../")) #for executation without having installed the package
 import scipy as sp;from scipy.misc import imread,imsave
-import skgtimage as skgti;from skgtimage.utils import mean_shift,recognize
+import skgtimage as skgti;from skgtimage.utils import meanshift,recognize
 from skimage.segmentation import mark_boundaries
 
 #A PRIORI KNOWLEDGE
@@ -8,11 +8,11 @@ inclusion="text<paper<file" #text is included within paper, itself included into
 photometry="text<file<paper" #text is darker than file, itself darker than paper
 
 #INITIAL IMAGE
-image=imread("image.png")
+image=imread("image_gray.png")
 
 #MEANSHIFT-BASED SEGMENTATION
 print("Start segmentation...")
-segmentation=mean_shift(image,10)
+segmentation=meanshift(image, 10,verbose=True)
 print("Segmentation finished")
 
 #INTERPRETATION (PROPOSED METHOD)
