@@ -1,5 +1,6 @@
 import numpy as np
 from skgtimage.utils.evaluation import grey_levels
+from skgtimage.core.photometry import region_stat
 #from skgtimage.core.parameters import region_stat
 
 def rgb2chsv(image):
