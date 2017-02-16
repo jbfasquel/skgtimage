@@ -22,11 +22,11 @@ def meanshift(image, bandwidth, roi=None, mc=False, sigma=None, rgb_convert=Fals
     if mc: #color
         if sigma is not None:
             tmp=skimage.filters.gaussian(image, sigma=sigma, multichannel=True)
-            return meanshift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, verbose=verbose, sigma=None, rgb_convert=rgb_convert)
+            return meanshift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, sigma=None, rgb_convert=rgb_convert,verbose=verbose)
         #Conversion
         if rgb_convert:
             tmp=rgb2chsv(image)
-            return meanshift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, verbose=verbose, sigma=sigma, rgb_convert=False)
+            return meanshift(tmp, bandwidth=bandwidth, roi=roi, mc=mc, sigma=sigma, rgb_convert=False, verbose=verbose)
 
 
     nb_components,spatial_dim=1,len(image.shape)
@@ -43,7 +43,7 @@ def meanshift(image, bandwidth, roi=None, mc=False, sigma=None, rgb_convert=Fals
             roi=np.ones(image.shape[0:spatial_dim])
             roi_mask=np.dstack(tuple([roi for i in range(0,nb_components)]))
             roied_image=np.ma.masked_array(image,mask=np.logical_not(roi_mask))
-            return meanshift(roied_image, bandwidth, None, mc, verbose)
+            return meanshift(roied_image, bandwidth, None, mc, verbose=verbose)
 
 
     if type(image) == np.ma.masked_array :
