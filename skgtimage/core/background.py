@@ -1,23 +1,9 @@
 import networkx as nx
-import os
-from skgtimage.core.factory import from_labelled_image
+
 from skgtimage.core.photometry import update_photometric_graph
-from skgtimage.core.subisomorphism import common_subgraphisomorphisms_optimized,common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.subisomorphism import common_subgraphisomorphisms_optimized_v2
 from skgtimage.core.search_base import find_head
 from skgtimage.core.topology import fill_region
-#from skgtimage.io.with_graphviz import save_graph,save_graphregions
-
-def background_removal_by_size(image,labelled_image,ref_t,ref_p,save_dir=None):
-    """
-    To remove background: this provides a ROI within which analysis is performed
-    This enable to manage situation where background can not be described in the model (e.g. impossibility to assumed any
-    photometric relationships with other regions).
-    :param image:
-    :param labelled_image:
-    :return: roi (i.e. complementary of the backgroung)
-    """
-    pass
-
 
 def background_removal_by_iso(image,t,p,ref_t,ref_p,verbose=False):
     """

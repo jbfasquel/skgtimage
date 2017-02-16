@@ -4,10 +4,8 @@
 
 
 import numpy as np
-import scipy as sp; from scipy import ndimage
-import networkx as nx
-from skgtimage.core.graph import IrDiGraph,transitive_reduction,mat2graph,graph2mat,transitive_reduction_matrix,labelled_image2regions
-from skgtimage.core.search_base import recursive_predecessors,search_head_nodes
+from skgtimage.core.graph import IrDiGraph,transitive_reduction_matrix,labelled_image2regions
+from skgtimage.core.search_base import search_head_nodes
 
 def fill_regions(regions):
     filled_regions=[fill_region(r) for r in regions]
@@ -149,26 +147,6 @@ def topological_graph_from_residues_refactorying(residues,copy=True):
         g.set_region(nodes[i],working_residues[i])
 
     return g,working_residues
-'''
-def topological_merging_candidates_v2(graph,source):
-    #Source must be child of target, or target child of source, or both must be brother (i.e. sharing common father),
-    #Note that a
-    #TO DO: Pour image03_region_top_ok_meanshift_5classes_vs4classes_refactorying: permettra d'avoir les "trous" de "ville fleurie" correctement identified
-    candidates=set(graph.predecessors(source))
-    if len(graph.successors(source)) !=0:
-        father=graph.successors(source)[0]
-        candidates|=set([father])
-        candidates|=set(graph.predecessors(father)) #brothers
-        #candidates|=set(recursive_predecessors(graph,father))
-
-    heads=search_head_nodes(graph)
-    if source in heads:
-        candidates|=heads
-
-    candidates -= set([source])
-
-    return candidates
-'''
 
 def topological_merging_candidates(graph,source):
     #Source must be child of target, or target child of source, or both must be brother (i.e. sharing common father)

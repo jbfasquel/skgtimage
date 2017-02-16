@@ -3,7 +3,6 @@
 #Licence: BSD 3 clause
 import numpy as np
 import networkx as nx
-from skgtimage.core.photometry import region_stat
 from skgtimage.core.graph import transitive_closure
 from skgtimage.core.brothers import find_groups_of_brothers,compute_possible_graphs,increasing_ordered_list
 from skgtimage.core.search_base import decreasing_ordered_nodes
@@ -24,7 +23,6 @@ def photometric_iso_validity(iso,image_ordering,model_ordering):
         if m != related_elements: valid=False
         image_copy=image_copy[nb_similar_element:]
 
-    #return model_ordering_from_iso
     return valid
 
 
@@ -154,10 +152,7 @@ def common_subgraphisomorphisms_optimized(query_graphs,ref_graphs):
         if validity:
             nb_valid += 1
             valid_isomorphisms+=[iso]
-    '''
-    #OLD (without prefiltering)
-    valid_isomorphisms=isomorphisms_candidates
-    '''
+
     ############################
     #
     ############################
