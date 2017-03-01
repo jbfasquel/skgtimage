@@ -19,12 +19,14 @@ def save_to_csv(dir,name,gcr,similarities,nodepersim=None):
         c_writer.writerow(['related nodes']+[i for i in nodepersim])
     csv_file.close()
 
-def compute_sim_between_graph_regions(result_graph,truth_graph):
+def compute_sim_between_graph_regions(result_graph,truth_graph,prec=None):
     region2sim={}
     for n in truth_graph.nodes():
         true_region=truth_graph.get_region(n)
         result_region=result_graph.get_region(n)
         sim=similarity_index(result_region,true_region)
+        if prec is not None:
+            sim=np.round(sim,prec)
         region2sim[n]=sim
     return region2sim
 
@@ -90,7 +92,7 @@ def remap_greylevels(image,dest_levels,src_levels=None):
          remapped_result=np.ma.MaskedArray(remapped_result,mask=image.mask)
     return remapped_result
 
-def goodclassification_rate(result,truth):
+def goodclassification_rate(result,truth,prec=None):
     """
         Measure to good classification rate between classification result and expect result (truth), assuming
         that greylevels correspond.
@@ -114,6 +116,8 @@ def goodclassification_rate(result,truth):
 
     number_of_errors=np.count_nonzero(result-truth)
     classif=1.0-number_of_errors/nb_points
+    if prec is not None:
+        classif=np.round(classif,prec)
     return classif
 
 

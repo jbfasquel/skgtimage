@@ -16,12 +16,18 @@ def from_dir2(directory,color=False):
         if f[0]==".": continue #to skip .Dstore
         (root_name,extension)=f.split(".")
         if root_name == "image":
-            image=sp.misc.imread(os.path.join(directory,f))
+            if extension == "npy":
+                image = np.load(os.path.join(directory, f))
+            else:
+                image=sp.misc.imread(os.path.join(directory,f))
             if color:
                 image=rgb2gray(image)
         else:
             region_names+=[root_name[len("region_"):len(root_name)]]
-            regions+=[sp.misc.imread(os.path.join(directory,f))]
+            if extension == "npy":
+                regions += [np.load(os.path.join(directory, f))]
+            else:
+                regions+=[sp.misc.imread(os.path.join(directory,f))]
     print(region_names)
     #####
     #Check
@@ -29,7 +35,8 @@ def from_dir2(directory,color=False):
         for j in range(0,len(regions)):
             if i != j:
                 inter=np.logical_and(regions[i],regions[j])
-                if np.max(inter) != 0: raise Exception("Error: region not mutually excluded")
+                maxi=np.max(inter)
+                if maxi != 0: raise Exception("Error: region not mutually excluded")
                 #print(region_names[i],region_names[j],np.max(inter))
 
     #####

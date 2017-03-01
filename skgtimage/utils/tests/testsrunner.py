@@ -5,11 +5,10 @@ __author__      = "Jean-Baptiste Fasquel <Jean-Baptiste.Fasquel@univ-angers.fr>,
 __copyright__   = "Copyright (C) 2015 Jean-Baptiste Fasquel"
 
 
-'''
+
 import unittest
-import tests
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromModule(tests)
+    suite = unittest.defaultTestLoader.discover('.')
     unittest.TextTestRunner(verbosity=2).run(suite)
-'''
+

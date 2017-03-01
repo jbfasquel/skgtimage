@@ -17,7 +17,7 @@ print("Segmentation finished")
 
 #INTERPRETATION (PROPOSED METHOD)
 print("Start recognition...")
-id2region,r = recognize(image, segmentation, inclusion, photometry, bg=True, rag=40)
+id2region,r = recognize(image, segmentation, inclusion, photometry, bg=True, rag=20)
 print("Recognition finished")
 
 #skgti.utils.save_recognizer_details(r,"save/")

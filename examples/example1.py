@@ -3,6 +3,8 @@ import scipy as sp;from scipy.misc import imread,imsave
 import skgtimage as skgti;from skgtimage.utils import meanshift,recognize
 from skimage.segmentation import mark_boundaries
 
+
+
 #A PRIORI KNOWLEDGE
 inclusion="text<paper<file" #text is included within paper, itself included into file
 photometry="text<file<paper" #text is darker than file, itself darker than paper

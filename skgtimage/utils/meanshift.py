@@ -37,7 +37,7 @@ def meanshift(image, bandwidth, roi=None, mc=False, sigma=None, rgb_convert=Fals
     if roi is not None:
         roi_mask=np.dstack(tuple([roi for i in range(0,nb_components)]))
         roied_image=np.ma.masked_array(image,mask=np.logical_not(roi_mask))
-        return meanshift(roied_image, bandwidth, None, mc, verbose)
+        return meanshift(roied_image, bandwidth, None, mc, verbose=verbose)
     else:
         if type(image) != np.ma.masked_array :
             roi=np.ones(image.shape[0:spatial_dim])

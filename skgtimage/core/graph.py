@@ -233,14 +233,36 @@ class IrDiGraph(nx.DiGraph):
             if self.get_region(n) is not None: s = s | set([n])
         return s
 
-    def get_labelled(self):
-        labelled=np.zeros(self.get_image().shape,dtype=np.int)
+    def downsample(self,d):
+        self.__image=self.__image[::d,::d]
+        for n in self.nodes():
+            region=self.get_region(n)[::d,::d]
+            self.set_region(n,region)
+        self.update_intensities(self.__image)
+
+        #self.get_image()
+
+    def get_labelled(self,mapping=None,bg=0):
+        labelled=np.zeros(self.get_image().shape,dtype=np.int)-bg
         fill_value=1
         for n in self.nodes():
             region=self.get_region(n)
-            labelled=np.ma.masked_array(labelled,mask=region).filled(fill_value)
-            fill_value+=1
+            if mapping is not None:
+                intensity = mapping[n]
+                labelled=np.ma.masked_array(labelled, mask=region).filled(intensity)
+            else:
+                labelled=np.ma.masked_array(labelled,mask=region).filled(fill_value)
+                fill_value+=1
         return labelled
+
+    def get_node2mean(self,round=False):
+        mapping = {}
+        for n in self.nodes():
+            # residue=t_graph.get_residue(n)
+            intensity = self.get_mean_residue_intensity(n)
+            if round: intensity = np.round(intensity, 0)
+            mapping[n] = intensity
+        return mapping
 
     def __str__(self):
         chaine=""
