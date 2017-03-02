@@ -57,39 +57,6 @@ def goodclassification_rate(result,truth,prec=None):
         classif=np.round(classif,prec)
     return classif
 
-
-
-def tp(result,truth):
-    """ True positive """
-    return np.float32(np.sum(np.logical_and(result, truth)))
-
-def tn(result,truth):
-    """ True negative """
-    return np.float32(np.sum(np.logical_not(np.logical_or(result, truth))))
-
-def fp(result,truth):
-    """ False positive """
-    return np.float32(np.sum(np.logical_and(np.logical_not(truth), result)))
-
-def fn(result,truth):
-    """ False negative """
-    return np.float32(np.sum(np.logical_and(truth,np.logical_not(result))))
-
-def sensibility(result,truth):
-    """ Sensibility : 1.0 (perfect) truth is included into result """
-    if np.max(result)==0 : return 0
-    tp_val=tp(result,truth)
-    fn_val=fn(result,truth)
-    return tp_val/(tp_val+fn_val)
-
-def specificity(result,truth):
-    """ Specificity : 1.0 (perfect) result is included into true """
-    if np.max(result)==0 : return 0
-    tn_val=tn(result,truth)
-    fp_val=fp(result,truth)
-    return tn_val/(tn_val+fp_val)
-
-
 def similarity_index(result,truth,roi=None):
     """
         If roi is not none, result and truth reduced to roi are used for computations (i.e. compressed() masked array)

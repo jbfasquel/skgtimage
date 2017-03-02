@@ -71,53 +71,6 @@ def plot_graph_with_regions(graph,nb_rows=1,slice=None):
 ##############################
 # FUNCTION FOR SAVING
 ##############################
-import skimage; from skimage import segmentation
-from skgtimage.core.photometry import grey_levels
-def save_image2d_boundaries(image,labelled,directory=None,filename="img_bound"):
-    if not os.path.exists(directory): os.mkdir(directory)
-
-    nb = len(grey_levels(labelled))
-    if np.max(labelled) != np.min(labelled):
-        tmp_labelled=(labelled.astype(np.float)-np.min(labelled))*(255.0)/(np.max(labelled)-np.min(labelled)).astype(np.uint8)
-    else:
-        tmp_labelled=labelled.astype(np.uint8)
-    sp.misc.imsave(directory + filename + "_" + str(nb) + "_labels.png", tmp_labelled)
-    if len(image.shape) == 2:
-        tmp = np.dstack(tuple([image for i in range(0,3)]))
-        tmp = skimage.segmentation.mark_boundaries(tmp, labelled)
-    else:
-        tmp = skimage.segmentation.mark_boundaries(image, labelled)
-    sp.misc.imsave(directory + filename + "_" + str(nb) + "_labels_bounds.png", tmp)
-
-def save_image3d_boundaries(image,labelled,directory=None,slices=[]):
-    #Directory
-    if not os.path.exists(directory) : os.mkdir(directory)
-    #Rescale
-    '''
-    mini,maxi=np.min(image),np.max(image)
-    if (maxi-mini != 0) and do_rescale:
-        tmp_image=(image.astype(np.float)-mini)*(255.0)/(maxi-mini)
-    else:
-        tmp_image=image
-    '''
-    tmp_image=image
-    #Save
-    for s in slices:
-        current_labelled=labelled[:,:,s]
-        current_slice=tmp_image[:,:,s]
-        mini, maxi = np.min(current_slice), np.max(current_slice)
-        if mini != maxi:
-            current_slice = (current_slice.astype(np.float) - mini) * (255.0) / (maxi - mini)
-        current_slice = current_slice.astype(np.uint8)
-        if type(current_slice) == np.ma.MaskedArray:
-            current_slice=current_slice.filled(0)
-        if type(current_labelled) == np.ma.MaskedArray:
-            current_labelled=current_labelled.filled(0)
-
-        current_slice=np.rot90(current_slice)
-        current_labelled = np.rot90(current_labelled)
-        #filename=os.path.join(directory,"slice_"+str(s)+".png");
-        save_image2d_boundaries(current_slice,current_labelled,directory,"slice_"+str(s))
 
 
 def save_intensities(graph,directory=None,filename="intensities"):
@@ -129,32 +82,6 @@ def save_intensities(graph,directory=None,filename="intensities"):
     csv_file.close()
 
 
-def __save_image2d__(image,filename,do_rescale=True):
-    mini,maxi=np.min(image),np.max(image)
-    if (maxi-mini != 0) and do_rescale:
-        tmp_image=(image.astype(np.float)-mini)*(255.0)/(maxi-mini)
-        sp.misc.imsave(filename, tmp_image.astype(np.uint8))
-    else:
-        sp.misc.imsave(filename, image.astype(np.uint8))
-
-def __save_image3d__(image,directory,slices=[],do_rescale=True):
-    #Directory
-    if not os.path.exists(directory) : os.mkdir(directory)
-    #Rescale
-    tmp_image=image
-    #Save
-    for s in slices:
-        current_slice=tmp_image[:,:,s]
-        mini, maxi = np.min(current_slice), np.max(current_slice)
-        if mini != maxi:
-            current_slice = (current_slice.astype(np.float) - mini) * (255.0) / (maxi - mini)
-        else:
-            current_slice = current_slice.astype(np.uint8)
-        if type(current_slice) == np.ma.MaskedArray:
-            current_slice=current_slice.filled(0)
-        current_slice=np.rot90(current_slice)
-        filename=os.path.join(directory,"slice_"+str(s)+".png");
-        __save_image2d__(current_slice,filename,False)
 
 def save_graphregions(graph,directory=None,slices=[]):
     if directory is not None:
@@ -171,12 +98,12 @@ def save_graphregions(graph,directory=None,slices=[]):
             if len(current_region.shape) == 2:
                 filename="region_"+str(n)+".png"
                 if directory is not None: filename=os.path.join(directory,filename);
-                __save_image2d__(current_region,filename)
+                skgti.io.image.__save_image2d__(current_region,filename)
 
             elif len(current_region.shape) == 3:
                 slice_dir=directory+"region_"+str(n)+"/"
                 if not os.path.exists(slice_dir) : os.mkdir(slice_dir)
-                __save_image3d__(current_region,slice_dir,slices,True)
+                skgti.io.image.__save_image3d__(current_region,slice_dir,slices,True)
 
             else: raise Exception("Not a 2D nor a 3D image")
 

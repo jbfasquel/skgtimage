@@ -55,6 +55,13 @@ class TestOnGrayscale2D(unittest.TestCase):
         self.assertAlmostEqual(region2sim['paper'], 0.99, 2)
         self.assertAlmostEqual(region2sim['file'], 1, 2)
 
+    def test04(self):
+        """ Test save """
+        segmentation = imread("data_gray/meanshift_labelling.png")
+        id2region, r = skgti.utils.recognize(self.image, segmentation, inclusion, photometry, bg=True)
+
+        skgti.io.save_recognizer_details(r, "save/")
+
 
 if __name__ == '__main__':
     #With verbose

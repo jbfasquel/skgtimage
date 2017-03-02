@@ -1,20 +1,16 @@
-from skgtimage.core.graph import rename_nodes,transitive_closure
+from skgtimage.core.graph import rename_nodes
 from skgtimage.core.filtering import size_filtering,rag_merge_until_commonisomorphism,merge_photometry_gray
-from skgtimage.core.subisomorphism import find_subgraph_isomorphims,best_common_subgraphisomorphism,common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.subisomorphism import best_common_subgraphisomorphism,common_subgraphisomorphisms_optimized_v2
 from skgtimage.core.propagation import propagate
 from skgtimage.core.factory import from_string,from_labelled_image
 from skgtimage.core.background import background_removal_by_iso
-from skgtimage.utils import grey_levels,extract_subarray_rgb,extract_subarray
+from skgtimage.utils import grey_levels
 from skgtimage.utils.rag_merging import rag_merge
 from skgtimage.utils.color import merge_photometry_color
-from skgtimage.io.with_graphviz import __save_image2d__, __save_image3d__, save_image2d_boundaries, \
-    save_image3d_boundaries,save_graph,save_intensities,save_graphregions,save_graph_links,matching2links,save_graph_links_v2,save_graph_v2
 
 
 import time
 import copy
-import os
-import csv
 import numpy as np
 
 class RecognitionException(Exception):
@@ -230,183 +226,4 @@ class Recognizer:
         self.relabelled_final_p_graph.set_image(self.t_graph.get_image())
 
 
-def clear_dir_content(save_dir):
-    if os.path.exists(save_dir):
-        for e in os.listdir(save_dir):
-            if not(os.path.isdir(save_dir+e)):
-                os.remove(save_dir+e)
-            else:
-                clear_dir_content(save_dir+e+"/")
-
-def save_image_context(image,label,context_dir,roi=None,slices=[],mc=False):
-    """
-    save image+superimposed labels, roied_label,roied_image+superimposed labels
-    :param image:
-    :param label:
-    :param directory:
-    :param roi:
-    :param slices:
-    :param mc:
-    :return:
-    """
-    if not os.path.exists(context_dir): os.mkdir(context_dir)
-    nb = len(grey_levels(label, roi))
-    #Case 2D grayscale
-    if (len(image.shape) == 2) and (mc is False):
-        tmp_image=image
-        #if roi is not None: tmp_image = np.ma.array(image.astype(np.float), mask=np.logical_not(roi)).filled(np.min(image) - 1)
-        if roi is not None: tmp_image = np.ma.array(image, mask=np.logical_not(roi)).filled(0)
-        save_image2d_boundaries(tmp_image, label, directory=context_dir, filename="image_and_"+str(nb)+"_labels")
-        __save_image2d__(tmp_image,os.path.join(context_dir,"image.png"))
-        __save_image2d__(label,os.path.join(context_dir,"label.png"))
-        #Crop
-        if roi is not None:
-            tmp_image_crop = extract_subarray(tmp_image, roi=roi)
-            label_crop=extract_subarray(label, roi=roi)
-            save_image2d_boundaries(tmp_image_crop, label_crop, directory=context_dir, filename="image_and_"+str(nb)+"_label_crop")
-            __save_image2d__(tmp_image_crop, os.path.join(context_dir, "image_crop.png"))
-            __save_image2d__(label_crop, os.path.join(context_dir, "label_crop.png"))
-
-    #Case 2D color
-    elif mc is True:
-        tmp_image = image
-        if roi is not None:
-            tmp_roi=np.dstack(tuple([roi for i in range(0,3)]))
-            tmp_image = np.ma.array(tmp_image, mask=np.logical_not(tmp_roi)).filled(0)
-            __save_image2d__(tmp_image, os.path.join(context_dir, "image_roied.png"))
-        save_image2d_boundaries(tmp_image, label, directory=context_dir, filename="image_and_"+str(nb)+"_label")
-        if roi is not None:
-            tmp_image_crop = extract_subarray_rgb(tmp_image, roi=roi)
-            label_crop = extract_subarray(label, roi=roi)
-            save_image2d_boundaries(tmp_image_crop, label_crop, directory=context_dir, filename="image_and_"+str(nb)+"_label_crop")
-            __save_image2d__(tmp_image_crop, os.path.join(context_dir, "image_crop.png"))
-            __save_image2d__(label_crop, os.path.join(context_dir, "label_crop.png"))
-
-    #Case 3D grayscale (with slices)
-    elif (len(image.shape) == 3) and (mc is False):
-        __save_image3d__(image,context_dir+"image/",slices,True)
-        if roi is not None:
-            l_image=np.ma.array(image.astype(np.float), mask=np.logical_not(roi))
-        __save_image3d__(l_image,context_dir+"image_roi/",slices,True)
-        save_image3d_boundaries(l_image, label, directory=context_dir+"image_"+str(nb)+"_label/", slices=slices)
-
-
-def save_recognizer_details(recognizer,save_dir,full=False,slices=[]):
-    """
-    Save details of the recognition procedure: regions, graphs and statistics (mean intensities) related to each step
-
-    :param recognizer: object embedding all details, and returned by recognize
-    :param save_dir: directory within which all details are saved
-    :param full: if True, all regions, and mean intensities, related to initial graphs are saved (time consuming if many nodes)
-    :param slices: list of slice indices to be exported in .png image files, in case of 3D images
-    :return: None
-    """
-    if not os.path.exists(save_dir): os.mkdir(save_dir)
-    #####################################
-    # Save final result
-    #####################################
-    if recognizer.relabelled_final_t_graph is not None:
-        save_graph(recognizer.relabelled_final_t_graph, name="topological", directory=save_dir, tree=True)
-        save_graph(recognizer.relabelled_final_p_graph, name="photometric", directory=save_dir, tree=True)
-        save_graphregions(recognizer.relabelled_final_t_graph, directory=save_dir, slices=slices)
-        save_intensities(recognizer.relabelled_final_p_graph, directory=save_dir)
-        label_from_final = recognizer.relabelled_final_t_graph.get_labelled()
-        save_image_context(recognizer.raw_image, label_from_final, save_dir, recognizer.roi, slices=slices, mc=recognizer.mc)
-
-    #############
-    #Details
-    #############
-    details_save_dir=save_dir+"Details/"
-    if not os.path.exists(details_save_dir): os.mkdir(details_save_dir)
-
-    for step in range(0,len(recognizer.intermediate_operations)):
-        operation=recognizer.intermediate_operations[step]
-        tmp_dir=details_save_dir+operation+"/"
-        if not os.path.exists(tmp_dir) : os.mkdir(tmp_dir)
-        clear_dir_content(tmp_dir)
-        label=recognizer.intermediate_labels[step]
-        save_image_context(recognizer.raw_image, label, tmp_dir, recognizer.roi, slices=slices,mc=recognizer.mc)
-        if recognizer.intermediate_graphs[step] is not None:
-            (t_graph,p_graph)=recognizer.intermediate_graphs[step]
-            nb_nodes = len(t_graph.nodes())
-            save_graph(t_graph, name="g_topological_" + str(nb_nodes), directory=tmp_dir,tree=True)
-            save_graph(p_graph, name="g_photometric_" + str(nb_nodes), directory=tmp_dir,tree=True)
-            # Simplified
-            save_graph_v2(t_graph, name="g_topological_simple_" + str(nb_nodes),directory=tmp_dir, tree=True)
-            save_graph_v2(p_graph, name="g_photometric_simple_" + str(nb_nodes), directory=tmp_dir, tree=True)
-            if step == (len(recognizer.intermediate_operations)-1):
-                save_intensities(p_graph, directory=tmp_dir)
-                save_graphregions(t_graph, directory=tmp_dir, slices=slices)
-
-        else:
-            if len(grey_levels(label)) < 50:
-                t_graph,p_graph=from_labelled_image(recognizer.image,label,recognizer.roi,recognizer.bound_thickness,recognizer.bound_thickness)
-                nb_nodes = len(t_graph.nodes())
-                save_graph(t_graph, name="g_topological_" + str(nb_nodes), directory=tmp_dir, tree=True)
-                save_graph(p_graph, name="g_photometric_" + str(nb_nodes), directory=tmp_dir, tree=True)
-                # Simplified
-                save_graph_v2(t_graph, name="g_topological_simple_" + str(nb_nodes), directory=tmp_dir, tree=True)
-                save_graph_v2(p_graph, name="g_photometric_simple_" + str(nb_nodes), directory=tmp_dir, tree=True)
-
-    #####################################
-    # Save common iso and matching
-    #####################################
-    step_index=len(recognizer.intermediate_operations)
-    tmp_dir = details_save_dir + str(step_index)+"_graphs_and_common_isos/";clear_dir_content(tmp_dir)
-    clear_dir_content(tmp_dir)
-    if recognizer.common_isomorphisms is not None:
-        if not os.path.exists(tmp_dir): os.mkdir(tmp_dir)
-        t_isomorphisms_candidates = find_subgraph_isomorphims(transitive_closure(recognizer.t_graph), transitive_closure(recognizer.ref_t_graph))
-        nb_t_isos=len(t_isomorphisms_candidates)
-        f=open(tmp_dir+str(nb_t_isos)+"_t_isos",'w');f.close()
-        f=open(tmp_dir+str(len(recognizer.common_isomorphisms))+"_c_isos",'w');f.close()
-        if recognizer.matching is not None:
-            matching_links = matching2links(recognizer.matching)
-            save_graph_links(recognizer.t_graph, recognizer.ref_t_graph, [matching_links], ['red'], name="1_matching_t",directory=tmp_dir, tree=True)
-            save_graph_links(recognizer.p_graph, recognizer.ref_p_graph, [matching_links], ['red'], name="1_matching_p",directory=tmp_dir, tree=True)
-            #Simplified
-            save_graph_links_v2(recognizer.t_graph, recognizer.ref_t_graph, [matching_links], ['red'], name="1_matching_t_simple",directory=tmp_dir, tree=True)
-            save_graph_links_v2(recognizer.p_graph, recognizer.ref_p_graph, [matching_links], ['red'],
-                                name="1_matching_p_simple", directory=tmp_dir, tree=True)
-        if len(recognizer.common_isomorphisms) < 20:
-            for i in range(0,len(recognizer.common_isomorphisms)):
-                matching_links = matching2links(recognizer.common_isomorphisms[i])
-                save_graph_links(recognizer.t_graph, recognizer.ref_t_graph, [matching_links], ['red'],
-                         name="common_iso_t_" + str(i), directory=tmp_dir, tree=True)
-                save_graph_links(recognizer.p_graph, recognizer.ref_p_graph, [matching_links], ['red'],
-                         name="common_iso_p_" + str(i), directory=tmp_dir, tree=True)
-        if full:
-            save_intensities(recognizer.p_graph, directory=tmp_dir)
-            save_graphregions(recognizer.t_graph, directory=tmp_dir, slices=slices)
-
-        #Energies
-        csv_file=open(os.path.join(tmp_dir,"2_all_energies.csv"), "w")
-        c_writer = csv.writer(csv_file,dialect='excel')
-        c_writer.writerow(["Common iso"]+[i for i in range(0,len(recognizer.common_isomorphisms))])
-        c_writer.writerow(['Eie']+[i for i in recognizer.eies])
-        csv_file.close()
-
-
-    ##############################
-    # Saving merging
-    ##############################
-    step_index+=1
-    tmp_dir = details_save_dir + str(step_index)+"_merging/";clear_dir_content(tmp_dir)
-    if (recognizer.matching is not None) and (recognizer.ordered_merges is not None):
-        # All merging
-        matching_links = matching2links(recognizer.matching)
-        save_graph_links(recognizer.t_graph, recognizer.ref_t_graph, [matching_links, recognizer.ordered_merges],
-                         ['red', 'green'], label_lists=[[], range(0, len(recognizer.ordered_merges) + 1)], name="matching_t",directory=tmp_dir, tree=True)
-        save_graph_links(recognizer.p_graph, recognizer.ref_p_graph, [matching_links, recognizer.ordered_merges],
-                         ['red', 'green'], label_lists=[[], range(0, len(recognizer.ordered_merges) + 1)], name="matching_p",
-                         directory=tmp_dir, tree=True)
-        #Simplified
-        save_graph_links_v2(recognizer.t_graph, recognizer.ref_t_graph, [matching_links, recognizer.ordered_merges],
-                     ['red', 'green'], label_lists=[[], range(0, len(recognizer.ordered_merges) + 1)],
-                     name="matching_t_simplified",
-                     directory=tmp_dir, tree=True)
-        save_graph_links_v2(recognizer.p_graph, recognizer.ref_p_graph, [matching_links, recognizer.ordered_merges],
-                    ['red', 'green'], label_lists=[[], range(0, len(recognizer.ordered_merges) + 1)],
-                    name="matching_p_simplified",
-                    directory=tmp_dir, tree=True)
 
