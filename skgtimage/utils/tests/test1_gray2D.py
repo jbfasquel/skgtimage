@@ -33,9 +33,9 @@ class TestOnGrayscale2D(unittest.TestCase):
         self.assertAlmostEqual(region2sim['file'], 0.98, 2)
 
     def test02(self):
-        """ Quickshift (rag merge) """
+        """ Quickshift (rag+phot merge) """
         segmentation = imread("data_gray/quickshift_labelling.png")
-        id2region, r = skgti.utils.recognize(self.image, segmentation, inclusion, photometry, bg=True,rag=20)
+        id2region, r = skgti.utils.recognize(self.image, segmentation, inclusion, photometry, bg=True,rag=20,merge=6)
         # COMPARISON WITH TRUTH
         classif, region2sim = self.compare(r)
         self.assertAlmostEqual(classif, 0.987, 3)

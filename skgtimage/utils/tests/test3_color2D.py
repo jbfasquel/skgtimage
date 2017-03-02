@@ -8,8 +8,6 @@ truth_dir="data_color/truth/"
 
 class TestOnColor2D(unittest.TestCase):
     def setUp(self):
-        print(os.getcwd())
-
         self.image = imread(truth_dir + "image.png")
 
     def compare(self,r):
@@ -44,6 +42,17 @@ class TestOnColor2D(unittest.TestCase):
         self.assertAlmostEqual(min(region2sim.values()), 0.89, 2)
         self.assertAlmostEqual(max(region2sim.values()), 0.99, 2)
 
+
+    def test03(self):
+        """ Meanshift + rag and phot merging """
+        segmentation = imread("data_color/meanshift_labelling.png")
+        id2region, r = skgti.utils.recognize(self.image, segmentation, inclusion, photometry, mc=True, bg=True,
+                                             verbose=True,rag=60,merge=5)
+        # COMPARISON WITH TRUTH
+        classif, region2sim = self.compare(r)
+        self.assertAlmostEqual(classif, 0.976, 3)
+        self.assertAlmostEqual(min(region2sim.values()), 0.87, 2)
+        self.assertAlmostEqual(max(region2sim.values()), 0.99, 2)
 
 
 if __name__ == '__main__':
