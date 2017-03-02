@@ -49,6 +49,13 @@ def from_dir2(directory,color=False):
     for i in range(0,len(region_names)):
         remaping[i]=region_names[i]
     (t_graph,p_graph)=rename_nodes([t_graph,p_graph],remaping)
+
+    t_graph.update_intensities(image)
+    #Hack
+    for n in t_graph.nodes():
+        intensity=t_graph.get_mean_residue_intensity(n)
+        p_graph.set_mean_residue_intensity(n,intensity)
+
     #t_graph.set_image(t_graph)
     return t_graph,p_graph
 
