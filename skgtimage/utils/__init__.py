@@ -7,7 +7,6 @@ from __future__ import absolute_import
 from .misc import *
 from .color import *
 from .factory import *
-from .histogram import *
 from .meanshift import *
 from .quickshift import *
 from .evaluation import *

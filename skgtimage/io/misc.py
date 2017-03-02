@@ -37,7 +37,6 @@ def from_dir2(directory,color=False):
                 inter=np.logical_and(regions[i],regions[j])
                 maxi=np.max(inter)
                 if maxi != 0: raise Exception("Error: region not mutually excluded")
-                #print(region_names[i],region_names[j],np.max(inter))
 
     #####
     #Build graphs
@@ -50,13 +49,13 @@ def from_dir2(directory,color=False):
         remaping[i]=region_names[i]
     (t_graph,p_graph)=rename_nodes([t_graph,p_graph],remaping)
 
+    #####
+    #Update intensities
     t_graph.update_intensities(image)
-    #Hack
     for n in t_graph.nodes():
         intensity=t_graph.get_mean_residue_intensity(n)
         p_graph.set_mean_residue_intensity(n,intensity)
 
-    #t_graph.set_image(t_graph)
     return t_graph,p_graph
 
 def from_dir(desc_t,desc_p,image,directory):

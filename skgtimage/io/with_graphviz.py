@@ -7,7 +7,6 @@ import os,csv
 import numpy as np
 import scipy as sp;from scipy import misc
 import skgtimage as skgti
-import matplotlib.pyplot as plt
 
 def matching2links(matching):
     return [ (i,matching[i]) for i in matching]
@@ -15,7 +14,6 @@ def matching2links(matching):
 ##############################
 # FUNCTION FOR DISPLAY
 ##############################
-
 def plot_graph_links(source_graph,target_graph,link_lists=[],colors=[]):
     """
     Plot graph using graphviz and matplotlib
@@ -73,8 +71,8 @@ def plot_graph_with_regions(graph,nb_rows=1,slice=None):
 ##############################
 # FUNCTION FOR SAVING
 ##############################
-import skimage; from skimage import segmentation;from skimage.future import graph
-from skgtimage.utils.evaluation import grey_levels
+import skimage; from skimage import segmentation
+from skgtimage.core.photometry import grey_levels
 def save_image2d_boundaries(image,labelled,directory=None,filename="img_bound"):
     if not os.path.exists(directory): os.mkdir(directory)
 
@@ -143,13 +141,6 @@ def __save_image3d__(image,directory,slices=[],do_rescale=True):
     #Directory
     if not os.path.exists(directory) : os.mkdir(directory)
     #Rescale
-    '''
-    mini,maxi=np.min(image),np.max(image)
-    if (maxi-mini != 0) and do_rescale:
-        tmp_image=(image.astype(np.float)-mini)*(255.0)/(maxi-mini)
-    else:
-        tmp_image=image
-    '''
     tmp_image=image
     #Save
     for s in slices:
