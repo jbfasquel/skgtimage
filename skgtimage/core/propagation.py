@@ -1,5 +1,5 @@
 import networkx as nx
-from skgtimage.core.subisomorphism import find_subgraph_isomorphims,common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.isomorphism import find_subgraph_isomorphims,common_subgraphisomorphisms
 from skgtimage.core.topology import topological_merging_candidates,merge_nodes_topology
 from skgtimage.core.photometry import merge_nodes_photometry
 from skgtimage.core.graph import transitive_closure,extract_subgraph
@@ -19,7 +19,7 @@ def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,curre
     subgraph=extract_subgraph(previous_p_graph,ref_matching.keys()) #reference ref_p_graph considered in matching, i.e. without "brothers"
     simplified_ref_p_graph=nx.relabel_nodes(subgraph,ref_matching)
     #common_isomorphisms,_=common_subgraphisomorphisms([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
-    common_isomorphisms=common_subgraphisomorphisms_optimized_v2([current_t_graph,current_p_graph],[ref_t_graph,simplified_ref_p_graph])
+    common_isomorphisms=common_subgraphisomorphisms([current_t_graph, current_p_graph], [ref_t_graph, simplified_ref_p_graph])
     validity= (ref_matching in common_isomorphisms)
 
     ######################
@@ -29,7 +29,7 @@ def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,curre
     #In such a case, ref_matching can be modified (e.g. valid photometric inversion)
     ######################
     if validity == False:
-        common_isomorphisms= common_subgraphisomorphisms_optimized_v2([current_t_graph, current_p_graph],[ref_t_graph, ref_p_graph])
+        common_isomorphisms= common_subgraphisomorphisms([current_t_graph, current_p_graph], [ref_t_graph, ref_p_graph])
         validity= (ref_matching in common_isomorphisms)
 
     return validity

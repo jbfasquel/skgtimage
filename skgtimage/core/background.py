@@ -1,7 +1,7 @@
 import networkx as nx
 
 from skgtimage.core.photometry import update_photometric_graph
-from skgtimage.core.subisomorphism import common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.isomorphism import common_subgraphisomorphisms
 from skgtimage.core.search_base import find_head
 from skgtimage.core.topology import fill_region
 
@@ -27,7 +27,7 @@ def background_removal_by_iso(image,t,p,ref_t,ref_p,verbose=False):
         update_photometric_graph(p_c)
         p_cs+=[p_c]
         if len(t_c.nodes()) >= len(ref_t.nodes()): #to avoid useless computation
-            common_isos=common_subgraphisomorphisms_optimized_v2([t_c, p_c],[ref_t, ref_p])
+            common_isos=common_subgraphisomorphisms([t_c, p_c], [ref_t, ref_p])
             nbisos+=[len(common_isos)]
         else:
             nbisos += [0]

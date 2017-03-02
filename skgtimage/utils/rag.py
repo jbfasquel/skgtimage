@@ -1,5 +1,5 @@
 import numpy as np
-from skgtimage.core.subisomorphism import common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.isomorphism import common_subgraphisomorphisms
 from skimage.future import graph as skimage_graph
 from skgtimage.core.factory import from_labelled_image
 
@@ -127,7 +127,7 @@ def rag_merge_until_commonisomorphism(t_graph,p_graph,ref_t_graph,ref_p_graph,im
 
     new_t_graph, new_p_graph=t_graph,p_graph
 
-    common_isomorphisms = common_subgraphisomorphisms_optimized_v2([t_graph, p_graph], [ref_t_graph, ref_p_graph])
+    common_isomorphisms = common_subgraphisomorphisms([t_graph, p_graph], [ref_t_graph, ref_p_graph])
     while len(common_isomorphisms) == 0:
         ##########
         #Merge the 2 most similar regions
@@ -147,7 +147,7 @@ def rag_merge_until_commonisomorphism(t_graph,p_graph,ref_t_graph,ref_p_graph,im
         #merge_nodes_topology(t_graph, to_merge[0], to_merge[1])
 
         new_t_graph,new_p_graph=from_labelled_image(image_gray,new_labelled_region,roi,verbose=verbose)
-        common_isomorphisms = common_subgraphisomorphisms_optimized_v2([new_t_graph, new_p_graph], [ref_t_graph, ref_p_graph])
+        common_isomorphisms = common_subgraphisomorphisms([new_t_graph, new_p_graph], [ref_t_graph, ref_p_graph])
 
 
     return new_t_graph,new_p_graph

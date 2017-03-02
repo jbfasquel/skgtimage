@@ -1,7 +1,8 @@
 from skgtimage.core.graph import rename_nodes
 from skgtimage.core.photometry import grey_levels
 from skgtimage.core.filtering import size_filtering,merge_photometry_gray,merge_photometry_color
-from skgtimage.core.subisomorphism import best_common_subgraphisomorphism,common_subgraphisomorphisms_optimized_v2
+from skgtimage.core.isomorphism import common_subgraphisomorphisms
+from skgtimage.core.criterion import best_common_subgraphisomorphism
 from skgtimage.core.propagation import propagate
 from skgtimage.core.factory import from_string,from_labelled_image
 from skgtimage.core.background import background_removal_by_iso
@@ -164,7 +165,7 @@ class Recognizer:
         self.t_graph, self.p_graph=from_labelled_image(self.image,self.label,self.roi,self.bound_thickness,self.bound_thickness)
 
     def rag_merging(self):
-        common_isomorphisms = common_subgraphisomorphisms_optimized_v2([self.t_graph, self.p_graph], [self.ref_t_graph,self.ref_p_graph])
+        common_isomorphisms = common_subgraphisomorphisms([self.t_graph, self.p_graph], [self.ref_t_graph, self.ref_p_graph])
         if len(common_isomorphisms) == 0:
             if self.verbose: print("Starting RAG merge until common iso is found...")
             #self.t_graph_before_rag, self.p_graph_before_rag=copy.deepcopy(self.t_graph),copy.deepcopy(self.p_graph)
@@ -208,7 +209,7 @@ class Recognizer:
     def compute_common_iso(self):
         if self.verbose: print("Searching for common isomorphisms")
         t0 = time.clock()
-        self.common_isomorphisms = common_subgraphisomorphisms_optimized_v2([self.t_graph, self.p_graph],[self.ref_t_graph, self.ref_p_graph])
+        self.common_isomorphisms = common_subgraphisomorphisms([self.t_graph, self.p_graph], [self.ref_t_graph, self.ref_p_graph])
         t1 = time.clock()
         self.action2runtime["Iso."]=t1-t0
 

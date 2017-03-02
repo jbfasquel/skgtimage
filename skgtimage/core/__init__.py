@@ -10,7 +10,6 @@ from .graph import *
 
 ##### GRAPH SEARCH ALGORITHMS
 from .search_base import *
-from .search_filtered import *
 
 ##### FILTERING
 from .filtering import *
@@ -30,8 +29,11 @@ from .photometry import *
 ##### PARSER
 from .factory import *
 
-##### MATCHING
-from .subisomorphism import *
+##### ISOMORPHISMS
+from .isomorphism import *
+
+##### BEST ISOMORPHISM SELECTION
+from .criterion import *
 
 ##### BACKGROUND
 from .background import *

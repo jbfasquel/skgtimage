@@ -4,7 +4,7 @@ from skgtimage.io.with_graphviz import save_graph,save_intensities,save_graphreg
 from skgtimage.io.image import save_image_context
 from skgtimage.core.photometry import grey_levels
 from skgtimage.core.factory import from_labelled_image
-from skgtimage.core.subisomorphism import find_subgraph_isomorphims
+from skgtimage.core.isomorphism import find_subgraph_isomorphims
 from skgtimage.core.graph import transitive_closure
 
 def clear_dir_content(save_dir):
