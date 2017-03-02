@@ -1,12 +1,12 @@
 from skgtimage.core.graph import rename_nodes
-from skgtimage.core.filtering import size_filtering,rag_merge_until_commonisomorphism,merge_photometry_gray
+from skgtimage.core.photometry import grey_levels
+from skgtimage.core.filtering import size_filtering,merge_photometry_gray,merge_photometry_color
 from skgtimage.core.subisomorphism import best_common_subgraphisomorphism,common_subgraphisomorphisms_optimized_v2
 from skgtimage.core.propagation import propagate
 from skgtimage.core.factory import from_string,from_labelled_image
 from skgtimage.core.background import background_removal_by_iso
-from skgtimage.utils import grey_levels
-from skgtimage.utils.rag_merging import rag_merge
-from skgtimage.utils.color import merge_photometry_color
+from skgtimage.utils.rag_merging import rag_merge,rag_merge_until_commonisomorphism
+from skgtimage.utils.color import rgb2chsv
 
 
 import time
@@ -118,7 +118,8 @@ class Recognizer:
             nb = len(grey_levels(self.label))
             times = nb - self.pre_photmerging
             if self.mc is True:
-                self.label = merge_photometry_color(self.raw_image, self.label, self.roi, times, self.verbose)
+                tmp_chsv=rgb2chsv(self.raw_image)
+                self.label = merge_photometry_color(tmp_chsv, self.label, self.roi, times, self.verbose)
             else:
                 self.label = merge_photometry_gray(self.raw_image, self.label, times)
 

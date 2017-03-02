@@ -5,7 +5,6 @@ import networkx as nx
 from skgtimage.core.graph import IrDiGraph,transitive_reduction,labelled_image2regions,rename_nodes
 from skgtimage.core.topology import topological_graph_from_residues_refactorying
 from skgtimage.core.photometry import photometric_graph_from_residues,photometric_graph_from_residues_refactorying
-#from skgtimage.utils.color import rgb2gray
 
 def __analyze_sentence__(g,desc) :
     operators=re.findall('<|>|=',desc)

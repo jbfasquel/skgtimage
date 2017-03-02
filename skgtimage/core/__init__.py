@@ -33,9 +33,6 @@ from .factory import *
 ##### MATCHING
 from .subisomorphism import *
 
-##### MATCHER
-from .matcher import *
-
 ##### BACKGROUND
 from .background import *
 
