@@ -1,7 +1,7 @@
 import numpy as np
 from skgtimage.core.subisomorphism import common_subgraphisomorphisms_optimized_v2
-import skimage; from skimage.future import graph as skimage_graph
-from skgtimage.core.factory import photometric_graph_from_residues_refactorying,from_labelled_image
+from skimage.future import graph as skimage_graph
+from skgtimage.core.factory import from_labelled_image
 
 
 def __weight_mean_color__(graph, src, dst, n):
@@ -50,13 +50,6 @@ def __merge_mean_color__(graph, src, dst):
     graph.node[dst]['mean color'] = (graph.node[dst]['total color'] / graph.node[dst]['pixel count'])
 
 def rag_merge(image,labelled,threshold,mc=False,roi=None):
-    #t, p = from_labelled_image(gray_image, labelled, roi)
-    #tmp=t.get_labelled()
-    #tmp=labelled
-    #gray = skgti.utils.rgb2gray(image)
-    # gray=np.dstack((gray,gray,gray))
-    #tmp_labelled=np.copy(labelled)
-    #if roi is not None:
 
     rgb=image
     if mc == False:

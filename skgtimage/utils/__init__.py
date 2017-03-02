@@ -9,6 +9,6 @@ from .meanshift import *
 from .quickshift import *
 from .evaluation import *
 from .recognition import *
-from .rag_merging import *
+from .rag import *
 from .kmeans import *
 

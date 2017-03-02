@@ -5,7 +5,7 @@ from skgtimage.core.subisomorphism import best_common_subgraphisomorphism,common
 from skgtimage.core.propagation import propagate
 from skgtimage.core.factory import from_string,from_labelled_image
 from skgtimage.core.background import background_removal_by_iso
-from skgtimage.utils.rag_merging import rag_merge,rag_merge_until_commonisomorphism
+from skgtimage.utils.rag import rag_merge,rag_merge_until_commonisomorphism
 from skgtimage.utils.color import rgb2chsv
 
 
