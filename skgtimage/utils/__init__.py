@@ -6,17 +6,10 @@ from __future__ import absolute_import
 
 from .misc import *
 from .color import *
-from .factory import *
 from .meanshift import *
 from .quickshift import *
 from .evaluation import *
 from .recognition import *
 from .rag_merging import *
-
-try:
-    import sklearn
-except:
-    print("Warning: cannot import kmeans because sklearn is not installed")
-else:
-    from .kmeans import *
+from .kmeans import *
 
