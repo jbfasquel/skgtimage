@@ -31,6 +31,7 @@ from .factory import *
 
 ##### ISOMORPHISMS
 from .isomorphism import *
+from .isomorphism_bf import *
 
 ##### BEST ISOMORPHISM SELECTION
 from .criterion import *

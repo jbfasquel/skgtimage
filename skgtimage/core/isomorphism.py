@@ -1,10 +1,9 @@
 #Author: Jean-Baptiste Fasquel <Jean-Baptiste.Fasquel@univ-angers.fr>, LARIS Laboratory, Angers University, France
 #Copyright (C) 2015 Jean-Baptiste Fasquel
 #Licence: BSD 3 clause
-import numpy as np
 import networkx as nx
 from skgtimage.core.graph import transitive_closure
-from skgtimage.core.brothers import find_groups_of_brothers,compute_possible_graphs,increasing_ordered_list
+from skgtimage.core.brothers import increasing_ordered_list
 
 
 def nb_automorphisms(graphs):
@@ -68,49 +67,5 @@ def common_subgraphisomorphisms(query_graphs, ref_graphs, verbose=False):
     return common_iso
 
 
-def common_subgraphisomorphisms_bf(query_graphs, ref_graphs):
-    """
-    Computation of common (subgraph) isomorphisms using the orginal brute force implementation of the method
-    (highly combinatory): one uses unwrapped photometric graphs (in case of similarities/cycles).
-
-    :param query_graphs:
-    :param ref_graphs:
-    :return:
-    """
-    ###########################################################################################
-    #Preparing possible "permutations" within ref_graphs: managing 'brother' nodes
-    ###########################################################################################
-    all_ref_graphs=[]
-    for rg in ref_graphs:
-        nb_brothers=find_groups_of_brothers(rg)
-        if len(nb_brothers) > 0:
-            all_ref_graphs+=[compute_possible_graphs(rg)] #we add a list of n elements (all possible graphs)
-        else:
-            all_ref_graphs+=[[rg]] #we add a list of one element
-    ###########################################################################################
-    #Loop over query (built) graphs to be matched with a priori knowledge (ref_graphs)
-    ###########################################################################################
-    isomorphisms_per_graph=[]
-    nb_graphs=len(query_graphs)
-    for i in range(0,nb_graphs):
-        related_ref_graphs=all_ref_graphs[i]
-        query=transitive_closure(query_graphs[i])
-        #Loop over the possible "permutations" (i.e. versus brothers/incertain relationships) of reference graphs: union of matchings
-        related_isomorphisms=[]
-        counter=1
-        for ref in related_ref_graphs:
-            print(counter,"/",len(related_ref_graphs));counter+=1
-            ref=transitive_closure(ref)
-            isomorphisms=find_subgraph_isomorphims(query,ref)
-            related_isomorphisms+=isomorphisms
-        isomorphisms_per_graph+=[related_isomorphisms]
-    ###########################################################################################
-    #Common isomorphisms: intersection of matchings
-    ###########################################################################################
-    common_isomorphisms=__find_common_isomorphims__(isomorphisms_per_graph[0],isomorphisms_per_graph[1])
-    for i in range(2,len(isomorphisms_per_graph)):
-        common_isomorphisms=__find_common_isomorphims__(common_isomorphisms,isomorphisms_per_graph[i])
-
-    return common_isomorphisms,isomorphisms_per_graph
 
 

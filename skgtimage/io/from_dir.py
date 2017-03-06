@@ -5,6 +5,38 @@ from skgtimage.core.graph import IrDiGraph,rename_nodes
 from skgtimage.utils.color import rgb2gray
 import scipy as sp;from scipy import misc
 
+def from_dir(path,multichannel=False):
+    import os,re
+    import scipy as sp;from scipy import misc;
+    image=sp.misc.imread(os.path.join(path,'image.png'))
+    regions=[]
+    id2region={}
+    for f in os.listdir(path):
+        if re.match(".*\.png",f) is not None:
+            #Any file ending with .png (image) and starting with 'region'
+            if (f.split('.')[1] == 'png') & (f.split('_')[0]=='region'):
+                r_name=(f.split('.')[0]).split('_')[1]
+                region=sp.misc.imread(os.path.join(path,f))
+                regions+=[region]
+                id2region[r_name]=region
+    if multichannel:
+        image=0.2125 * image[:, :, 0] + 0.7154 * image[:, :, 1] + 0.0721 * image[:, :, 2]
+        #image=rgb2gray(image)
+    built_t,build_p=from_regions(image,regions)
+    #Relabel
+    node2id={}
+    for n in built_t.nodes():
+        for id in id2region:
+            region_graph=built_t.get_region(n)
+            region_fs=id2region[id].astype(np.float)
+            region_graph/=np.max(region_graph)
+            region_fs/=np.max(region_fs)
+            if np.array_equal(region_graph,region_fs):
+                node2id[n]=id
+
+    built_t, build_p=rename_nodes([built_t,build_p],node2id)
+
+    return built_t,build_p
 
 def from_dir2(directory,color=False):
     image=None

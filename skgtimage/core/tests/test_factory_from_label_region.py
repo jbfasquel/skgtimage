@@ -66,8 +66,8 @@ class TestFactoryFromLabelRegions(unittest.TestCase):
         self.assertEqual(set(built_t_graph.nodes()),set([0, 1, 2, 3]))
         self.assertEqual(set(built_p_graph.nodes()),set([0, 1, 2, 3]))
         #Correction
-        built_t_graph,built_p_graph=sgi.core.from_labelled_image(image,label_b,None,True,1)
-        self.check(built_t_graph,built_p_graph)
+        #built_t_graph,built_p_graph=sgi.core.from_labelled_image(image,label_b,None,True,1)
+        #self.check(built_t_graph,built_p_graph)
 
 
 

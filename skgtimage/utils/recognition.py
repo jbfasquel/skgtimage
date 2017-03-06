@@ -5,7 +5,7 @@ from skgtimage.core.isomorphism import common_subgraphisomorphisms
 from skgtimage.core.criterion import best_common_subgraphisomorphism
 from skgtimage.core.propagation import propagate
 from skgtimage.core.factory import from_string,from_labelled_image
-from skgtimage.core.background import background_removal_by_iso
+from skgtimage.core.background import remove_background
 from skgtimage.utils.rag import rag_merge,rag_merge_until_commonisomorphism
 from skgtimage.utils.color import rgb2chsv
 
@@ -197,7 +197,7 @@ class Recognizer:
     def extract_from_background(self):
         if self.verbose: print("Removing background")
         self.t_graph_before_background, self.p_graph_before_background = copy.deepcopy(self.t_graph), copy.deepcopy(self.p_graph)
-        roi, self.t_graph,self.p_graph = background_removal_by_iso(self.image, self.t_graph,self.p_graph, self.ref_t_graph, self.ref_p_graph)
+        roi, self.t_graph,self.p_graph = remove_background(self.image, self.t_graph, self.p_graph, self.ref_t_graph, self.ref_p_graph)
 
         self.intermediate_operations += [str(self.operation_step) + "_Initial_background_removed"]
         self.label = self.t_graph.get_labelled()

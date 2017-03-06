@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp; from scipy import ndimage
 import networkx as nx
 from skgtimage.core.graph import IrDiGraph,transitive_reduction,labelled_image2regions,rename_nodes
-from skgtimage.core.topology import topological_graph_from_residues_refactorying
+from skgtimage.core.topology import topological_graph_from_residues
 from skgtimage.core.photometry import photometric_graph_from_residues,photometric_graph_from_residues_refactorying
 
 def __analyze_sentence__(g,desc) :
@@ -40,41 +40,9 @@ def from_string(desc,g=None):
     #Return
     return g
 
-def from_dir(path,multichannel=False):
-    import os,re
-    import scipy as sp;from scipy import misc;
-    image=sp.misc.imread(os.path.join(path,'image.png'))
-    regions=[]
-    id2region={}
-    for f in os.listdir(path):
-        if re.match(".*\.png",f) is not None:
-            #Any file ending with .png (image) and starting with 'region'
-            if (f.split('.')[1] == 'png') & (f.split('_')[0]=='region'):
-                r_name=(f.split('.')[0]).split('_')[1]
-                region=sp.misc.imread(os.path.join(path,f))
-                regions+=[region]
-                id2region[r_name]=region
-    if multichannel:
-        image=0.2125 * image[:, :, 0] + 0.7154 * image[:, :, 1] + 0.0721 * image[:, :, 2]
-        #image=rgb2gray(image)
-    built_t,build_p=from_regions(image,regions)
-    #Relabel
-    node2id={}
-    for n in built_t.nodes():
-        for id in id2region:
-            region_graph=built_t.get_region(n)
-            region_fs=id2region[id].astype(np.float)
-            region_graph/=np.max(region_graph)
-            region_fs/=np.max(region_fs)
-            if np.array_equal(region_graph,region_fs):
-                node2id[n]=id
-
-    built_t, build_p=rename_nodes([built_t,build_p],node2id)
-
-    return built_t,build_p
 
 def from_regions(image,regions):
-    built_t_graph,new_residues=topological_graph_from_residues_refactorying(regions)
+    built_t_graph,new_residues=topological_graph_from_residues(regions)
     built_p_graph=photometric_graph_from_residues_refactorying(image,new_residues)
     built_t_graph.set_image(image);built_p_graph.set_image(image)
     return built_t_graph,built_p_graph

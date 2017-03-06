@@ -5,7 +5,7 @@ from skgtimage.core.isomorphism import common_subgraphisomorphisms
 from skgtimage.core.search_base import find_head
 from skgtimage.core.topology import fill_region
 
-def background_removal_by_iso(image,t,p,ref_t,ref_p,verbose=False):
+def remove_background(image, t, p, ref_t, ref_p, verbose=False):
     """
     To remove background: this provides a ROI within which analysis is performed
     This enable to manage situation where background can not be described in the model (e.g. impossibility to assumed any

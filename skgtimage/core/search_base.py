@@ -10,19 +10,8 @@ Note that to kind of cycles may be reported:
 #Copyright (C) 2015 Jean-Baptiste Fasquel
 #Licence: BSD 3 clause
 
-
 import numpy as np
 import networkx as nx
-
-def recursive_successors(g,n):
-    """
-    Recursively search for successors of a given node, avoiding cycles
-
-    :param g: graph
-    :param n: node from which one searches successors
-    :return: set of node ids
-    """
-    return __depth_search__(g,n,nx.DiGraph.successors)
 
 def recursive_predecessors(g,n):
     """
@@ -34,16 +23,16 @@ def recursive_predecessors(g,n):
     """
     return __depth_search__(g,n,nx.DiGraph.predecessors)
 
-def recursive_brothers(g,n):
+
+def recursive_successors(g,n):
     """
-    Recursively search for brothers of a given node, e.g. depicting bidirectional edges with the given node n
+    Recursively search for successors of a given node, avoiding cycles
 
     :param g: graph
-    :param n: node from which one searches brothers
+    :param n: node from which one searches successors
     :return: set of node ids
     """
-    brothers=__depth_brother_search__(g,n) - set([n])
-    return brothers
+    return __depth_search__(g,n,nx.DiGraph.successors)
 
 def recursive_nonbrother_successors(g,n):
     """
@@ -71,6 +60,52 @@ def recursive_nonbrother_predecessors(g,n):
     non_brothers_predecessors = predecessors - (predecessors & brothers)
     return non_brothers_predecessors
 
+def number_of_brother_links(g):
+    """
+    Determine the number of similarity links within g
+    For example, A<B<C<D -> 0 ; A=B<C<D -> 1; A=B<C=D -> 2; A=B=C<D -> 2
+
+    :param g: graph
+    :return: number of similarity links (int)
+    """
+    number=0
+    already_considered=set()
+    for n in g.nodes():
+        already_considered |= set([n])
+        bs=recursive_brothers(g,n)
+        for b in bs:
+            if not(b in already_considered): number+=1
+            already_considered |= set([b])
+
+    return int(number)
+
+def __depth_brother_search__(g,n,visited=set()):
+    """ Internal search function
+
+    :param g: graph
+    :param n: node
+    :param visited: internally used to avoid cycles
+    :return:
+    """
+    to_visit=set(g.successors(n)) - visited #"s" minus already encountered
+    visited = visited | to_visit #union
+    brothers=set()
+    for i in to_visit:
+        if n in set(g.successors(i)):
+            brothers = brothers | set([i])
+            brothers = brothers | __depth_brother_search__(g,i,visited)
+    return brothers
+
+def recursive_brothers(g,n):
+    """
+    Recursively search for brothers of a given node, e.g. depicting bidirectional edges with the given node n
+
+    :param g: graph
+    :param n: node from which one searches brothers
+    :return: set of node ids
+    """
+    brothers=__depth_brother_search__(g,n) - set([n])
+    return brothers
 
 def __depth_brother_search__(g,n,visited=set()):
     """ Internal search function
@@ -109,25 +144,6 @@ def __depth_search__(g,n,functor=nx.DiGraph.predecessors,visited=set()):
     to_return=result - set([n])
     return to_return #to avoid requested node
 
-def number_of_brother_links(g):
-    """
-    Determine the number of similarity links within g
-    For example, A<B<C<D -> 0 ; A=B<C<D -> 1; A=B<C=D -> 2; A=B=C<D -> 2
-
-    :param g: graph
-    :return: number of similarity links (int)
-    """
-    number=0
-    already_considered=set()
-    for n in g.nodes():
-        already_considered |= set([n])
-        bs=recursive_brothers(g,n)
-        for b in bs:
-            if not(b in already_considered): number+=1
-            already_considered |= set([b])
-
-    return int(number)
-
 def find_head(g):
     head=None
     #Search for the node (or brother nodes) without successors: the head of the graph
@@ -155,14 +171,6 @@ def search_head_nodes(graph):
         if len(graph.successors(n)) == 0: result|=set([n])
     return result
 
-
-def search_leaf_nodes(graph):
-    result=set()
-    for n in graph.nodes():
-        if len(graph.predecessors(n)) == 0: result|=set([n])
-    return result
-
-
 def __recursive_ordering_search__(g,n,result):
     pred=set()
     for e in n:
@@ -175,13 +183,3 @@ def __recursive_ordering_search__(g,n,result):
         result+=[pred]
         __recursive_ordering_search__(g,pred,result)
 
-def decreasing_ordered_nodes(g):
-    """
-    Only meaning full for photometric graphs
-    :param g:
-    :return:
-    """
-    head=find_head(g)
-    result=[head]
-    __recursive_ordering_search__(g,head,result)
-    return result

@@ -1,5 +1,18 @@
 import numpy as np
-from skgtimage.core.search_base import decreasing_ordered_nodes
+#from skgtimage.core.search_base import decreasing_ordered_nodes
+from skgtimage.core.search_base import find_head,__recursive_ordering_search__
+
+def decreasing_ordered_nodes(g):
+    """
+    Only meaning full for photometric graphs
+    :param g:
+    :return:
+    """
+    head=find_head(g)
+    result=[head]
+    __recursive_ordering_search__(g,head,result)
+    return result
+
 
 def best_common_subgraphisomorphism(common_isomorphisms,query_p_graph,ref_p_graph,return_details=False):
     #Computing energies

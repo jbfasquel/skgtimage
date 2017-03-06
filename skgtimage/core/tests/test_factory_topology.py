@@ -69,7 +69,7 @@ class TestTopologyFactory(unittest.TestCase):
     #   EXECUTE TWICE THE FUNCTION: SHOULD NOT MODIFY RESIDUES AND NEW RESIDUES
     ####################################
     def test01(self):
-        t_graph,residues=sgi.core.topological_graph_from_residues_refactorying(initial_residues)
+        t_graph,residues=sgi.core.topological_graph_from_residues(initial_residues)
         self.assertEqual(len(residues),5)
         '''
         for n in residues:

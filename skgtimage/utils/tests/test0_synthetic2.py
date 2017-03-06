@@ -44,7 +44,7 @@ D=np.where(label==4,1,0)
 class TestRecognitionUseCase2(unittest.TestCase):
 
     def test01(self):
-        id2r,matcher=skgti.core.recognize_regions(image,label,t_desc,p_desc,roi=None,manage_bounds=False,thickness=2,filtering=False,verbose=False)
+        id2r,matcher=skgti.utils.recognize(image,label,t_desc,p_desc)
         self.assertTrue(np.array_equal(id2r['A'],A))
         self.assertTrue(np.array_equal(id2r['B'],B))
         self.assertTrue(np.array_equal(id2r['C'],C))
