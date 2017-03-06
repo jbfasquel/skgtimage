@@ -17,7 +17,7 @@ class TestOnGrayscale3D(unittest.TestCase):
         id2region, r = skgti.utils.recognize(image, segmentation, inclusion, photometry, roi=roi, bound_thickness=2, min_size=300,
                                  mc=False, verbose=True)
         # COMPARISON WITH TRUTH
-        truth_t_graph, _ = skgti.io.from_dir(inclusion, photometry, image, truth_dir)
+        truth_t_graph, _ = skgti.io.from_dir_and_desc(inclusion, photometry, image, truth_dir)
         result_t_graph = r.relabelled_final_t_graph
         map = skgti.core.get_node2mean(truth_t_graph, round=True)
         truth_image = truth_t_graph.get_labelled(mapping=map)

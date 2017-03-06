@@ -132,13 +132,9 @@ def save_graph_v2(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
         #a.layout(prog='circo')
         a.layout(prog='twopi')
     for n in graph.nodes():
-        #a.get_node(n).attr['label']=""
         a.get_node(n).attr['shape'] ='point'
         a.get_node(n).attr['width'] = 0.5
         a.get_node(n).attr['height'] = 0.5
-        #a.get_node(n).attr['area'] = 0.1
-        #a.get_node(n).attr['margin'] = 0
-        #a.get_node(n).attr['cellborder'] = 0.1
         a.get_node(n).attr['fixedsize']=True
 
     for e in graph.edges():
@@ -149,8 +145,6 @@ def save_graph_v2(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
 
     #Marking nodes corresponding to, e.g., already segmented regions
     for n in colored_nodes:
-        #a.get_node(n).attr['shape']='box' #Shape
-        #a.get_node(n).attr['color']='red' #Border
         a.get_node(n).attr['style']='filled';a.get_node(n).attr['fillcolor']='red';
 
     #Hack for plottin with matplotlib -> png -> numpy array -> imshow

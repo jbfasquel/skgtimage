@@ -90,7 +90,7 @@ def from_dir2(directory,color=False):
 
     return t_graph,p_graph
 
-def from_dir(desc_t,desc_p,image,directory):
+def from_dir_and_desc(desc_t,desc_p,image,directory):
     t_graph=from_string(desc_t,IrDiGraph())
     p_graph=from_string(desc_p,IrDiGraph())
     t_graph.set_image(image)
