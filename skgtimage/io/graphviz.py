@@ -14,14 +14,14 @@ def matching2links(matching):
 ##############################
 # FUNCTION FOR DISPLAY
 ##############################
-def plot_graph_links(source_graph,target_graph,link_lists=[],colors=[]):
+def plot_matching(source_graph, target_graph, link_lists=[], colors=[]):
     """
     Plot graph using graphviz and matplotlib
     :param graph: graph to be plotted
     :return: None
     """
     import matplotlib.pyplot as plt
-    save_graph_links(source_graph,target_graph,link_lists,colors,name="tmp")
+    save_matching(source_graph, target_graph, link_lists, colors, name="tmp")
     tmp_image=sp.misc.imread("tmp.png")
     os.remove("tmp.png");os.remove("tmp.svg")
     plt.imshow(tmp_image);plt.axis('off')
@@ -39,7 +39,7 @@ def plot_graph(graph):
     os.remove("tmp.png");os.remove("tmp.svg")
     plt.imshow(tmp_image);plt.axis('off')
 
-def plot_graph_with_regions(graph,nb_rows=1,slice=None):
+def plot_graph_regions(graph, nb_rows=1, slice=None):
     """
 
     :param graph: graph to be plotted, including image and regions
@@ -71,15 +71,7 @@ def plot_graph_with_regions(graph,nb_rows=1,slice=None):
 ##############################
 # FUNCTION FOR SAVING
 ##############################
-def save_intensities(graph,directory=None,filename="intensities"):
-    if not os.path.exists(directory) : os.mkdir(directory)
-    csv_file=open(os.path.join(directory,filename+".csv"), "w")
-    c_writer = csv.writer(csv_file,dialect='excel')
-    for n in graph.nodes():
-        c_writer.writerow([n] + [graph.get_mean_intensity(n)])
-    csv_file.close()
-
-def save_graphregions(graph,directory=None,slices=[]):
+def save_graph_regions(graph, directory=None, slices=[]):
     if directory is not None:
         if not os.path.exists(directory) : os.mkdir(directory)
 
@@ -103,7 +95,7 @@ def save_graphregions(graph,directory=None,slices=[]):
 
             else: raise Exception("Not a 2D nor a 3D image")
 
-def save_graph_v2(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
+def save_graph_basic(graph, name="graph", directory=None, tree=True, colored_nodes=[]):
     """
     Without labels on graph nodes
     :param graph:
@@ -191,7 +183,7 @@ def save_graph(graph,name="graph",directory=None,tree=True,colored_nodes=[]):
         a.draw(filename+".png") #;a.draw("tmp.svg")
         a.draw(filename+".svg") #;a.draw("tmp.svg")
 
-def save_graph_links_v2(source_graph,target_graph,link_lists=[],colors=[],label_lists=[],name="matching",directory=None,tree=True):
+def save_matching_basic(source_graph, target_graph, link_lists=[], colors=[], label_lists=[], name="matching", directory=None, tree=True):
     """
     typically invokation (g1,g2,link_lists=[ [(a,b),(c,d)] , [(k,l),(u,v)] ],colors=["red","green"], name=...)
     :param source_graph:
@@ -276,7 +268,7 @@ def save_graph_links_v2(source_graph,target_graph,link_lists=[],colors=[],label_
         a.draw(filename+".svg") #;a.draw("tmp.svg")
 
 
-def save_graph_links(source_graph,target_graph,link_lists=[],colors=[],label_lists=[],name="matching",directory=None,tree=True):
+def save_matching(source_graph, target_graph, link_lists=[], colors=[], label_lists=[], name="matching", directory=None, tree=True):
     """
     typically invokation (g1,g2,link_lists=[ [(a,b),(c,d)] , [(k,l),(u,v)] ],colors=["red","green"], name=...)
     :param source_graph:

@@ -147,9 +147,9 @@ def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=
             #If "visual debug" True: plot each intermediate graph
             ###########################
             if visual_debug:
-                from skgtimage.io import plot_graph_links,matching2links;import matplotlib.pyplot as plt
+                from skgtimage.io import plot_matching,matching2links;import matplotlib.pyplot as plt
                 ordered_merges=[i[2] for i in modification_historisation]
-                plot_graph_links(t_graph,ref_t_graph,link_lists=[matching2links(ref_matching),ordered_merges,[merge]],colors=['red','green','yellow']);plt.show()
+                plot_matching(t_graph, ref_t_graph, link_lists=[matching2links(ref_matching), ordered_merges, [merge]], colors=['red', 'green', 'yellow']);plt.show()
 
             ###########################
             #Apply merging on graph copies (temporarly node merging)
