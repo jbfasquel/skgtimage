@@ -11,8 +11,9 @@ class TestOnGrayscale2D(unittest.TestCase):
 
     def compare(self,r):
         self.truth_t_graph, _ = skgti.io.from_dir2(truth_dir, color=False)
-        self.truth_t_graph.downsample(2)
-        map = self.truth_t_graph.get_node2mean(round=True)
+        skgti.core.downsample(self.truth_t_graph,2)
+        #self.truth_t_graph.downsample(2)
+        map = skgti.core.get_node2mean(self.truth_t_graph,round=True)
         result_t_graph = r.relabelled_final_t_graph
         truth_image = self.truth_t_graph.get_labelled(mapping=map)
         result_image = result_t_graph.get_labelled(mapping=map)

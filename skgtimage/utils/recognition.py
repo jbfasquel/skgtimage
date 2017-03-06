@@ -1,4 +1,4 @@
-from skgtimage.core.graph import rename_nodes
+from skgtimage.core.graph import relabel_nodes
 from skgtimage.core.photometry import grey_levels
 from skgtimage.core.filtering import size_filtering,merge_photometry_gray,merge_photometry_color
 from skgtimage.core.isomorphism import common_subgraphisomorphisms
@@ -223,7 +223,7 @@ class Recognizer:
         self.final_t_graph, self.final_p_graph, self.ordered_merges = propagate(self.t_graph,self.p_graph, self.ref_t_graph,self.ref_p_graph, self.matching,verbose=self.verbose)
         t1 = time.clock()
         self.action2runtime["Merge"] = t1 - t0
-        (self.relabelled_final_t_graph, self.relabelled_final_p_graph) = rename_nodes([self.final_t_graph, self.final_p_graph], self.matching)
+        (self.relabelled_final_t_graph, self.relabelled_final_p_graph) = relabel_nodes([self.final_t_graph, self.final_p_graph], self.matching)
         self.relabelled_final_t_graph.set_image(self.t_graph.get_image())
         self.relabelled_final_p_graph.set_image(self.t_graph.get_image())
 

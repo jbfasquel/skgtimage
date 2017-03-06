@@ -2,7 +2,7 @@
 #Copyright (C) 2015 Jean-Baptiste Fasquel
 #Licence: BSD 3 clause
 import networkx as nx
-from skgtimage.core.graph import transitive_closure
+from skgtimage.core.graph import transitive_closure,get_ordered_nodes
 from skgtimage.core.brothers import increasing_ordered_list
 
 
@@ -57,7 +57,8 @@ def common_subgraphisomorphisms(query_graphs, ref_graphs, verbose=False):
     # p_isomorphisms
     #############################
     p_query,p_model=query_graphs[1],ref_graphs[1]
-    image_ordering=p_query.get_ordered_nodes()
+    #image_ordering=p_query.get_ordered_nodes()
+    image_ordering = get_ordered_nodes(p_query)
     model_ordering=increasing_ordered_list(p_model)
     common_iso=[]
     for iso in t_isomorphisms_candidates:

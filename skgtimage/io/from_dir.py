@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from skgtimage.core.factory import from_string,from_regions
-from skgtimage.core.graph import IrDiGraph,rename_nodes
+from skgtimage.core.graph import IrDiGraph,relabel_nodes
 from skgtimage.utils.color import rgb2gray
 import scipy as sp;from scipy import misc
 
@@ -34,7 +34,7 @@ def from_dir(path,multichannel=False):
             if np.array_equal(region_graph,region_fs):
                 node2id[n]=id
 
-    built_t, build_p=rename_nodes([built_t,build_p],node2id)
+    built_t, build_p=relabel_nodes([built_t, build_p], node2id)
 
     return built_t,build_p
 
@@ -79,14 +79,14 @@ def from_dir2(directory,color=False):
     remaping={}
     for i in range(0,len(region_names)):
         remaping[i]=region_names[i]
-    (t_graph,p_graph)=rename_nodes([t_graph,p_graph],remaping)
+    (t_graph,p_graph)=relabel_nodes([t_graph, p_graph], remaping)
 
     #####
     #Update intensities
     t_graph.update_intensities(image)
     for n in t_graph.nodes():
-        intensity=t_graph.get_mean_residue_intensity(n)
-        p_graph.set_mean_residue_intensity(n,intensity)
+        intensity=t_graph.get_mean_intensity(n)
+        p_graph.set_mean_intensity(n, intensity)
 
     return t_graph,p_graph
 
@@ -113,8 +113,8 @@ def from_dir(desc_t,desc_p,image,directory):
     t_graph.update_intensities(image)
     #Hack
     for n in t_graph.nodes():
-        intensity=t_graph.get_mean_residue_intensity(n)
-        p_graph.set_mean_residue_intensity(n,intensity)
+        intensity=t_graph.get_mean_intensity(n)
+        p_graph.set_mean_intensity(n, intensity)
 
     return t_graph,p_graph
 

@@ -45,9 +45,9 @@ class TestFactoryFromLabelRegions(unittest.TestCase):
         self.assertTrue(np.array_equal(built_t_graph.get_region(1),residues[1]))
         self.assertTrue(np.array_equal(built_t_graph.get_region(2),residues[2]))
         #Check mean intensities
-        self.assertEqual(built_p_graph.get_mean_residue_intensity(0),0.025)
-        self.assertEqual(built_p_graph.get_mean_residue_intensity(1),1.0)
-        self.assertEqual(built_p_graph.get_mean_residue_intensity(2),2.0)
+        self.assertEqual(built_p_graph.get_mean_intensity(0), 0.025)
+        self.assertEqual(built_p_graph.get_mean_intensity(1), 1.0)
+        self.assertEqual(built_p_graph.get_mean_intensity(2), 2.0)
 
     #From labels
     def test01(self):

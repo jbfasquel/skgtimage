@@ -1,7 +1,8 @@
 from skgtimage.core.topology import merge_nodes_topology,topological_merging_candidates
 from skgtimage.core.photometry import merge_nodes_photometry,grey_levels,region_stat
 from skgtimage.core.propagation import cost2merge
-from skgtimage.core.factory import photometric_graph_from_residues_refactorying
+from skgtimage.core.factory import photometric_graph_from_regions
+from skgtimage.core.graph import get_ordered_nodes
 import numpy as np
 
 def size_filtering(t_graph,p_graph,threshold=0,verbose=False):
@@ -39,10 +40,10 @@ def size_filtering(t_graph,p_graph,threshold=0,verbose=False):
             raise Exception("error")
 
 def compute_dm(p_g):
-    ord_n = p_g.get_ordered_nodes()
+    ord_n = get_ordered_nodes(p_g)
     dm = {}
     for j in range(1, len(ord_n)):
-        diff = abs(p_g.get_mean_residue_intensity(ord_n[j]) - p_g.get_mean_residue_intensity(ord_n[j-1]))
+        diff = abs(p_g.get_mean_intensity(ord_n[j]) - p_g.get_mean_intensity(ord_n[j - 1]))
         if diff in dm:
             dm[diff] += [(ord_n[j - 1], ord_n[j])]
         else:
@@ -52,7 +53,7 @@ def compute_dm(p_g):
 
 def merge_photometry_gray(image, label, nb_times=10):
     residues = [np.where(label == i, 255, 0) for i in range(0, np.max(label) + 1)]
-    p_g = photometric_graph_from_residues_refactorying(image, residues)
+    p_g = photometric_graph_from_regions(image, residues)
     #dm=compute_dm(p_g)
     for i in range(0, nb_times):
         dm = compute_dm(p_g)

@@ -19,10 +19,6 @@ region_A=np.where( image_gray>0,1,0)-region_B
 
 regions=region_A+region_B
 
-'''
-image_color=np.zeros((image_gray.shape[0],image_gray.shape[1],3))
-image_color[:,:,0]=image_gray;image_color[:,:,1]=image_gray+1;image_color[:,:,2]=image_gray+2
-'''
 image_color=np.dstack((image_gray,image_gray+1,image_gray+2))
 
 class TestPhotometricStats(unittest.TestCase):
@@ -33,19 +29,12 @@ class TestPhotometricStats(unittest.TestCase):
         #Mean
         self.assertEqual(sgi.core.region_stat(image_gray,region_A),1.5)
         self.assertEqual(sgi.core.region_stat(image_gray,region_B),5.5)
-        ord_region,ord_stats=sgi.core.sort_regions_by_stat(image_gray,[region_A,region_B],return_stats=True)
-        self.assertEqual(ord_stats,[5.5,1.5])
-        self.assertTrue(np.array_equal(ord_region[0],region_B))
-        self.assertTrue(np.array_equal(ord_region[1],region_A))
         ord_indices=sgi.core.sort_region_indices_by_stat(image_gray,[region_A,region_B],return_stats=False)
         self.assertTrue(np.array_equal(ord_indices[0],1))
         self.assertTrue(np.array_equal(ord_indices[1],0))
         #Dev
         self.assertEqual(sgi.core.region_stat(image_gray,region_A,fct=np.std),0.5)
         self.assertAlmostEqual(sgi.core.region_stat(image_gray,region_B,fct=np.std),1.1,places=1)
-        ord_region=sgi.core.sort_regions_by_stat(image_gray,[region_A,region_B],fct=np.std,return_stats=False)
-        self.assertTrue(np.array_equal(ord_region[0],region_B))
-        self.assertTrue(np.array_equal(ord_region[1],region_A))
     ##############
     # IN COLOR, FROM LIST OF REGIONS
     ##############
@@ -58,18 +47,12 @@ class TestPhotometricStats(unittest.TestCase):
         a=sgi.core.region_stat(image_color,region_B,mc=True)[0]
         self.assertTrue(np.array_equal(sgi.core.region_stat(image_color,region_B,mc=True),np.array([5.5,6.5,7.5])))
         #self.assertEqual(sgi.core.region_stat(image_color,region_B,gray=False,component=0),5.5)
-        ord_region,ord_stats=sgi.core.sort_regions_by_stat(image_color,[region_A,region_B],mc=True,component=0,return_stats=True)
-        self.assertEqual(ord_stats,[5.5,1.5])
-        self.assertTrue(np.array_equal(ord_region[0],region_B))
-        self.assertTrue(np.array_equal(ord_region[1],region_A))
+
         #Std
         #a=sgi.core.region_stat(image_color,region_A,fct=np.std,gray=False)
         self.assertTrue(np.array_equal(sgi.core.region_stat(image_color,region_A,fct=np.std,mc=True),np.array([0.5,0.5,0.5])))
         #self.assertEqual(sgi.core.region_stat(image_color,region_A,fct=np.std,gray=False,component=0),0.5)
         self.assertAlmostEqual(sgi.core.region_stat(image_color,region_B,fct=np.std,mc=True)[0],1.1,places=1)
-        ord_region=sgi.core.sort_regions_by_stat(image_color,[region_A,region_B],fct=np.std,mc=True,component=0,return_stats=False)
-        self.assertTrue(np.array_equal(ord_region[0],region_B))
-        self.assertTrue(np.array_equal(ord_region[1],region_A))
 
 
 if __name__ == '__main__':

@@ -2,9 +2,8 @@ import re,itertools
 import numpy as np
 import scipy as sp; from scipy import ndimage
 import networkx as nx
-from skgtimage.core.graph import IrDiGraph,transitive_reduction,labelled_image2regions,rename_nodes
-from skgtimage.core.topology import topological_graph_from_residues
-from skgtimage.core.photometry import photometric_graph_from_residues,photometric_graph_from_residues_refactorying
+from skgtimage.core.topology import topological_graph_from_regions
+from skgtimage.core.photometry import photometric_graph_from_regions
 
 def __analyze_sentence__(g,desc) :
     operators=re.findall('<|>|=',desc)
@@ -42,8 +41,8 @@ def from_string(desc,g=None):
 
 
 def from_regions(image,regions):
-    built_t_graph,new_residues=topological_graph_from_residues(regions)
-    built_p_graph=photometric_graph_from_residues_refactorying(image,new_residues)
+    built_t_graph,new_residues=topological_graph_from_regions(regions)
+    built_p_graph=photometric_graph_from_regions(image, new_residues)
     built_t_graph.set_image(image);built_p_graph.set_image(image)
     return built_t_graph,built_p_graph
 
@@ -81,3 +80,32 @@ def manage_boundaries(image, roi=None, thickness=1):
     if type(image)==np.ma.MaskedArray:
         modified_image=np.ma.MaskedArray(modified_image,mask=np.logical_not(enlarged_roi))
     return modified_image,enlarged_roi
+
+
+def labelled_image2regions(labelled_image,roi=None):
+    """
+        Generate regions from labelled image: each region correspond to a specific label
+    """
+    #If explicit ROI (i.e. explicit as not integrated within an image of type np.ma.masked_array
+    if roi is not None:
+        tmp_masked_array=np.ma.masked_array(labelled_image, mask=np.logical_not(roi))
+        return labelled_image2regions(tmp_masked_array)
+    #Use histogram to find labels
+    regions=[]
+    if type(labelled_image) == np.ma.masked_array :
+        mask_roi=np.logical_not(labelled_image.mask)
+        min_image,max_image=labelled_image.compressed().min(),labelled_image.compressed().max()
+        hist,bins = np.histogram(labelled_image.compressed(), bins=max_image-min_image+1,range=(min_image,max_image+1))
+        bins=bins[0:bins.size-1]
+        for i in range(0,len(hist)):
+            if hist[i] != 0:
+                new_region=np.where(labelled_image==bins[i],1,0)
+                new_region=np.logical_and(mask_roi,new_region)
+                regions+=[new_region]
+    else:
+        min_image,max_image=labelled_image.min(),labelled_image.max()
+        hist,bins = np.histogram(labelled_image, bins=max_image-min_image+1,range=(min_image,max_image+1))
+        bins=bins[0:bins.size-1]
+        for i in range(0,len(hist)):
+            if hist[i] != 0: regions+=[np.where(labelled_image==bins[i],1,0)]
+    return regions

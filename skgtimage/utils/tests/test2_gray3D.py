@@ -19,7 +19,7 @@ class TestOnGrayscale3D(unittest.TestCase):
         # COMPARISON WITH TRUTH
         truth_t_graph, _ = skgti.io.from_dir(inclusion, photometry, image, truth_dir)
         result_t_graph = r.relabelled_final_t_graph
-        map = truth_t_graph.get_node2mean(round=True)
+        map = skgti.core.get_node2mean(truth_t_graph, round=True)
         truth_image = truth_t_graph.get_labelled(mapping=map)
         result_image = result_t_graph.get_labelled(mapping=map)
 

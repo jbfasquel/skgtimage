@@ -6,7 +6,6 @@ from skgtimage.core.search_base import recursive_brothers,find_head
 def increasing_ordered_list(p_graph):
     currents = find_head(p_graph)
     my_list = []
-    # a_head=list(heads)[0]
     while len(currents) != 0:
         my_list += [currents]
         pred = set()
@@ -18,8 +17,7 @@ def increasing_ordered_list(p_graph):
         pred |= brothers_to_add
         pred -= currents
         currents = pred
-    #print("predecessors:", pred)
-    # my_list+=[pred]
+
     my_list.reverse()
     return my_list
 

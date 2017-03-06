@@ -41,7 +41,7 @@ class TestTransitiveClosureReduction(unittest.TestCase):
     #   COMPLEX CASE
     ####################################
     def test01(self):
-        result=sgi.core.transitive_reduction_matrix(m1)
+        result=sgi.core.transitive_reduction_adjacency_matrix(m1)
         self.assertEqual(m1[16,1],1)
         self.assertEqual(result[16,1],0)
 
@@ -49,7 +49,7 @@ class TestTransitiveClosureReduction(unittest.TestCase):
     #   TODO: BASIC CASES
     ####################################
     def test02(self):
-        result=sgi.core.transitive_reduction_matrix(m2)
+        result=sgi.core.transitive_reduction_adjacency_matrix(m2)
         self.assertEqual(m2[0,3],1)
         self.assertEqual(result[0,3],0)
 

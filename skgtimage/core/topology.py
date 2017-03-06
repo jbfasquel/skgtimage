@@ -4,22 +4,15 @@
 
 
 import numpy as np
-from skgtimage.core.graph import IrDiGraph,transitive_reduction_matrix,labelled_image2regions
+from skgtimage.core.graph import IrDiGraph,transitive_reduction_adjacency_matrix
 from skgtimage.core.search_base import search_head_nodes
 
-def fill_regions(regions):
-    filled_regions=[fill_region(r) for r in regions]
-    return filled_regions
 
 def fill_region(r):
     import scipy as sp; from scipy import ndimage
     se=sp.ndimage.morphology.generate_binary_structure(len(r.shape),1) #connectivity (4 in 2D or 6 in 3D: diagonal elements are not neighbors)
     filled=sp.ndimage.morphology.binary_fill_holes(r,se).astype(np.uint8)
     return filled
-
-def topological_graph_from_labels(labelled_image,roi=None):
-    residues=labelled_image2regions(labelled_image,roi)
-    return topological_graph_from_residues(residues, copy=False)
 
 def is_included_in(a,b): #True if a included in b
     filled_b=fill_region(b)
@@ -28,7 +21,7 @@ def is_included_in(a,b): #True if a included in b
     is_included=int(np.array_equal(intersection,normed_a.astype(np.bool)))
     return is_included
 
-def inclusions_from_residues(residues,filled_residues):
+def inclusions_from_regions(regions, filled_regions):
     ########################
     #Discovering inclusions and intersections relationships (adj matrices) between residues and filled residues
     # M[i,j]=1 <-> ri included in rj <-> edge i->j
@@ -37,25 +30,25 @@ def inclusions_from_residues(residues,filled_residues):
     # r_1  x   0   x
     # r_2  x   x   0
     ###################
-    n=len(filled_residues)
+    n=len(filled_regions)
     adj_included=np.zeros((n,n),dtype=np.uint8) #why not 'adj_included=np.eye(n,dtype=np.uint8)'
     adj_intersection=np.zeros((n,n),dtype=np.uint8) #why not 'adj_intersection=np.eye(n,dtype=np.uint8)'
 
-    for i in range(0,n): residues[i]=residues[i]/np.max(residues[i])
+    for i in range(0,n): regions[i]= regions[i] / np.max(regions[i])
     for i in range(0,n):
         for j in range(0,n):
             if i != j:
                 #Intersection
-                intersection=np.logical_and(residues[i],filled_residues[j])
+                intersection=np.logical_and(regions[i], filled_regions[j])
                 does_intersect=int((np.sum(intersection) != 0))
                 adj_intersection[i,j]=does_intersect
                 #Inclusion
-                is_included=int(np.array_equal(intersection,residues[i].astype(np.bool)))
+                is_included=int(np.array_equal(intersection, regions[i].astype(np.bool)))
                 adj_included[i,j]=is_included
     ###################
     #Transitive reduction of the inclusion graph
     ###################
-    adj_included=transitive_reduction_matrix(adj_included)
+    adj_included=transitive_reduction_adjacency_matrix(adj_included)
     #adj_intersection=transitive_reduction_matrix(adj_intersection)
     ###################
     #Management of intersections without inclusion
@@ -67,35 +60,34 @@ def inclusions_from_residues(residues,filled_residues):
         for n in range(0,len(nzeros_i)):
             i_residue=nzeros_i[n]
             j_region=nzeros_j[n]
-            intersection=np.logical_and(residues[i_residue],filled_residues[j_region]).astype(np.uint8)
+            intersection=np.logical_and(regions[i_residue], filled_regions[j_region]).astype(np.uint8)
             #New region
-            new_residue=residues[i_residue]-intersection
+            new_residue= regions[i_residue] - intersection
             if (np.max(new_residue)>0) and (np.max(intersection)>0): #if residue is not empty
                 recurse=True
-                residues[i_residue]=new_residue
-                residues+=[intersection.astype(np.uint8)]
-                filled_residues[i_residue]=fill_region(new_residue)
-                filled_residues+=[fill_region(intersection)]
+                regions[i_residue]=new_residue
+                regions+=[intersection.astype(np.uint8)]
+                filled_regions[i_residue]=fill_region(new_residue)
+                filled_regions+=[fill_region(intersection)]
 
     ###################
     #Recursive invocation if the management of intersections has led to new residues/filled_residues
     ###################
     if recurse:
-        adj_included,residues=inclusions_from_residues(residues,filled_residues)
+        adj_included, regions=inclusions_from_regions(regions, filled_regions)
 
-    return adj_included,residues
+    return adj_included, regions
 
-def topological_graph_from_residues(residues, copy=True):
-    import scipy as sp; from scipy import ndimage
-    working_residues=residues
+def topological_graph_from_regions(regions, copy=True):
+    working_residues=regions
     if copy:
-        working_residues=[np.copy(r) for r in residues]
-    filled_residues=fill_regions(working_residues)
-    adj_included,working_residues=inclusions_from_residues(working_residues,filled_residues)
+        working_residues=[np.copy(r) for r in regions]
+    filled_residues=[fill_region(r) for r in working_residues]
+    adj_included,working_residues=inclusions_from_regions(working_residues, filled_residues)
 
     ###################
     #Build graph
-    adj_included=transitive_reduction_matrix(adj_included)
+    adj_included=transitive_reduction_adjacency_matrix(adj_included)
     g=IrDiGraph()
     #Nodes
     for i in range(0,adj_included.shape[0]): g.add_node(i)
@@ -178,43 +170,3 @@ def merge_nodes_topology(graph,source,target):
                 r_j=graph.get_region(l_heads[j])
                 if is_included_in(r_i,r_j):
                     graph.add_edge(l_heads[i],l_heads[j])
-
-
-'''
-def inclusions_from_residues_fast(residues,filled_residues):
-    ########################
-    #Discovering inclusions and intersections relationships (adj matrices) between residues and filled residues
-    # M[i,j]=1 <-> ri included in rj <-> edge i->j
-    #     r_0 r_1 r_2
-    # r_0  0   x   x
-    # r_1  x   0   x
-    # r_2  x   x   0
-    ###################
-    n=len(filled_residues)
-    adj_included=np.zeros((n,n),dtype=np.uint8) #why not 'adj_included=np.eye(n,dtype=np.uint8)'
-    adj_intersection=np.zeros((n,n),dtype=np.uint8) #why not 'adj_intersection=np.eye(n,dtype=np.uint8)'
-
-    for i in range(0,n): residues[i]=residues[i]/np.max(residues[i])
-    for i in range(0,n):
-        for j in range(0,n):
-            if i != j:
-                #Intersection
-                intersection=np.logical_and(residues[i],filled_residues[j])
-                does_intersect=int((np.sum(intersection) != 0))
-                adj_intersection[i,j]=does_intersect
-                #Inclusion
-                is_included=int(np.array_equal(intersection,residues[i].astype(np.bool)))
-                adj_included[i,j]=is_included
-    ###################
-    #Transitive reduction of the inclusion graph
-    ###################
-    #adj_included=transitive_reduction_matrix(adj_included)
-    #adj_intersection=transitive_reduction_matrix(adj_intersection)
-    ###################
-    #Management of intersections without inclusion
-    ###################
-    print(adj_included)
-    print(adj_intersection)
-    split_matrix=adj_intersection-adj_included
-    return split_matrix
-'''

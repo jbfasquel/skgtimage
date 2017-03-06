@@ -2,7 +2,32 @@ import networkx as nx
 from skgtimage.core.isomorphism import find_subgraph_isomorphims,common_subgraphisomorphisms
 from skgtimage.core.topology import topological_merging_candidates,merge_nodes_topology
 from skgtimage.core.photometry import merge_nodes_photometry
-from skgtimage.core.graph import transitive_closure,extract_subgraph
+from skgtimage.core.graph import transitive_closure
+
+def extract_subgraph(built_p,subnodes):
+    """
+    Return
+    :return:
+    """
+    built_p=built_p.copy()
+    nodes_to_remove=set(built_p.nodes())-set(subnodes)
+    for n in nodes_to_remove:
+        if len(built_p.successors(n)) == 1:
+            father=built_p.successors(n)[0]
+            top_edge=(n,father)
+            built_p.remove_edge(top_edge[0],top_edge[1])
+            #Bottom edge
+            bottom_edges=[(i,n) for i in built_p.predecessors(n)]
+            for e in bottom_edges:
+                built_p.remove_edge(e[0],e[1])
+                built_p.add_edge(e[0],father)
+            built_p.remove_node(n)
+        elif len(built_p.successors(n)) == 0:
+            if len(built_p.predecessors(n)) !=0:
+                pred=built_p.predecessors(n)[0]
+                built_p.remove_edge(pred,n)
+            built_p.remove_node(n)
+    return built_p
 
 
 def check_merge_validity(previous_t_graph,previous_p_graph,current_t_graph,current_p_graph,ref_t_graph,ref_p_graph,ref_matching):
@@ -46,9 +71,9 @@ def cost2merge(t_graph,p_graph,nodes,possible_targets):
     ###############################
     for e in nodes:
         target_candidates=topological_merging_candidates(t_graph,e) & set(possible_targets)
-        intensity_of_e=p_graph.get_mean_residue_intensity(e)
+        intensity_of_e=p_graph.get_mean_intensity(e)
         for t in target_candidates:
-            intensity_of_t=p_graph.get_mean_residue_intensity(t)
+            intensity_of_t=p_graph.get_mean_intensity(t)
             distance=abs(intensity_of_e-intensity_of_t)
             if distance in d2m:
                 d2m[distance]+=[(e,t)]

@@ -1,5 +1,4 @@
 import numpy as np
-#from skgtimage.core.search_base import decreasing_ordered_nodes
 from skgtimage.core.search_base import find_head,__recursive_ordering_search__
 
 def decreasing_ordered_nodes(g):
@@ -14,7 +13,7 @@ def decreasing_ordered_nodes(g):
     return result
 
 
-def best_common_subgraphisomorphism(common_isomorphisms,query_p_graph,ref_p_graph,return_details=False):
+def best_common_subgraphisomorphism(common_isomorphisms,query_p_graph,ref_p_graph):
     #Computing energies
 
     eie_per_iso=[]
@@ -69,7 +68,7 @@ def matching_criterion_value(query_graph,ref_graph,iso):
             local_intensities=[]
             brother_nodes=[list(oi[b])[0] for b in current_element]
             for j in range(0,len(brother_nodes)):
-                local_intensities+=[query_graph.get_mean_residue_intensity(brother_nodes[j])]
+                local_intensities+=[query_graph.get_mean_intensity(brother_nodes[j])]
 
             mean_intensity=np.mean(np.asarray(local_intensities))
             stddev_intensity=np.std(np.asarray(local_intensities))
@@ -82,7 +81,7 @@ def matching_criterion_value(query_graph,ref_graph,iso):
             tmp=list(current_element)[0]
             target=oi[tmp]
             corresponding_node=list(target)[0]
-            mean_intensity=query_graph.get_mean_residue_intensity(corresponding_node)
+            mean_intensity=query_graph.get_mean_intensity(corresponding_node)
             #new_brothers_std_dev_for_each += [0.0]
         ################################################
         #Keep intensity

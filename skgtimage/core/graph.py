@@ -7,33 +7,43 @@ Truc
 import networkx as nx
 import numpy as np
 
-def extract_subgraph(built_p,subnodes):
+def downsample(g, d):
     """
-    Return
+    Only for graphs involving 2D grayscale images
+    :param g:
+    :param d:
     :return:
     """
-    built_p=built_p.copy()
-    nodes_to_remove=set(built_p.nodes())-set(subnodes)
-    for n in nodes_to_remove:
-        if len(built_p.successors(n)) == 1:
-            father=built_p.successors(n)[0]
-            top_edge=(n,father)
-            built_p.remove_edge(top_edge[0],top_edge[1])
-            #Bottom edge
-            bottom_edges=[(i,n) for i in built_p.predecessors(n)]
-            for e in bottom_edges:
-                built_p.remove_edge(e[0],e[1])
-                built_p.add_edge(e[0],father)
-            built_p.remove_node(n)
-        elif len(built_p.successors(n)) == 0:
-            if len(built_p.predecessors(n)) !=0:
-                pred=built_p.predecessors(n)[0]
-                built_p.remove_edge(pred,n)
-            built_p.remove_node(n)
-    return built_p
+    g.set_image(g.get_image()[::d, ::d])
+    for n in g.nodes():
+        g.set_region(n,g.get_region(n)[::d, ::d])
+        #self.set_region(n, region)
+    g.update_intensities(g.get_image())
 
+def get_node2mean(g, round=False):
+    mapping = {}
+    for n in g.nodes():
+        intensity = g.get_mean_intensity(n)
+        if round: intensity = np.round(intensity, 0)
+        mapping[n] = intensity
+    return mapping
 
-def rename_nodes(graphs,matching):
+def get_ordered_nodes(g):
+    """
+    :return: nodes in increasing order of related region mean intensity
+    """
+    i2n={}
+    for n in g.nodes():
+        i=g.get_mean_intensity(n)
+        if i in i2n: i2n[i]+=[n]
+        else: i2n[i]=[n]
+    ordered=[]
+    for i in sorted(i2n):
+        ordered+=i2n[i]
+
+    return ordered
+
+def relabel_nodes(graphs, matching):
     resulting_graphs=[]
     for g in graphs:
         resulting_graphs+=[nx.relabel_nodes(g,matching)]
@@ -42,50 +52,7 @@ def rename_nodes(graphs,matching):
     for g in resulting_graphs: g.set_image(image)
     return tuple(resulting_graphs)
 
-def labelled_image2regions(labelled_image,roi=None):
-    """
-        Generate regions from labelled image: each region correspond to a specific label
-    """
-    #If explicit ROI (i.e. explicit as not integrated within an image of type np.ma.masked_array
-    if roi is not None:
-        tmp_masked_array=np.ma.masked_array(labelled_image, mask=np.logical_not(roi))
-        return labelled_image2regions(tmp_masked_array)
-    #Use histogram to find labels
-    regions=[]
-    if type(labelled_image) == np.ma.masked_array :
-        mask_roi=np.logical_not(labelled_image.mask)
-        min_image,max_image=labelled_image.compressed().min(),labelled_image.compressed().max()
-        hist,bins = np.histogram(labelled_image.compressed(), bins=max_image-min_image+1,range=(min_image,max_image+1))
-        bins=bins[0:bins.size-1]
-        for i in range(0,len(hist)):
-            if hist[i] != 0:
-                new_region=np.where(labelled_image==bins[i],1,0)
-                new_region=np.logical_and(mask_roi,new_region)
-                regions+=[new_region]
-    else:
-        min_image,max_image=labelled_image.min(),labelled_image.max()
-        hist,bins = np.histogram(labelled_image, bins=max_image-min_image+1,range=(min_image,max_image+1))
-        bins=bins[0:bins.size-1]
-        for i in range(0,len(hist)):
-            if hist[i] != 0: regions+=[np.where(labelled_image==bins[i],1,0)]
-    return regions
-
-
-def get_sub_graphs(graphs,nodes):
-    sub_graphs=[]
-    for g in graphs:
-        sub_graphs+=[transitive_reduction(transitive_closure(g).subgraph(nodes))]
-    return sub_graphs
-
-
-def transitive_reduction_matrix(m):
-    g=mat2graph(m)
-    g=transitive_reduction(g)
-    return graph2mat(g)
-
-
-def mat2graph(m):
-    #Build graph
+def transitive_reduction_adjacency_matrix(m):
     g=IrDiGraph()
     #Nodes
     for i in range(0,m.shape[0]): g.add_node(i)
@@ -94,9 +61,18 @@ def mat2graph(m):
         for j in range(0,m.shape[1]):
             if (i != j) and (m[i,j]!=0):
                 g.add_edge(i,j)
-    return g
-
-def graph2mat(g):
+    #Transitive reduction
+    #g=transitive_reduction(g)
+    for n1 in g.nodes_iter():
+        if g.has_edge(n1, n1):
+            g.remove_edge(n1, n1)
+        for n2 in g.successors(n1):
+            for n3 in g.successors(n2):
+                nodes=list(nx.dfs_preorder_nodes(g, n3))
+                for n4 in nodes:
+                    if g.has_edge(n1, n4):
+                        g.remove_edge(n1, n4)
+    #Back to adjacency_matrix and return
     return nx.adjacency_matrix(g).toarray()
 
 def transitive_closure(g):
@@ -117,26 +93,6 @@ def transitive_closure(g):
         closed_g.add_edge(e[0],e[1])
     return closed_g
 
-
-def transitive_reduction(g):
-    """
-    Compute the transitive reduction of a graph
-
-    TODO: unittest.
-
-    :param g: graph to be reduced (no copy)
-    :return: g without transitive closure
-    """
-    for n1 in g.nodes_iter():
-        if g.has_edge(n1, n1):
-            g.remove_edge(n1, n1)
-        for n2 in g.successors(n1):
-            for n3 in g.successors(n2):
-                nodes=list(nx.dfs_preorder_nodes(g, n3))
-                for n4 in nodes:
-                    if g.has_edge(n1, n4):
-                        g.remove_edge(n1, n4)
-    return g
 
 class IrDiGraph(nx.DiGraph):
     """With automatically assigned attribute 'region' to each node (numpy array, 'None' by default)
@@ -165,82 +121,36 @@ class IrDiGraph(nx.DiGraph):
         return self.__image
 
     def add_node(self, n, attr_dict=None, **attr):
-        """Add node
-
-        :parameters:
-            * n: as as in networkx.DiGraph.add_node
-            * attr_dict: as as in networkx.DiGraph.add_node
-
-        """
         nx.DiGraph.add_node(self, n, attr_dict=attr_dict, **attr)
         self.node[n]['region']=None
         self.node[n]['mean_residue']=None
 
+    def add_nodes_from(self, n, **attr):
+        nx.DiGraph.add_nodes_from(self, n, **attr)
+        for i in n:
+            self.node[i]['region']=None
+            self.node[i]['mean_residue'] = None
+
+    def set_mean_intensity(self, n, value):
+        self.node[n]['mean_residue']=value
+
+    def get_mean_intensity(self, n):
+        return self.node[n]['mean_residue']
+
+    def set_region(self,n,r):
+        if n not in self.nodes(): raise Exception(str(n)+" not a existing node (declared nodes are: "+str(self.nodes())+")")
+        self.node[n]['region']=np.copy(r)
+
+    def get_region(self,n):
+        return self.node[n]['region']
+
     def update_intensities(self,image):
         from skgtimage.core.photometry import region_stat
         for n in self.nodes():
-            #region=self.get_residue(n)
             region=self.get_region(n)
             intensity=region_stat(image,region)
-            self.set_mean_residue_intensity(n,intensity)
+            self.set_mean_intensity(n, intensity)
 
-    def set_mean_residue_intensity(self,n,value):
-        self.node[n]['mean_residue']=value
-
-    def get_mean_residue_intensity(self,n):
-        return self.node[n]['mean_residue']
-
-    def get_ordered_nodes(self):
-        """
-        :return: nodes in increasing order of related region mean intensity
-        """
-        i2n={}
-        for n in self.nodes():
-            i=self.get_mean_residue_intensity(n)
-            if i in i2n: i2n[i]+=[n]
-            else: i2n[i]=[n]
-            #i2n[self.get_mean_residue_intensity(n)]=n
-        ordered=[]
-        for i in sorted(i2n):
-            ordered+=i2n[i]
-
-        #ordered=[ i2n[i] for i in sorted(i2n)]
-        return ordered
-
-    def add_nodes_from(self, n, **attr):
-        nx.DiGraph.add_nodes_from(self, n, **attr)
-        for i in n: self.node[i]['region']=None
-    def set_region(self,n,r):
-        """Add node
-
-        :returns: None
-        """
-        if n not in self.nodes(): raise Exception(str(n)+" not a existing node (declared nodes are: "+str(self.nodes())+")")
-        import numpy as np
-        self.node[n]['region']=np.copy(r)
-        #self.node[n]['region']=r
-    def get_region(self,n):
-        """
-        Return the image region associated with the node name n
-        :param n: node name
-        :return: image region (numpy array)
-        """
-        return self.node[n]['region']
-
-    def segmented_nodes(self):
-        s=set()
-        for n in self.nodes():
-            if self.get_region(n) is not None: s = s | set([n])
-        return s
-
-    def downsample(self,d):
-        self.__image=self.__image[::d,::d]
-        for n in self.nodes():
-            region=self.get_region(n)[::d,::d]
-            self.set_region(n,region)
-        self.update_intensities(self.__image)
-
-        #self.get_image()
 
     def get_labelled(self,mapping=None,bg=0):
         labelled=np.zeros(self.get_image().shape,dtype=np.int)-bg
@@ -255,17 +165,3 @@ class IrDiGraph(nx.DiGraph):
                 fill_value+=1
         return labelled
 
-    def get_node2mean(self,round=False):
-        mapping = {}
-        for n in self.nodes():
-            # residue=t_graph.get_residue(n)
-            intensity = self.get_mean_residue_intensity(n)
-            if round: intensity = np.round(intensity, 0)
-            mapping[n] = intensity
-        return mapping
-
-    def __str__(self):
-        chaine=""
-        for n in self.nodes():
-            chaine+="Node:" + str(n) + " ("+str(self.get_mean_residue_intensity(n))+")"
-        return chaine
