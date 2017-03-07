@@ -180,14 +180,16 @@ def propagate(t_graph,p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug=
                 current_candidate_index+=1
                 if current_candidate_index == len(ordered_merging_candidates):
                     #print("Here",current_candidate_index)
-                    #One removes the region from candidates
+                    #One removes the last region from candidates
                     concerned_merge=ordered_merging_candidates[current_candidate_index-1]
                     region_to_remove=concerned_merge[0]
+                    if verbose: print("Removing node",region_to_remove)
                     previous_t_graph.remove_node(region_to_remove)
                     previous_p_graph.remove_node(region_to_remove)
-                    #modification_historisation+=[concerned_merge]
-                    return previous_t_graph,previous_p_graph,modification_historisation
-                    #raise Exception("Impossible to merge")
+                    #One reiterates the procedure the remove the other "invalid" candidates
+                    previous_t_graph, previous_p_graph,tmp=propagate(previous_t_graph,previous_p_graph,ref_t_graph,ref_p_graph,ref_matching,visual_debug,verbose)
+                    modification_historisation+=tmp
+                    return previous_t_graph, previous_p_graph,modification_historisation
 
     ###################
     #Return
