@@ -34,7 +34,9 @@ def inclusions_from_regions(regions, filled_regions):
     adj_included=np.zeros((n,n),dtype=np.uint8) #why not 'adj_included=np.eye(n,dtype=np.uint8)'
     adj_intersection=np.zeros((n,n),dtype=np.uint8) #why not 'adj_intersection=np.eye(n,dtype=np.uint8)'
 
-    for i in range(0,n): regions[i]= regions[i] / np.max(regions[i])
+    for i in range(0,n):
+        #if np.max(regions[i]) != 0:
+        regions[i]= regions[i] / np.max(regions[i])
     for i in range(0,n):
         for j in range(0,n):
             if i != j:

@@ -10,7 +10,7 @@ class TestOnGrayscale2D(unittest.TestCase):
         self.image = imread(truth_dir + "image.png")[::2, ::2]
 
     def compare(self,r):
-        self.truth_t_graph, _ = skgti.io.from_dir2(truth_dir, color=False)
+        self.truth_t_graph, _ = skgti.io.from_dir(truth_dir, mc=False)
         skgti.core.downsample(self.truth_t_graph,2)
         #self.truth_t_graph.downsample(2)
         map = skgti.core.get_node2mean(self.truth_t_graph,round=True)

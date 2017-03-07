@@ -11,7 +11,7 @@ class TestOnColor2D(unittest.TestCase):
         self.image = imread(truth_dir + "image.png")
 
     def compare(self,r):
-        self.truth_t_graph, _ = skgti.io.from_dir2(truth_dir, color=True)
+        self.truth_t_graph, _ = skgti.io.from_dir(truth_dir, mc=True)
         #map = self.truth_t_graph.get_node2mean(round=True)
         map = skgti.core.get_node2mean(self.truth_t_graph, round=True)
         result_t_graph = r.relabelled_final_t_graph
