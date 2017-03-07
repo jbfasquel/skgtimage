@@ -6,13 +6,21 @@
 import numpy as np
 import csv,os
 
-def save_to_csv(dir,name,gcr,similarities,nodepersim=None):
+def save_to_csv(dir,name,gcr,region2sim):
+    nodepersim=[]
+    related_sims=[]
+    for n in sorted(region2sim):
+        sim=np.round(region2sim[n],3)
+        nodepersim+=[n]
+        related_sims+=[sim]
+
+
     fullfilename=os.path.join(dir,name+".csv")
     csv_file=open(fullfilename, "w")
     c_writer = csv.writer(csv_file,dialect='excel')
     c_writer.writerow([name])
     c_writer.writerow(['good classification rate (%)']+[gcr])
-    c_writer.writerow(['similarities']+[i for i in similarities])
+    c_writer.writerow(['similarities']+[i for i in related_sims])
     if nodepersim is not None:
         c_writer.writerow(['related nodes']+[i for i in nodepersim])
     csv_file.close()

@@ -50,10 +50,11 @@ def from_dir(directory, image=None, t_desc=None, p_desc=None, mc=False):
         p_graph = from_string(p_desc,IrDiGraph())
         t_graph.set_image(image)
         p_graph.set_image(image)
-        for id in id2region:
-            region=id2region[id]
-            t_graph.set_region(id, region)
-            p_graph.set_region(id, region)
+        #for id in id2region:
+        for n in t_graph.nodes():
+            region=id2region[n]
+            t_graph.set_region(n, region)
+            p_graph.set_region(n, region)
         t_graph.update_intensities(image)
         p_graph.update_intensities(image)
 
