@@ -18,15 +18,10 @@ class TestOnGrayscale3D(unittest.TestCase):
                                  mc=False, verbose=True)
         # COMPARISON WITH TRUTH
         truth_t_graph, _ = skgti.io.from_dir(truth_dir, image, inclusion, photometry)
-        result_t_graph = r.relabelled_final_t_graph
-        map = skgti.core.get_node2mean(truth_t_graph, round=True)
-        truth_image = truth_t_graph.get_labelled(mapping=map)
-        result_image = result_t_graph.get_labelled(mapping=map)
-
-        classif = skgti.utils.goodclassification_rate(result_image, truth_image, 3)
-        region2sim = skgti.utils.compute_sim_between_graph_regions(result_t_graph, truth_t_graph, 2)
+        classif, _, _ = skgti.utils.goodclassification_rate_graphs(r.relabelled_final_t_graph, truth_t_graph,r.roi, 3)
+        region2sim = skgti.utils.similarity_indices_graph_regions(r.relabelled_final_t_graph, truth_t_graph, 2)
         print(classif, region2sim)
-        self.assertAlmostEqual(classif, 0.95,2)
+        self.assertAlmostEqual(classif, 0.94,2)
         self.assertAlmostEqual(region2sim['tumor'], 0.68, 2)
         self.assertAlmostEqual(region2sim['vessel'], 0.54, 2)
         self.assertAlmostEqual(region2sim['liver'], 0.90, 2)

@@ -5,6 +5,9 @@
 
 import numpy as np
 import csv,os
+from skgtimage.core.graph import get_node2mean
+from skgtimage.core.search_base import find_head
+from skgtimage.core.topology import fill_region
 
 def save_to_csv(dir,name,gcr,region2sim):
     nodepersim=[]
@@ -13,7 +16,6 @@ def save_to_csv(dir,name,gcr,region2sim):
         sim=np.round(region2sim[n],3)
         nodepersim+=[n]
         related_sims+=[sim]
-
 
     fullfilename=os.path.join(dir,name+".csv")
     csv_file=open(fullfilename, "w")
@@ -25,7 +27,36 @@ def save_to_csv(dir,name,gcr,region2sim):
         c_writer.writerow(['related nodes']+[i for i in nodepersim])
     csv_file.close()
 
-def compute_sim_between_graph_regions(result_graph,truth_graph,prec=None):
+def goodclassification_rate_graphs(result_t_graph,truth_t_graph,roi=None,prec=None):
+    res2int = get_node2mean(truth_t_graph,round=True)
+    truth_image = truth_t_graph.get_labelled(mapping=res2int)
+    result_image = result_t_graph.get_labelled(mapping=res2int)
+
+    #####
+    # GENERATING MASKED IMAGES
+
+    #OLD uncorrect measurement: ROI is not the "filled" head.
+    #Should be union of all truth regions, or the entire image (if recognition is not contrainted to the ROI
+    #May be this involved uncorrect result in the paper
+    '''
+    head=list(find_head(truth_t_graph))[0]
+    roi=fill_region(truth_t_graph.get_region(head))
+    l_truth_image=np.ma.array(truth_image, mask=np.logical_not(roi))
+    l_result_image=np.ma.array(result_image, mask=np.logical_not(roi))
+    classif=goodclassification_rate(l_result_image,l_truth_image)
+    '''
+    #NEW
+    if roi is not None:
+        l_truth_image = np.ma.array(truth_image, mask=np.logical_not(roi))
+        l_result_image = np.ma.array(result_image, mask=np.logical_not(roi))
+        classif=goodclassification_rate(l_result_image,l_truth_image)
+    else:
+        classif = goodclassification_rate(result_image, truth_image)
+    if prec is not None:
+        classif = np.round(classif, prec)
+    return classif,truth_image,result_image
+
+def similarity_indices_graph_regions(result_graph, truth_graph, prec=None):
     region2sim={}
     for n in truth_graph.nodes():
         true_region=truth_graph.get_region(n)

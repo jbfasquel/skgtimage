@@ -12,13 +12,8 @@ class TestOnColor2D(unittest.TestCase):
 
     def compare(self,r):
         self.truth_t_graph, _ = skgti.io.from_dir(truth_dir, mc=True)
-        #map = self.truth_t_graph.get_node2mean(round=True)
-        map = skgti.core.get_node2mean(self.truth_t_graph, round=True)
-        result_t_graph = r.relabelled_final_t_graph
-        truth_image = self.truth_t_graph.get_labelled(mapping=map)
-        result_image = result_t_graph.get_labelled(mapping=map)
-        classif = skgti.utils.goodclassification_rate(result_image, truth_image, 3)
-        region2sim = skgti.utils.compute_sim_between_graph_regions(result_t_graph, self.truth_t_graph, 2)
+        classif, _, _ = skgti.utils.goodclassification_rate_graphs(r.relabelled_final_t_graph, self.truth_t_graph, r.roi, 3)
+        region2sim = skgti.utils.similarity_indices_graph_regions(r.relabelled_final_t_graph, self.truth_t_graph, 2)
         return classif,region2sim
 
     def test01(self):
@@ -28,7 +23,7 @@ class TestOnColor2D(unittest.TestCase):
         id2region, r = skgti.utils.recognize(self.image, segmentation, inclusion, photometry, roi=roi,mc=True, bg=False, verbose=True)
         # COMPARISON WITH TRUTH
         classif, region2sim=self.compare(r)
-        self.assertAlmostEqual(classif, 0.988,3) #not reproducible ?
+        self.assertAlmostEqual(classif, 0.976,3)
         self.assertAlmostEqual(min(region2sim.values()), 0.89, 2)
         self.assertAlmostEqual(max(region2sim.values()), 1, 2)
 
