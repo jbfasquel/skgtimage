@@ -141,7 +141,11 @@ class Recognizer:
         self.preliminary_processing()
 
         #Step 0: built graphs from label
+        t0 = time.clock()
         self.t_graph, self.p_graph=from_labelled_image(self.image,self.label,self.roi,self.bound_thickness,self.bound_thickness)
+        t1 = time.clock()
+        self.action2runtime["Build."]=t1-t0
+
         self.intermediate_operations+=[str(self.operation_step)+"_Initial_graph"]
         self.intermediate_labels+= [np.copy(self.label)]
         self.intermediate_graphs+=[(copy.deepcopy(self.t_graph),copy.deepcopy(self.p_graph))]

@@ -48,6 +48,18 @@ def from_regions(image,regions):
 
 
 def from_labelled_image(image, labelled_image, roi=None, manage_bounds=False, thickness=1,verbose=False):
+    """
+        Generate both inclusion and photometric graphs from the input image and its labelling (over-segmentation)
+
+        :param image: input image
+        :param labelled_image: input labelling (over-segmentation)
+        :param roi: region of interest considered from computing graphs (regions lying outside are ignored)
+        :param manage_bounds: if a thin enveloppe is added at image or roi boundaries
+        :param thickness: internal boundary thickness to be considered for computing enveloppe label
+        :param verbose: if True, details of the procedure are printed
+        :return: built inclusion and photometric graphs
+
+    """
     #To remove noise at labelled_image boundaries
     if manage_bounds:
         if type(labelled_image) == np.ma.masked_array :

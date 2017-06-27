@@ -3,6 +3,32 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+Quick start : example 0
+=======================
+
+Code (graph building from labelling):
+*************************************
+
+.. literalinclude:: ../../examples/example0.py
+   :language: python
+   :lines: 2-
+   :linenos:
+
+Output (using matplotlib):
+**************************
+
+.. image:: _static/figure_0.png
+   :scale: 70 %
+   :alt: Produced result
+
+Resulting graphs (requires pygraphviz):
+***************************************
+
+.. image:: _static/graph_0.png
+   :scale: 70 %
+   :alt: Produced result
+
+
 Quick start : example 1
 =======================
 

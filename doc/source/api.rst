@@ -6,5 +6,9 @@
 Documentation
 =============
 
+.. automodule:: skgtimage.core
+    :members: from_labelled_image
 .. automodule:: skgtimage.utils
-    :members: recognize,save_recognizer_details,meanshift,quickshift
+    :members: recognize,meanshift,quickshift
+.. automodule:: skgtimage.io
+    :members: save_recognizer_details
