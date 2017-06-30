@@ -1,0 +1,235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skgtimage.io.recognition &#8212; scikit-gtimage 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for skgtimage.io.recognition</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">skgtimage.io.graphviz</span> <span class="k">import</span> <span class="n">save_graph</span><span class="p">,</span><span class="n">save_graph_regions</span><span class="p">,</span><span class="n">save_matching</span><span class="p">,</span><span class="n">matching2links</span><span class="p">,</span><span class="n">save_matching_basic</span><span class="p">,</span><span class="n">save_graph_basic</span>
+<span class="kn">from</span> <span class="nn">skgtimage.io.csv</span> <span class="k">import</span> <span class="n">save_intensities</span>
+<span class="kn">from</span> <span class="nn">skgtimage.io.image</span> <span class="k">import</span> <span class="n">save_image_context</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.photometry</span> <span class="k">import</span> <span class="n">grey_levels</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.factory</span> <span class="k">import</span> <span class="n">from_labelled_image</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.isomorphism</span> <span class="k">import</span> <span class="n">find_subgraph_isomorphims</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.graph</span> <span class="k">import</span> <span class="n">transitive_closure</span>
+
+<span class="k">def</span> <span class="nf">clear_dir_content</span><span class="p">(</span><span class="n">save_dir</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">save_dir</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="n">e</span><span class="p">)):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">clear_dir_content</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="n">e</span><span class="o">+</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="save_recognizer_details"><a class="viewcode-back" href="../../../api.html#skgtimage.io.save_recognizer_details">[docs]</a><span class="k">def</span> <span class="nf">save_recognizer_details</span><span class="p">(</span><span class="n">recognizer</span><span class="p">,</span><span class="n">save_dir</span><span class="p">,</span><span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">slices</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save details of the recognition procedure: regions, graphs and statistics (mean intensities) related to each step</span>
+
+<span class="sd">    :param recognizer: object embedding all details, and returned by recognize</span>
+<span class="sd">    :param save_dir: directory within which all details are saved</span>
+<span class="sd">    :param full: if True, all regions, and mean intensities, related to initial graphs are saved (time consuming if many nodes)</span>
+<span class="sd">    :param slices: list of slice indices to be exported in .png image files, in case of 3D images</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
+    <span class="c1">#####################################</span>
+    <span class="c1"># Save final result</span>
+    <span class="c1">#####################################</span>
+    <span class="k">if</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">save_graph</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;topological&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">save_graph</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_p_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;photometric&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">save_graph_regions</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">slices</span><span class="o">=</span><span class="n">slices</span><span class="p">)</span>
+        <span class="n">save_intensities</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_p_graph</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">save_dir</span><span class="p">)</span>
+        <span class="n">label_from_final</span> <span class="o">=</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="o">.</span><span class="n">get_labelled</span><span class="p">()</span>
+        <span class="n">save_image_context</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">raw_image</span><span class="p">,</span> <span class="n">label_from_final</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="n">slices</span><span class="o">=</span><span class="n">slices</span><span class="p">,</span> <span class="n">mc</span><span class="o">=</span><span class="n">recognizer</span><span class="o">.</span><span class="n">mc</span><span class="p">)</span>
+
+    <span class="c1">#############</span>
+    <span class="c1">#Details</span>
+    <span class="c1">#############</span>
+    <span class="n">details_save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="o">+</span><span class="s2">&quot;Details/&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">details_save_dir</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">details_save_dir</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="p">)):</span>
+        <span class="n">operation</span><span class="o">=</span><span class="n">recognizer</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+        <span class="n">tmp_dir</span><span class="o">=</span><span class="n">details_save_dir</span><span class="o">+</span><span class="n">operation</span><span class="o">+</span><span class="s2">&quot;/&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="n">clear_dir_content</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">recognizer</span><span class="o">.</span><span class="n">intermediate_labels</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+        <span class="n">save_image_context</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">raw_image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="n">slices</span><span class="o">=</span><span class="n">slices</span><span class="p">,</span><span class="n">mc</span><span class="o">=</span><span class="n">recognizer</span><span class="o">.</span><span class="n">mc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">intermediate_graphs</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">t_graph</span><span class="p">,</span><span class="n">p_graph</span><span class="p">)</span><span class="o">=</span><span class="n">recognizer</span><span class="o">.</span><span class="n">intermediate_graphs</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+            <span class="n">nb_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+            <span class="n">save_graph</span><span class="p">(</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_topological_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span><span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">save_graph</span><span class="p">(</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_photometric_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span><span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># Simplified</span>
+            <span class="n">save_graph_basic</span><span class="p">(</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_topological_simple_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">save_graph_basic</span><span class="p">(</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_photometric_simple_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">save_intensities</span><span class="p">(</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span>
+                <span class="n">save_graph_regions</span><span class="p">(</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">slices</span><span class="o">=</span><span class="n">slices</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">grey_levels</span><span class="p">(</span><span class="n">label</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="n">t_graph</span><span class="p">,</span><span class="n">p_graph</span><span class="o">=</span><span class="n">from_labelled_image</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">image</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">recognizer</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span><span class="n">recognizer</span><span class="o">.</span><span class="n">bound_thickness</span><span class="p">,</span><span class="n">recognizer</span><span class="o">.</span><span class="n">bound_thickness</span><span class="p">)</span>
+                <span class="n">nb_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+                <span class="n">save_graph</span><span class="p">(</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_topological_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">save_graph</span><span class="p">(</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_photometric_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># Simplified</span>
+                <span class="n">save_graph_basic</span><span class="p">(</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_topological_simple_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">save_graph_basic</span><span class="p">(</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;g_photometric_simple_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_nodes</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1"># Save common iso and matching</span>
+    <span class="c1">#####################################</span>
+    <span class="n">step_index</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="p">)</span>
+    <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">details_save_dir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">step_index</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_graphs_and_common_isos/&quot;</span><span class="p">;</span><span class="n">clear_dir_content</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+    <span class="n">clear_dir_content</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">common_isomorphisms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="n">t_isomorphisms_candidates</span> <span class="o">=</span> <span class="n">find_subgraph_isomorphims</span><span class="p">(</span><span class="n">transitive_closure</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">t_graph</span><span class="p">),</span> <span class="n">transitive_closure</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">))</span>
+        <span class="n">nb_t_isos</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">t_isomorphisms_candidates</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">tmp_dir</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">nb_t_isos</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_t_isos&quot;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">);</span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">tmp_dir</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">common_isomorphisms</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot;_c_isos&quot;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">);</span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">matching</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">matching_links</span> <span class="o">=</span> <span class="n">matching2links</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">matching</span><span class="p">)</span>
+            <span class="n">save_matching</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;1_matching_t&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">save_matching</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;1_matching_p&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1">#Simplified</span>
+            <span class="n">save_matching_basic</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;1_matching_t_simple&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">save_matching_basic</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">],</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;1_matching_p_simple&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">common_isomorphisms</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">common_isomorphisms</span><span class="p">)):</span>
+                <span class="n">matching_links</span> <span class="o">=</span> <span class="n">matching2links</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">common_isomorphisms</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">save_matching</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">],</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s2">&quot;common_iso_t_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">save_matching</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">],</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s2">&quot;common_iso_p_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">full</span><span class="p">:</span>
+            <span class="n">save_intensities</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span>
+            <span class="n">save_graph_regions</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">slices</span><span class="o">=</span><span class="n">slices</span><span class="p">)</span>
+
+        <span class="c1">#Energies</span>
+        <span class="n">csv_file</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span><span class="s2">&quot;2_all_energies.csv&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">c_writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span><span class="n">dialect</span><span class="o">=</span><span class="s1">&#39;excel&#39;</span><span class="p">)</span>
+        <span class="n">c_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;Common iso&quot;</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">common_isomorphisms</span><span class="p">))])</span>
+        <span class="n">c_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s1">&#39;Eie&#39;</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">eies</span><span class="p">])</span>
+        <span class="n">csv_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+    <span class="c1">##############################</span>
+    <span class="c1"># Saving merging</span>
+    <span class="c1">##############################</span>
+    <span class="n">step_index</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">details_save_dir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">step_index</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_merging/&quot;</span><span class="p">;</span><span class="n">clear_dir_content</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">matching</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># All merging</span>
+        <span class="n">matching_links</span> <span class="o">=</span> <span class="n">matching2links</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">matching</span><span class="p">)</span>
+        <span class="n">save_matching</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">],</span>
+                      <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">],</span> <span class="n">label_lists</span><span class="o">=</span><span class="p">[[],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;matching_t&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">save_matching</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">],</span>
+                      <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">],</span> <span class="n">label_lists</span><span class="o">=</span><span class="p">[[],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;matching_p&quot;</span><span class="p">,</span>
+                      <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1">#Simplified</span>
+        <span class="n">save_matching_basic</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">],</span>
+                            <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">],</span> <span class="n">label_lists</span><span class="o">=</span><span class="p">[[],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;matching_t_simplified&quot;</span><span class="p">,</span>
+                            <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">save_matching_basic</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">,</span> <span class="p">[</span><span class="n">matching_links</span><span class="p">,</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">],</span>
+                            <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">],</span> <span class="n">label_lists</span><span class="o">=</span><span class="p">[[],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">recognizer</span><span class="o">.</span><span class="n">ordered_merges</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;matching_p_simplified&quot;</span><span class="p">,</span>
+                            <span class="n">directory</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html">Quick start : example 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-1">Quick start : example 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-2">Quick start : example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-3">Quick start : example 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-4">Quick start : example 4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Documentation</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jean-Baptiste Fasquel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documentation &#8212; scikit-gtimage 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Quick start : example 0" href="quick-start.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-skgtimage.core">
+<span id="documentation"></span><h1>Documentation<a class="headerlink" href="#module-skgtimage.core" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skgtimage.core.from_labelled_image">
+<code class="descclassname">skgtimage.core.</code><code class="descname">from_labelled_image</code><span class="sig-paren">(</span><em>image</em>, <em>labelled_image</em>, <em>roi=None</em>, <em>manage_bounds=False</em>, <em>thickness=1</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skgtimage/core/factory.html#from_labelled_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skgtimage.core.from_labelled_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate both inclusion and photometric graphs from the input image and its labelling (over-segmentation)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>image</strong> &#8211; input image</li>
+<li><strong>labelled_image</strong> &#8211; input labelling (over-segmentation)</li>
+<li><strong>roi</strong> &#8211; region of interest considered from computing graphs (regions lying outside are ignored)</li>
+<li><strong>manage_bounds</strong> &#8211; if a thin enveloppe is added at image or roi boundaries</li>
+<li><strong>thickness</strong> &#8211; internal boundary thickness to be considered for computing enveloppe label</li>
+<li><strong>verbose</strong> &#8211; if True, details of the procedure are printed</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">built inclusion and photometric graphs</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-skgtimage.utils"></span><dl class="function">
+<dt id="skgtimage.utils.recognize">
+<code class="descclassname">skgtimage.utils.</code><code class="descname">recognize</code><span class="sig-paren">(</span><em>image</em>, <em>label</em>, <em>t_desc</em>, <em>p_desc</em>, <em>mc=False</em>, <em>roi=None</em>, <em>min_size=None</em>, <em>bg=False</em>, <em>bound_thickness=0</em>, <em>rag=None</em>, <em>merge=None</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skgtimage/utils/recognition.html#recognize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skgtimage.utils.recognize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute and return identified regions, specified in qualitative descriptions (t_desc, p_desc), from the provided over-segmentation (label) of the image (image)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>image</strong> &#8211; input image (numpy array), can be 2D, 3D, grayscale, color</li>
+<li><strong>label</strong> &#8211; input oversegmentation (numpy array)</li>
+<li><strong>t_desc</strong> &#8211; description of inclusion relationships (string)</li>
+<li><strong>p_desc</strong> &#8211; description of photometric relationships (string)</li>
+<li><strong>mc</strong> &#8211; specifies if image is multi-component (True - color in our case) or not (False - grayscale).</li>
+<li><strong>roi</strong> &#8211; region of interest (numpy array), corresponding to non zeros.</li>
+<li><strong>min_size</strong> &#8211; minimum size (in pixels) of considered regions. Regions smaller than min_size are removed.</li>
+<li><strong>bg</strong> &#8211; specifies whether background must be removed</li>
+<li><strong>bound_thickness</strong> &#8211; thickness of the enveloppe surrounding the roi (if roi is not none)</li>
+<li><strong>rag</strong> &#8211; if not None, a preliminary merging of photometrically similar neighboring regions is performed. The parameter specifies the similarity threshold (threshold the in merge_hierarchical function of scikit-image)</li>
+<li><strong>merge</strong> &#8211; if not None, a preliminary merging of photometrically similar regions is performed (not necessarily neighboring regions). The parameter specifies the number of finally expected regions.</li>
+<li><strong>verbose</strong> &#8211; if True, details of the procedure are printed</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a mapping &#8220;id - regions&#8221; (python mapping type - dictionnary) and the object in charge of managing the entire procedure. &#8220;id&#8221; are names specified in the description (t_desc, p_desc), regions are &#8220;binary images&#8221; (numpy array). The object embedded many intermediate informations (e.g. graphs, isomorphisms,...)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="skgtimage.utils.meanshift">
+<code class="descclassname">skgtimage.utils.</code><code class="descname">meanshift</code><span class="sig-paren">(</span><em>image</em>, <em>bandwidth</em>, <em>roi=None</em>, <em>mc=False</em>, <em>sigma=None</em>, <em>rgb_convert=False</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skgtimage/utils/meanshift.html#meanshift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skgtimage.utils.meanshift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply meanshif to input image (within region of interest)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>image</strong> &#8211; input image</li>
+<li><strong>bandwidth</strong> &#8211; bandwidth parameter considered in scikit-learn  MeanShift</li>
+<li><strong>roi</strong> &#8211; region of interest</li>
+<li><strong>mc</strong> &#8211; whether image is multi-component or not (color in our case)</li>
+<li><strong>verbose</strong> &#8211; </li>
+<li><strong>sigma</strong> &#8211; preliminary gaussian filtering (parameter of scikit-image filters.gaussian)</li>
+<li><strong>rgb_convert</strong> &#8211; if True and mc True, RGB image is converted HSV space</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">labelled image (numpy array), where each label corresponds to a specific value</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="skgtimage.utils.quickshift">
+<code class="descclassname">skgtimage.utils.</code><code class="descname">quickshift</code><span class="sig-paren">(</span><em>image</em>, <em>ratio</em>, <em>mc=False</em>, <em>roi=None</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skgtimage/utils/quickshift.html#quickshift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skgtimage.utils.quickshift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply quickshift segmentation to input image (within region of interest)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>image</strong> &#8211; input image</li>
+<li><strong>ratio</strong> &#8211; ratio parameter considered in scikit-image quickshift</li>
+<li><strong>mc</strong> &#8211; whether image is multi-component or not (color in our case)</li>
+<li><strong>verbose</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">labelled image (numpy array), where each label corresponds to a specific value</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-skgtimage.io"></span><dl class="function">
+<dt id="skgtimage.io.save_recognizer_details">
+<code class="descclassname">skgtimage.io.</code><code class="descname">save_recognizer_details</code><span class="sig-paren">(</span><em>recognizer</em>, <em>save_dir</em>, <em>full=False</em>, <em>slices=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skgtimage/io/recognition.html#save_recognizer_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skgtimage.io.save_recognizer_details" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save details of the recognition procedure: regions, graphs and statistics (mean intensities) related to each step</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>recognizer</strong> &#8211; object embedding all details, and returned by recognize</li>
+<li><strong>save_dir</strong> &#8211; directory within which all details are saved</li>
+<li><strong>full</strong> &#8211; if True, all regions, and mean intensities, related to initial graphs are saved (time consuming if many nodes)</li>
+<li><strong>slices</strong> &#8211; list of slice indices to be exported in .png image files, in case of 3D images</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick start : example 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-1">Quick start : example 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-2">Quick start : example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-3">Quick start : example 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-4">Quick start : example 4</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jean-Baptiste Fasquel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quick start : example 0 &#8212; scikit-gtimage 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation" href="api.html" />
+    <link rel="prev" title="Overview" href="overview.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="quick-start-example-0">
+<h1>Quick start : example 0<a class="headerlink" href="#quick-start-example-0" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="code-graph-building-from-labelling">
+<h2>Code (graph building from labelling):<a class="headerlink" href="#code-graph-building-from-labelling" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">skgtimage</span> <span class="kn">as</span> <span class="nn">skgti</span>
+
+<span class="c1">#Initial image</span>
+<span class="n">image</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="c1">#Labelling: several regions depict several connected components</span>
+<span class="c1">#Region with label 0 correspond to image intensities 0 and 1</span>
+<span class="c1">#Region with label 2 correspond to image intensities 6 and 7</span>
+<span class="n">labelling</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+
+<span class="c1">#Building both inclusion and photometry graphs</span>
+<span class="n">inclusion_graph</span><span class="p">,</span><span class="n">photometry_graph</span><span class="o">=</span><span class="n">skgti</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">from_labelled_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">labelling</span><span class="p">)</span>
+<span class="c1">#Retrieval of the new labelling</span>
+<span class="n">new_labelling</span><span class="o">=</span><span class="n">inclusion_graph</span><span class="o">.</span><span class="n">get_labelled</span><span class="p">()</span>
+
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">131</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">132</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial labelling&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">labelling</span><span class="p">,</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">133</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Labelling after the discovery </span><span class="se">\n</span><span class="s2">of inclusion relationships&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">new_labelling</span><span class="p">,</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="output-using-matplotlib">
+<h2>Output (using matplotlib):<a class="headerlink" href="#output-using-matplotlib" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/figure_0.png"><img alt="Produced result" src="_images/figure_0.png" style="width: 560.0px; height: 420.0px;" /></a>
+</div>
+<div class="section" id="resulting-graphs-requires-pygraphviz">
+<h2>Resulting graphs (requires pygraphviz):<a class="headerlink" href="#resulting-graphs-requires-pygraphviz" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/graph_0.png"><img alt="Produced result" src="_images/graph_0.png" style="width: 560.0px; height: 420.0px;" /></a>
+</div>
+</div>
+<div class="section" id="quick-start-example-1">
+<h1>Quick start : example 1<a class="headerlink" href="#quick-start-example-1" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="code-mean-shift-segmentation">
+<h2>Code (mean shift segmentation):<a class="headerlink" href="#code-mean-shift-segmentation" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span><span class="p">;</span><span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="kn">import</span> <span class="n">imread</span><span class="p">,</span><span class="n">imsave</span>
+<span class="kn">import</span> <span class="nn">skgtimage</span> <span class="kn">as</span> <span class="nn">skgti</span><span class="p">;</span><span class="kn">from</span> <span class="nn">skgtimage.utils</span> <span class="kn">import</span> <span class="n">meanshift</span><span class="p">,</span><span class="n">recognize</span>
+<span class="kn">from</span> <span class="nn">skimage.segmentation</span> <span class="kn">import</span> <span class="n">mark_boundaries</span>
+
+
+
+<span class="c1">#A PRIORI KNOWLEDGE</span>
+<span class="n">inclusion</span><span class="o">=</span><span class="s2">&quot;text&lt;paper&lt;file&quot;</span> <span class="c1">#text is included within paper, itself included into file</span>
+<span class="n">photometry</span><span class="o">=</span><span class="s2">&quot;text&lt;file&lt;paper&quot;</span> <span class="c1">#text is darker than file, itself darker than paper</span>
+
+<span class="c1">#INITIAL IMAGE</span>
+<span class="n">image</span><span class="o">=</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;image_gray.png&quot;</span><span class="p">)</span>
+
+<span class="c1">#MEANSHIFT-BASED SEGMENTATION</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start segmentation...&quot;</span><span class="p">)</span>
+<span class="n">segmentation</span><span class="o">=</span><span class="n">meanshift</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Segmentation finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#INTERPRETATION (PROPOSED METHOD)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start recognition...&quot;</span><span class="p">)</span>
+<span class="n">id2region</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="n">recognize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">,</span> <span class="n">inclusion</span><span class="p">,</span> <span class="n">photometry</span><span class="p">,</span><span class="n">bg</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Recognition finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#skgti.utils.save_recognizer_details(r,&quot;save/&quot;)</span>
+
+<span class="c1">#DISPLAY</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">idplot</span><span class="o">=</span><span class="mi">141</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mark_boundaries</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">));</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">id2region</span><span class="p">:</span>
+    <span class="n">idplot</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">id2region</span><span class="p">[</span><span class="nb">id</span><span class="p">],</span><span class="s2">&quot;gray&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="nb">id</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="id1">
+<h2>Output (using matplotlib):<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/figure_1.png"><img alt="Produced result" src="_images/figure_1.png" style="width: 767.1999999999999px; height: 284.9px;" /></a>
+</div>
+<div class="section" id="inexact-graph-matching-inclusion-requires-pygraphviz">
+<h2>Inexact graph matching (inclusion - requires pygraphviz):<a class="headerlink" href="#inexact-graph-matching-inclusion-requires-pygraphviz" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/matching_t_1.png"><img alt="Produced result" src="_images/matching_t_1.png" style="width: 526.0px; height: 351.0px;" /></a>
+</div>
+<div class="section" id="inexact-graph-matching-photometry-requires-pygraphviz">
+<h2>Inexact graph matching (photometry - requires pygraphviz):<a class="headerlink" href="#inexact-graph-matching-photometry-requires-pygraphviz" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/matching_p_1.png"><img alt="Produced result" src="_images/matching_p_1.png" style="width: 95.0px; height: 461.5px;" /></a>
+</div>
+</div>
+<div class="section" id="quick-start-example-2">
+<h1>Quick start : example 2<a class="headerlink" href="#quick-start-example-2" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="code-quick-shift-segmentation">
+<h2>Code (quick shift segmentation):<a class="headerlink" href="#code-quick-shift-segmentation" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span><span class="p">;</span><span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="kn">import</span> <span class="n">imread</span><span class="p">,</span><span class="n">imsave</span>
+<span class="kn">import</span> <span class="nn">skgtimage</span> <span class="kn">as</span> <span class="nn">skgti</span><span class="p">;</span><span class="kn">from</span> <span class="nn">skgtimage.utils</span> <span class="kn">import</span> <span class="n">quickshift</span><span class="p">,</span><span class="n">recognize</span>
+<span class="kn">from</span> <span class="nn">skimage.segmentation</span> <span class="kn">import</span> <span class="n">mark_boundaries</span>
+
+<span class="c1">#A PRIORI KNOWLEDGE</span>
+<span class="n">inclusion</span><span class="o">=</span><span class="s2">&quot;text&lt;paper&lt;file&quot;</span> <span class="c1">#text is included within paper, itself included into file</span>
+<span class="n">photometry</span><span class="o">=</span><span class="s2">&quot;text&lt;file&lt;paper&quot;</span> <span class="c1">#text is darker than file, itself darker than paper</span>
+
+<span class="c1">#INITIAL IMAGE</span>
+<span class="n">image</span><span class="o">=</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;image_gray.png&quot;</span><span class="p">)</span>
+
+<span class="c1">#MEANSHIFT-BASED SEGMENTATION</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start segmentation...&quot;</span><span class="p">)</span>
+<span class="n">segmentation</span><span class="o">=</span><span class="n">quickshift</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Segmentation finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#INTERPRETATION (PROPOSED METHOD)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start recognition...&quot;</span><span class="p">)</span>
+<span class="n">id2region</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="n">recognize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">,</span> <span class="n">inclusion</span><span class="p">,</span> <span class="n">photometry</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">rag</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Recognition finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#skgti.utils.save_recognizer_details(r,&quot;save/&quot;)</span>
+
+<span class="c1">#DISPLAY</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">idplot</span><span class="o">=</span><span class="mi">141</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mark_boundaries</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">));</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">id2region</span><span class="p">:</span>
+    <span class="n">idplot</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">id2region</span><span class="p">[</span><span class="nb">id</span><span class="p">],</span><span class="s2">&quot;gray&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="nb">id</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="id2">
+<h2>Output (using matplotlib):<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/figure_2.png"><img alt="Produced result" src="_images/figure_2.png" style="width: 622.8000000000001px; height: 288.90000000000003px;" /></a>
+</div>
+<div class="section" id="id3">
+<h2>Inexact graph matching (inclusion - requires pygraphviz):<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/matching_t_2.png"><img alt="Produced result" src="_images/matching_t_2.png" style="width: 1144.0px; height: 266.0px;" /></a>
+</div>
+<div class="section" id="id4">
+<h2>Inexact graph matching (photometry - requires pygraphviz):<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/matching_p_2.png"><img alt="Produced result" src="_images/matching_p_2.png" style="width: 111.0px; height: 653.5px;" /></a>
+</div>
+</div>
+<div class="section" id="quick-start-example-3">
+<h1>Quick start : example 3<a class="headerlink" href="#quick-start-example-3" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id5">
+<h2>Code (quick shift segmentation):<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span><span class="p">;</span><span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="kn">import</span> <span class="n">imread</span><span class="p">,</span><span class="n">imsave</span>
+<span class="kn">import</span> <span class="nn">skgtimage</span> <span class="kn">as</span> <span class="nn">skgti</span><span class="p">;</span><span class="kn">from</span> <span class="nn">skgtimage.utils</span> <span class="kn">import</span> <span class="n">meanshift</span><span class="p">,</span><span class="n">recognize</span>
+<span class="kn">from</span> <span class="nn">skimage.segmentation</span> <span class="kn">import</span> <span class="n">mark_boundaries</span>
+
+<span class="c1">#A PRIORI KNOWLEDGE</span>
+<span class="n">inclusion</span><span class="o">=</span><span class="s2">&quot;2E&lt;2D;2G&lt;F;2D,F,2H,2I&lt;C&lt;B&lt;A;C,1D&lt;B&lt;A;1E,1G&lt;1D;1H&lt;1E&quot;</span>
+<span class="n">photometry</span><span class="o">=</span><span class="s2">&quot;B=F=2D=2H=1E=1G&lt;2I=2E=1H=1D&lt;C=2G=A&quot;</span>
+
+<span class="c1">#INITIAL IMAGE</span>
+<span class="n">image</span><span class="o">=</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;image_color.png&quot;</span><span class="p">)</span>
+
+<span class="c1">#MEANSHIFT-BASED SEGMENTATION</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start segmentation...&quot;</span><span class="p">)</span>
+<span class="n">segmentation</span><span class="o">=</span><span class="n">meanshift</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">mc</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">rgb_convert</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Segmentation finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#INTERPRETATION (PROPOSED METHOD)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start recognition...&quot;</span><span class="p">)</span>
+<span class="n">id2region</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="n">recognize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">,</span> <span class="n">inclusion</span><span class="p">,</span> <span class="n">photometry</span><span class="p">,</span><span class="n">mc</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">bg</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Recognition finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#skgti.utils.save_recognizer_details(r,&quot;save/&quot;)</span>
+
+<span class="c1">#DISPLAY</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">idplot</span><span class="o">=</span><span class="mi">141</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mark_boundaries</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">));</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;1E&quot;</span><span class="p">,</span><span class="s2">&quot;2E&quot;</span><span class="p">,</span><span class="s2">&quot;F&quot;</span><span class="p">]:</span>
+    <span class="n">idplot</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">id2region</span><span class="p">[</span><span class="nb">id</span><span class="p">],</span><span class="s2">&quot;gray&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="nb">id</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="id6">
+<h2>Output (using matplotlib):<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/figure_3.png"><img alt="Produced result" src="_images/figure_3.png" style="width: 1030.4px; height: 294.40000000000003px;" /></a>
+</div>
+<div class="section" id="id7">
+<h2>Inexact graph matching (inclusion - requires pygraphviz):<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/matching_t_3.png"><img alt="Produced result" src="_images/matching_t_3.png" style="width: 1571.0px; height: 450.0px;" /></a>
+</div>
+</div>
+<div class="section" id="quick-start-example-4">
+<h1>Quick start : example 4<a class="headerlink" href="#quick-start-example-4" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id8">
+<h2>Code (quick shift segmentation):<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span><span class="p">;</span><span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="kn">import</span> <span class="n">imread</span><span class="p">,</span><span class="n">imsave</span>
+<span class="kn">import</span> <span class="nn">skgtimage</span> <span class="kn">as</span> <span class="nn">skgti</span><span class="p">;</span><span class="kn">from</span> <span class="nn">skgtimage.utils</span> <span class="kn">import</span> <span class="n">quickshift</span><span class="p">,</span><span class="n">recognize</span>
+<span class="kn">from</span> <span class="nn">skimage.segmentation</span> <span class="kn">import</span> <span class="n">mark_boundaries</span>
+
+<span class="c1">#A PRIORI KNOWLEDGE</span>
+<span class="n">inclusion</span><span class="o">=</span><span class="s2">&quot;2E&lt;2D;2G&lt;F;2D,F,2H,2I&lt;C&lt;B&lt;A;C,1D&lt;B&lt;A;1E,1G&lt;1D;1H&lt;1E&quot;</span>
+<span class="n">photometry</span><span class="o">=</span><span class="s2">&quot;B=F=2D=2H=1E=1G&lt;2I=2E=1H=1D&lt;C=2G=A&quot;</span>
+
+<span class="c1">#INITIAL IMAGE</span>
+<span class="n">image</span><span class="o">=</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;image_color.png&quot;</span><span class="p">)</span>
+
+<span class="c1">#MEANSHIFT-BASED SEGMENTATION</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start segmentation...&quot;</span><span class="p">)</span>
+<span class="n">segmentation</span><span class="o">=</span><span class="n">quickshift</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">ratio</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span><span class="n">mc</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Segmentation finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#INTERPRETATION (PROPOSED METHOD)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Start recognition...&quot;</span><span class="p">)</span>
+<span class="n">id2region</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="n">recognize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">,</span> <span class="n">inclusion</span><span class="p">,</span> <span class="n">photometry</span><span class="p">,</span> <span class="n">mc</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">rag</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Recognition finished&quot;</span><span class="p">)</span>
+
+<span class="c1">#skgti.utils.save_recognizer_details(r,&quot;save/&quot;)</span>
+
+<span class="c1">#DISPLAY</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">idplot</span><span class="o">=</span><span class="mi">141</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mark_boundaries</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">));</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;1E&quot;</span><span class="p">,</span><span class="s2">&quot;2E&quot;</span><span class="p">,</span><span class="s2">&quot;F&quot;</span><span class="p">]:</span>
+    <span class="n">idplot</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">idplot</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">id2region</span><span class="p">[</span><span class="nb">id</span><span class="p">],</span><span class="s2">&quot;gray&quot;</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="nb">id</span><span class="p">);</span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="id9">
+<h2>Output (using matplotlib):<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/figure_4.png"><img alt="Produced result" src="_images/figure_4.png" style="width: 769.5px; height: 227.70000000000002px;" /></a>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html#installation">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick start : example 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quick-start-example-1">Quick start : example 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quick-start-example-2">Quick start : example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quick-start-example-3">Quick start : example 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quick-start-example-4">Quick start : example 4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Documentation</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/quick-start.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jean-Baptiste Fasquel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/quick-start.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

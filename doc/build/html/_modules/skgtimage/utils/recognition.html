@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skgtimage.utils.recognition &#8212; scikit-gtimage 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for skgtimage.utils.recognition</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">skgtimage.core.graph</span> <span class="k">import</span> <span class="n">relabel_nodes</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.photometry</span> <span class="k">import</span> <span class="n">grey_levels</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.filtering</span> <span class="k">import</span> <span class="n">size_filtering</span><span class="p">,</span><span class="n">merge_photometry_gray</span><span class="p">,</span><span class="n">merge_photometry_color</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.isomorphism</span> <span class="k">import</span> <span class="n">common_subgraphisomorphisms</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.criterion</span> <span class="k">import</span> <span class="n">best_common_subgraphisomorphism</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.propagation</span> <span class="k">import</span> <span class="n">propagate</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.factory</span> <span class="k">import</span> <span class="n">from_string</span><span class="p">,</span><span class="n">from_labelled_image</span>
+<span class="kn">from</span> <span class="nn">skgtimage.core.background</span> <span class="k">import</span> <span class="n">remove_background</span>
+<span class="kn">from</span> <span class="nn">skgtimage.utils.rag</span> <span class="k">import</span> <span class="n">rag_merge</span><span class="p">,</span><span class="n">rag_merge_until_commonisomorphism</span>
+<span class="kn">from</span> <span class="nn">skgtimage.utils.color</span> <span class="k">import</span> <span class="n">rgb2chsv</span>
+
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">class</span> <span class="nc">RecognitionException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recognizer</span><span class="p">,</span><span class="n">message</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span><span class="o">=</span><span class="n">recognizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="o">=</span><span class="n">message</span>
+
+<div class="viewcode-block" id="recognize"><a class="viewcode-back" href="../../../api.html#skgtimage.utils.recognize">[docs]</a><span class="k">def</span> <span class="nf">recognize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">t_desc</span><span class="p">,</span> <span class="n">p_desc</span><span class="p">,</span> <span class="n">mc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bound_thickness</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute and return identified regions, specified in qualitative descriptions (t_desc, p_desc), from the provided over-segmentation (label) of the image (image)</span>
+
+<span class="sd">        :param image: input image (numpy array), can be 2D, 3D, grayscale, color</span>
+<span class="sd">        :param label: input oversegmentation (numpy array)</span>
+<span class="sd">        :param t_desc: description of inclusion relationships (string)</span>
+<span class="sd">        :param p_desc: description of photometric relationships (string)</span>
+<span class="sd">        :param mc: specifies if image is multi-component (True - color in our case) or not (False - grayscale).</span>
+<span class="sd">        :param roi: region of interest (numpy array), corresponding to non zeros.</span>
+<span class="sd">        :param min_size: minimum size (in pixels) of considered regions. Regions smaller than min_size are removed.</span>
+<span class="sd">        :param bg: specifies whether background must be removed</span>
+<span class="sd">        :param bound_thickness: thickness of the enveloppe surrounding the roi (if roi is not none)</span>
+<span class="sd">        :param rag: if not None, a preliminary merging of photometrically similar neighboring regions is performed. The parameter specifies the similarity threshold (threshold the in merge_hierarchical function of scikit-image)</span>
+<span class="sd">        :param merge: if not None, a preliminary merging of photometrically similar regions is performed (not necessarily neighboring regions). The parameter specifies the number of finally expected regions.</span>
+<span class="sd">        :param verbose: if True, details of the procedure are printed</span>
+<span class="sd">        :return: a mapping &quot;id - regions&quot; (python mapping type - dictionnary) and the object in charge of managing the entire procedure. &quot;id&quot; are names specified in the description (t_desc, p_desc), regions are &quot;binary images&quot; (numpy array). The object embedded many intermediate informations (e.g. graphs, isomorphisms,...)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#Create recognizer instance and trigger recognition</span>
+    <span class="n">recognizer</span> <span class="o">=</span> <span class="n">Recognizer</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">t_desc</span><span class="p">,</span> <span class="n">p_desc</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">bound_thickness</span><span class="p">,</span> <span class="n">rag</span><span class="p">,</span> <span class="n">merge</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">recognizer</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+    <span class="c1">#Retrieve regions and return them for external use not requiring &#39;recognizer&#39;</span>
+    <span class="n">id2regions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+            <span class="n">id2regions</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="o">.</span><span class="n">get_region</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">id2regions</span><span class="p">,</span><span class="n">recognizer</span></div>
+
+
+<span class="k">class</span> <span class="nc">Recognizer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span><span class="n">label</span><span class="p">,</span> <span class="n">t_desc</span><span class="p">,</span> <span class="n">p_desc</span><span class="p">,</span><span class="n">mc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">size_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">bg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">bound_thickness</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">prerag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">premnoragmerging</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param image: input image (color or gray, nd)</span>
+<span class="sd">        :param label: labelled image</span>
+<span class="sd">        :param t_desc: string</span>
+<span class="sd">        :param p_desc: string</span>
+<span class="sd">        :param mc: True is color, False otherwise</span>
+<span class="sd">        :param roi: region of interest</span>
+<span class="sd">        :param bound_thickness: thickness of the boundary to be added (none if thickness is 0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_desc</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">p_desc</span><span class="o">=</span><span class="n">t_desc</span><span class="p">,</span><span class="n">p_desc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="o">=</span><span class="n">from_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_desc</span><span class="p">),</span><span class="n">from_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_desc</span><span class="p">)</span>
+        <span class="c1">#Context</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mc</span><span class="o">=</span><span class="n">mc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_image</span><span class="o">=</span><span class="n">image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">=</span><span class="n">image</span>
+        <span class="k">if</span> <span class="n">mc</span> <span class="p">:</span> <span class="c1">#input color image</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">=</span><span class="mf">0.2125</span><span class="o">*</span><span class="n">image</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span> <span class="mf">0.7154</span><span class="o">*</span><span class="n">image</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mf">0.0721</span><span class="o">*</span><span class="n">image</span><span class="p">[:,:,</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">=</span><span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_dim</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1">#Optional elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="o">=</span><span class="n">roi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound_thickness</span><span class="o">=</span><span class="n">bound_thickness</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_min</span><span class="o">=</span><span class="n">size_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_background</span><span class="o">=</span><span class="n">bg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_ragmerging</span><span class="o">=</span><span class="n">prerag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_photmerging</span><span class="o">=</span><span class="n">premnoragmerging</span>
+        <span class="c1"># Produced intermediate labelling (simplification of the initial labelled image)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_pre_rag</span><span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_pre_photomerge</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Produced intermediate operations (strings), labelled image and graphs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="o">=</span><span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span><span class="o">=</span><span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span><span class="o">=</span><span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="o">=</span><span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>  <span class="c1"># Graphs for computing isomorphisms and merging, can be after rag, filt, background removal</span>
+        <span class="c1">#Common isomorphisms and best isomorphism</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">common_isomorphisms</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matching</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eies</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span>
+        <span class="c1">#Merging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ordered_merges</span><span class="o">=</span><span class="kc">None</span>
+        <span class="c1">#Final result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_t_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">final_p_graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relabelled_final_p_graph</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="c1">#Runtimes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action2runtime</span><span class="o">=</span><span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">preliminary_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_ragmerging</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Preprocessing: RAG merging&quot;</span><span class="p">)</span>
+            <span class="c1">#self.label_pre_rag=np.copy(self.label)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">=</span><span class="n">rag_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_ragmerging</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="o">+=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_After_preliminary_RAG_merging&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span><span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span><span class="o">+=</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="o">+=</span><span class="mi">1</span>
+
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_photmerging</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Preprocessing: Photometry merging&quot;</span><span class="p">)</span>
+            <span class="c1">#self.label_pre_photomerge = np.copy(self.label)</span>
+            <span class="n">nb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grey_levels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">))</span>
+            <span class="n">times</span> <span class="o">=</span> <span class="n">nb</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_photmerging</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mc</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">tmp_chsv</span><span class="o">=</span><span class="n">rgb2chsv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_image</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">merge_photometry_color</span><span class="p">(</span><span class="n">tmp_chsv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">merge_photometry_gray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_After_preliminary_Photometry_merging&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span> <span class="o">+=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#Initial status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="o">+=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_Initial&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span><span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span><span class="o">+=</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="o">+=</span><span class="mi">1</span>
+
+        <span class="c1">#Step -1: preliminary rag merging (cut threshold)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preliminary_processing</span><span class="p">()</span>
+
+        <span class="c1">#Step 0: built graphs from label</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="o">=</span><span class="n">from_labelled_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bound_thickness</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bound_thickness</span><span class="p">)</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action2runtime</span><span class="p">[</span><span class="s2">&quot;Build.&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span><span class="o">+=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_Initial_graph&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span><span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span><span class="o">+=</span><span class="p">[(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">),</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">))]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="o">+=</span><span class="mi">1</span>
+
+        <span class="c1">#Step 1: merge adjacent region until at least one common isomorphism is found</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rag_merging</span><span class="p">()</span>
+        <span class="c1">#Step 2: size filtering by removing region smaller than self.size_min (in pixels)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filtering</span><span class="p">()</span>
+        <span class="c1">#Step 3: remove background</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_background</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extract_from_background</span><span class="p">()</span>
+        <span class="c1">#Step 4: compute common iso and best iso</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_common_iso</span><span class="p">()</span>
+        <span class="c1">#Step 5: merge region and relabelled graph nodes to identify each expected region</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_merge</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">build_graphs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="o">=</span><span class="n">from_labelled_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bound_thickness</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bound_thickness</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rag_merging</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">common_isomorphisms</span> <span class="o">=</span> <span class="n">common_subgraphisomorphisms</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_isomorphisms</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting RAG merge until common iso is found...&quot;</span><span class="p">)</span>
+            <span class="c1">#self.t_graph_before_rag, self.p_graph_before_rag=copy.deepcopy(self.t_graph),copy.deepcopy(self.p_graph)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span> <span class="o">=</span> <span class="n">rag_merge_until_commonisomorphism</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_image</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">mc</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_Initial_graph_after_RAG_for_common_isos&quot;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="o">.</span><span class="n">get_labelled</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">),</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">))]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending RAG merge: common iso is found...&quot;</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span>
+                <span class="k">raise</span> <span class="n">RecognitionException</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;Unefficient rag merging&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filtering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Filtering by removing regions smaller than &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_min</span><span class="p">,</span> <span class="s2">&quot; pixels&quot;</span><span class="p">)</span>
+        <span class="c1">#self.t_graph_before_filtering, self.p_graph_before_filtering = copy.deepcopy(self.t_graph), copy.deepcopy(self.p_graph)</span>
+        <span class="n">size_filtering</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_min</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_Initial_graph_size_filtered&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="o">.</span><span class="n">get_labelled</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">),</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">))]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+    <span class="k">def</span> <span class="nf">extract_from_background</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Removing background&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_graph_before_background</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph_before_background</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">),</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">)</span>
+        <span class="n">roi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span> <span class="o">=</span> <span class="n">remove_background</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_operations</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_Initial_background_removed&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="o">.</span><span class="n">get_labelled</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_labels</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_graphs</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">),</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">))]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation_step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+    <span class="k">def</span> <span class="nf">compute_common_iso</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Searching for common isomorphisms&quot;</span><span class="p">)</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">common_isomorphisms</span> <span class="o">=</span> <span class="n">common_subgraphisomorphisms</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">])</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action2runtime</span><span class="p">[</span><span class="s2">&quot;Iso.&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Searching for the best common isomorphism&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matching</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eies</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">best_common_subgraphisomorphism</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">common_isomorphisms</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">compute_merge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Merging regions&quot;</span><span class="p">)</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_p_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ordered_merges</span> <span class="o">=</span> <span class="n">propagate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">p_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_t_graph</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_p_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matching</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action2runtime</span><span class="p">[</span><span class="s2">&quot;Merge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relabelled_final_p_graph</span><span class="p">)</span> <span class="o">=</span> <span class="n">relabel_nodes</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">final_t_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_p_graph</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">matching</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relabelled_final_t_graph</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="o">.</span><span class="n">get_image</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relabelled_final_p_graph</span><span class="o">.</span><span class="n">set_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_graph</span><span class="o">.</span><span class="n">get_image</span><span class="p">())</span>
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html">Quick start : example 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-1">Quick start : example 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-2">Quick start : example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-3">Quick start : example 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick-start.html#quick-start-example-4">Quick start : example 4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Documentation</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jean-Baptiste Fasquel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

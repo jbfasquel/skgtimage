@@ -1,0 +1,151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Overview &#8212; scikit-gtimage 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quick start : example 0" href="quick-start.html" />
+    <link rel="prev" title="Scikit-gtimage" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<p>The scikit-gtimage (standing for &#8216;&#8217;graph tools for image analysis&#8217;&#8216;), skgtimage for package aims at providing graph-based tools for image interpretation.
+It implements a method, based on an inexact graph matching technique, for retrieving and identifying a set image regions, from an initial oversegmentation,
+using a priori declared qualitative inclusion and photometric relationships between the set of image regions.
+This package is distributed under the 3-Clause BSD license.</p>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>The proposed scikit-gtimage package is tested to work under Python 3.5.2 (should work for &gt; 3.5.2), not with Python 2 !</p>
+<p>The required dependencies are:</p>
+<ul class="simple">
+<li>numpy (tested with 1.11.3)</li>
+<li>scipy (tested with 0.18.1)</li>
+<li>Pillow (tested with 4.0.0)</li>
+<li>matplotlib (tested with 2.0.0)</li>
+<li>networkx (tested with 1.11)</li>
+<li>scikit-image (tested with 0.12.3)</li>
+<li>scikit-learn (tested with 0.18.1)</li>
+</ul>
+<p>Using miniconda, required dependencies can be installed as following:</p>
+<ul class="simple">
+<li>install miniconda (python 3.5): <a class="reference external" href="https://conda.io/miniconda.html">https://conda.io/miniconda.html</a></li>
+<li>conda install numpy</li>
+<li>conda install scipy</li>
+<li>conda install Pillow</li>
+<li>conda install matplotlib</li>
+<li>conda install networkx</li>
+<li>conda install scikit-image</li>
+<li>conda install scikit-learn</li>
+</ul>
+<p>Optionally (not required), for displaying and exporting graphs, you need to install pygraphviz (using pip for instance: pip install pygraphviz).
+Note that pygraphviz requires graphviz.</p>
+</div>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>Simply unzip the archive and run provided examples (from the root directory of the unzipped archive) :</p>
+<p>python example1.py</p>
+<p>python example2.py</p>
+<p>Note: depending on your system, you may run: python3 example1.py , python3 example2.py</p>
+</div>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p>Add the root directory of the archive to the PYTHONPATH environment variable.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick start : example 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-1">Quick start : example 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-2">Quick start : example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-3">Quick start : example 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html#quick-start-example-4">Quick start : example 4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Documentation</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/overview.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jean-Baptiste Fasquel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/overview.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
